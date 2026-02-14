@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27.0)
 
-set(RTAUDIO_TAG 6.0.1)
+set(RTAUDIO_TAG 409636b)
 set(BUILD_SHARED_LIBS OFF)
 set(RTAUDIO_BUILD_STATIC_LIBS ON)
 
