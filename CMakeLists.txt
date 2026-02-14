@@ -9,6 +9,8 @@ project(DiscordCloneProject)
 
 include(FetchContent)
 
+add_subdirectory(UDPSocket)
+
 if (${BUILD_SERVER})
 	add_subdirectory(Server)
 endif()

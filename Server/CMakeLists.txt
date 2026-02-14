@@ -12,4 +12,9 @@ target_include_directories(
 	include
 )
 
+target_link_libraries(
+	${PROJECT_NAME} PRIVATE
+	UDPSocket
+)
+
 install(TARGETS ${PROJECT_NAME} DESTINATION server/bin)
