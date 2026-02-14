@@ -76,7 +76,7 @@ namespace web
 	std::string UDPSocket::receiveData()
 	{
 		std::array<char, 1024> data{};
-		int size = sizeof(address);
+		socklen_t size = sizeof(address);
 		int result = recvfrom(udpSocket, data.data(), data.size(), 0, reinterpret_cast<sockaddr*>(&address), &size);
 
 		if (result == SOCKET_ERROR)

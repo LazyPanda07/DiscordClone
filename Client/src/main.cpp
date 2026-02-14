@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <memory>
 
 #include <UDPSocket.hpp>
 
@@ -33,10 +34,7 @@ int main(int argc, char** argv) try
 
 			message.erase(message.begin());
 
-			if (socket->sendData(message) == SOCKET_ERROR)
-			{
-				std::cout << WSAGetLastError() << std::endl;
-			}
+			socket->sendData(message);
 		}
 		else if (!command.find("connect"))
 		{

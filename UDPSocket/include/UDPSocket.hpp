@@ -6,6 +6,8 @@
 #ifdef _WIN32
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+
+#define socklen_t int
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -14,6 +16,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
 
 #ifndef WINDOWS_STYLE_DEFINITION
 #define WINDOWS_STYLE_DEFINITION

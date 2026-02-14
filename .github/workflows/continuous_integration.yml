@@ -13,9 +13,11 @@ jobs:
     strategy:
       matrix:
         config: 
-          - { os: windows-latest, image: "", artifact-name: Windows }
-          # - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: Linux }
+          - { os: windows-latest, image: "", artifact-name: Windows, additional-command: "" }
+          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: Linux, additional-command: "sudo apt update && sudo apt install -y alsa-base libasound2-dev" }
     runs-on: ${{ matrix.config.os }}
+    container:
+      image: ${{ matrix.config.image }}
 
     steps:
     - uses: actions/checkout@v6
@@ -23,6 +25,10 @@ jobs:
     - name: Enable NMake
       if: ${{ matrix.config.os == 'windows-latest' }}
       uses: ilammy/msvc-dev-cmd@v1.13.0
+
+    - name: Additional action
+      if: ${{ matrix.config.additional-command != '' }}
+      run: ${{ matrix.config.additional-command }}
 
     - name: Build
       run: |
