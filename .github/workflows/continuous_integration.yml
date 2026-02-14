@@ -1,0 +1,39 @@
+name: Continuous integration
+
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        config: 
+          - { os: windows-latest, image: "", artifact-name: Windows }
+          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: Linux }
+    runs-on: ${{ config.os }}
+
+    steps:
+    - uses: actions/checkout@v6
+      
+    - name: Enable NMake
+      if: ${{ matrix.config.os == 'windows-latest' }}
+      uses: ilammy/msvc-dev-cmd@v1.13.0
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_INSTALL_PREFIX=install-dir -DCMAKE_BUILD_TYPE=Release -G "Ninja" ..
+        cmake --build . -j
+        cmake --install .
+
+    - name: Upload ${{ matrix.config.artifact-name }}
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ matrix.config.artifact-name }}
+        path: build/install-dir

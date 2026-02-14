@@ -39,3 +39,10 @@
 
 # debug information files
 *.dwo
+
+# Binaries
+out/
+build/
+
+# Visual Studio
+.vs/
