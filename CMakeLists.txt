@@ -5,7 +5,7 @@ set(FETCHCONTENT_QUIET OFF CACHE BOOL "")
 option(BUILD_CLIENT "" ON)
 option(BUILD_SERVER "" ON)
 
-project(DiscordCloneProject)
+project(DiscordCloneProject VERSION 0.1.0)
 
 include(FetchContent)
 
@@ -22,3 +22,9 @@ endif()
 if (${BUILD_CLIENT})
 	add_subdirectory(Client)
 endif()
+
+add_custom_target(
+	build_docker_image
+	WORKING_DIRECTORY docker
+	COMMAND sudo docker build --build-arg BUILD_TAG=${PROJECT_VERSION} -t lazypanda07/discord_clone:${PROJECT_VERSION} .
+)
