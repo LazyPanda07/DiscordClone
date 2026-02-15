@@ -1,7 +1,5 @@
 #include "UDPServerSocket.hpp"
 
-#include <stdexcept>
-#include <format>
 #include <array>
 
 namespace web
@@ -23,10 +21,10 @@ namespace web
 		}
 	}
 
-	void UDPServerSocket::receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address)>& callback)
+	void UDPServerSocket::receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>& callback)
 	{
 		sockaddr_in client{};
-		std::array<char, 1024> data{};
+		Buffer data{};
 		socklen_t size = sizeof(client);
 		int result = recvfrom(udpSocket, data.data(), data.size(), 0, reinterpret_cast<sockaddr*>(&client), &size);
 
@@ -39,6 +37,6 @@ namespace web
 #endif
 		}
 
-		callback(data, size, client);
+		callback(data, result, client, *this);
 	}
 }

@@ -4,6 +4,10 @@
 #include <cstdint>
 #include <functional>
 #include <array>
+#include <span>
+#include <stdexcept>
+#include <format>
+#include <cstring>
 
 #ifdef _WIN32
 #include <WinSock2.h>
@@ -39,7 +43,7 @@ namespace web
 	class UDPSocket
 	{
 	public:
-		using Buffer = std::array<char, 1024>;
+		using Buffer = std::array<char, 4096>;
 
 	protected:
 		SOCKET udpSocket;
@@ -49,13 +53,36 @@ namespace web
 		void initializeSockets();
 
 	protected:
-		UDPSocket();
+		UDPSocket(const sockaddr_in& address = {});
 
 	public:
+		template<typename T>
+		int sendData(std::span<T> data, const UDPSocket* receiver = nullptr) const;
+
 		int sendData(std::string_view data, const UDPSocket* receiver = nullptr) const;
 
-		virtual void receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address)>& callback) = 0;
+		virtual void receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>& callback) = 0;
 
 		virtual ~UDPSocket();
 	};
+}
+
+namespace web
+{
+	template<typename T>
+	int UDPSocket::sendData(std::span<T> data, const UDPSocket* receiver) const
+	{
+		int result = sendto(udpSocket, reinterpret_cast<const char*>(data.data()), data.size_bytes(), 0, receiver ? reinterpret_cast<const sockaddr*>(&receiver->address) : reinterpret_cast<const sockaddr*>(&address), sizeof(address));
+
+		if (result == SOCKET_ERROR)
+		{
+#ifdef _WIN32
+			throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
+#else
+			throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
+#endif
+		}
+
+		return result;
+	}
 }

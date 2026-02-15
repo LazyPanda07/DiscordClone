@@ -1,7 +1,5 @@
 #include "UDPSocket.hpp"
 
-#include <stdexcept>
-#include <format>
 #include <array>
 
 namespace web
@@ -27,26 +25,15 @@ namespace web
 		}
 	}
 
-	UDPSocket::UDPSocket() :
-		address()
+	UDPSocket::UDPSocket(const sockaddr_in& address) :
+		address(address)
 	{
 		this->initializeSockets();
 	}
 
 	int UDPSocket::sendData(std::string_view data, const UDPSocket* receiver) const
 	{
-		int result = sendto(udpSocket, data.data(), data.size(), 0, receiver ? reinterpret_cast<const sockaddr*>(&receiver->address) : reinterpret_cast<const sockaddr*>(&address), sizeof(address));
-
-		if (result == SOCKET_ERROR)
-		{
-#ifdef _WIN32
-			throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
-#else
-			throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
-#endif
-		}
-
-		return result;
+		return this->sendData(std::span<const char>(data), receiver);
 	}
 
 	UDPSocket::~UDPSocket()

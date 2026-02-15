@@ -9,6 +9,14 @@ project(DiscordCloneProject)
 
 include(FetchContent)
 
+if (WIN32)
+	add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
+
+if (WIN32)
+	add_compile_options(/MT)
+endif()
+
 add_subdirectory(UDPSocket)
 
 if (${BUILD_SERVER})

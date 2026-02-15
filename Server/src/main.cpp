@@ -4,19 +4,16 @@
 
 #include <UDPServerSocket.hpp>
 
+#include "VoiceServer.hpp"
+
 int main(int argc, char** argv)
 {
 	std::unique_ptr<web::UDPSocket> socket = std::make_unique<web::UDPServerSocket>(8080);
+	voice::VoiceServer server;
 
 	while (true)
 	{
-		socket->receiveData
-		(
-			[](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address)
-			{
-				std::cout << data.data() << std::endl;
-			}
-		);
+		socket->receiveData(server);
 	}
 
 	return 0;

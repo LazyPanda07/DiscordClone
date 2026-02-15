@@ -5,8 +5,24 @@
 
 #include <UDPClientSocket.hpp>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
+#include "InputVoice.hpp"
+#include "OutputVoice.hpp"
+
+void diagnoseAudioDevices();
+
 int main(int argc, char** argv) try
 {
+	constexpr uint32_t sampleRate = 44100;
+	constexpr uint32_t bufferFrames = 256;
+
+#ifdef _WIN32
+	SetConsoleOutputCP(CP_UTF8);
+#endif
+
 	std::string command;
 	std::unique_ptr<web::UDPSocket> socket;
 	std::vector<std::pair<std::string, std::string>> availableCommands =
@@ -16,6 +32,11 @@ int main(int argc, char** argv) try
 		{ "help", "" },
 		{ "exit", "" }
 	};
+	
+	std::unique_ptr<voice::InputVoice> input;
+	std::unique_ptr<voice::OutputVoice> output;
+
+	diagnoseAudioDevices();
 
 	while (true)
 	{
@@ -52,7 +73,10 @@ int main(int argc, char** argv) try
 
 			socket = std::make_unique<web::UDPClientSocket>(ip.data(), static_cast<uint16_t>(std::stoi(port)));
 
-			std::cout << ip << ':' << port << std::endl;
+			std::cout << "Connected to: " << ip << ':' << port << std::endl;
+
+			input = std::make_unique<voice::InputVoice>(*socket, bufferFrames, sampleRate);
+			output = std::make_unique<voice::OutputVoice>(*socket, bufferFrames, sampleRate);
 		}
 		else if (!command.find("help"))
 		{
@@ -74,4 +98,25 @@ catch (const std::exception& e)
 	std::cerr << e.what() << std::endl;
 
 	return 1;
+}
+
+void diagnoseAudioDevices()
+{
+	RtAudio audio;
+	std::vector<uint32_t> devices = audio.getDeviceIds();
+	std::cout << "Found " << devices.size() << " audio devices:\n\n";
+
+	for (uint32_t i : devices)
+	{
+		RtAudio::DeviceInfo info = audio.getDeviceInfo(i);
+
+		std::cout << "Device " << i << ": " << info.name << std::endl;
+		std::cout << "  Input channels: " << info.inputChannels << std::endl;
+		std::cout << "  Output channels: " << info.outputChannels << std::endl;
+		std::cout << "  Default input: " << (info.isDefaultInput ? "yes" : "no") << std::endl;
+		std::cout << "  Default output: " << (info.isDefaultOutput ? "yes" : "no") << std::endl;
+		std::cout << std::endl;
+	}
+
+	std::cout << std::endl;
 }

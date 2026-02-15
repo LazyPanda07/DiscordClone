@@ -17,7 +17,11 @@ project(DiscordClone)
 add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
+	src/InputVoice.cpp
+	src/OutputVoice.cpp
 )
+
+add_compile_options()
 
 target_include_directories(
 	${PROJECT_NAME} PRIVATE
