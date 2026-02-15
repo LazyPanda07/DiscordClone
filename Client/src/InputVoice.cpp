@@ -1,6 +1,7 @@
 #include "InputVoice.hpp"
 
 #include <span>
+#include <UUID.h>
 
 namespace voice
 {
@@ -19,13 +20,22 @@ namespace voice
 		}
 
 		std::span<float> in(static_cast<float*>(inputBuffer), frames * voice.parameters.nChannels);
+		web::UDPSocket::Buffer buffer{};
+		size_t currentSize = 0;
 
-		voice.socket.sendData(in);
+		std::memcpy(buffer.data(), voice.uuid.data(), voice.uuid.size());
+		currentSize += voice.uuid.size();
+
+		std::memcpy(buffer.data() + currentSize, in.data(), in.size_bytes());
+		currentSize += in.size_bytes();
+
+		voice.socket.sendData(std::span<const char>(buffer.data(), currentSize));
 
 		return 0;
 	}
 
 	InputVoice::InputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate) :
+		uuid(utility::uuid::generateUUID()),
 		socket(socket)
 	{
 		parameters.deviceId = audio.getDefaultInputDevice();

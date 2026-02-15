@@ -17,7 +17,7 @@ namespace web
 
 		UDPClientSocket(const sockaddr_in& address);
 
-		void receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>& callback) override;
+		void receiveData(const ReceiveCallback& callback) override;
 
 		~UDPClientSocket() = default;
 	};

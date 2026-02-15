@@ -9,14 +9,17 @@ namespace voice
 {
 	class VoiceServer
 	{
-	public:
-		using IpData = std::array<char, INET_ADDRSTRLEN>;
-
 	private:
 		struct Client
 		{
-			IpData ip;
+		public:
+			std::string uuid;
 			web::UDPClientSocket socket;
+
+		public:
+			Client(std::string_view uuid, const sockaddr_in& address);
+
+			~Client() = default;
 		};
 
 	private:

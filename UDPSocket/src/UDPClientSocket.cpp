@@ -9,7 +9,7 @@ namespace web
 		localAddress = {};
 
 		localAddress.sin_family = AF_INET;
-		localAddress.sin_addr.s_addr = INADDR_ANY;   // receive on all interfaces
+		localAddress.sin_addr.s_addr = INADDR_ANY;
 		localAddress.sin_port = htons(0);
 
 		if (bind(udpSocket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) == SOCKET_ERROR)
@@ -39,7 +39,7 @@ namespace web
 		this->initLocalAddress();
 	}
 
-	void UDPClientSocket::receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>& callback)
+	void UDPClientSocket::receiveData(const ReceiveCallback& callback)
 	{
 		sockaddr_in server{};
 		Buffer data{};

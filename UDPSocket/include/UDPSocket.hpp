@@ -44,6 +44,10 @@ namespace web
 	{
 	public:
 		using Buffer = std::array<char, 4096>;
+		using ReceiveCallback = std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>;
+
+	public:
+		static constexpr size_t uuidSize = 36;
 
 	protected:
 		SOCKET udpSocket;
@@ -61,7 +65,7 @@ namespace web
 
 		int sendData(std::string_view data, const UDPSocket* receiver = nullptr) const;
 
-		virtual void receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>& callback) = 0;
+		virtual void receiveData(const ReceiveCallback& callback) = 0;
 
 		virtual ~UDPSocket();
 	};

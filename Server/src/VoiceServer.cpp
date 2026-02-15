@@ -2,17 +2,21 @@
 
 namespace voice
 {
+	VoiceServer::Client::Client(std::string_view uuid, const sockaddr_in& address) :
+		uuid(uuid),
+		socket(address)
+	{
+
+	}
+
 	void VoiceServer::operator ()(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 	{
-		IpData clientIp{};
-
-		inet_ntop(AF_INET, &address.sin_addr, clientIp.data(), sizeof(clientIp));
-
+		std::string_view uuid(data.data(), web::UDPSocket::uuidSize);
 		Client* currentClient = nullptr;
 
-		if (auto it = std::ranges::find(clients, clientIp, &VoiceServer::Client::ip); it == clients.end())
+		if (auto it = std::ranges::find(clients, uuid, &VoiceServer::Client::uuid); it == clients.end())
 		{
-			currentClient = &clients.emplace_back(clientIp, address);
+			currentClient = &clients.emplace_back(uuid, address);
 		}
 		else
 		{
@@ -23,7 +27,7 @@ namespace voice
 		{
 			if (currentClient != &client)
 			{
-				socket.sendData(std::span<const char>(data.data(), size), &client.socket);
+				socket.sendData(std::span<const char>(data.data() + web::UDPSocket::uuidSize, size), &client.socket);
 			}
 		}
 	}

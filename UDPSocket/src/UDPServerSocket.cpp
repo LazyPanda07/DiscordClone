@@ -21,7 +21,7 @@ namespace web
 		}
 	}
 
-	void UDPServerSocket::receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>& callback)
+	void UDPServerSocket::receiveData(const ReceiveCallback& callback)
 	{
 		sockaddr_in client{};
 		Buffer data{};
