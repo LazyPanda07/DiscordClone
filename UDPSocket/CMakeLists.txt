@@ -5,6 +5,8 @@ project(UDPSocket)
 add_library(
 	${PROJECT_NAME} STATIC
 	src/UDPSocket.cpp
+	src/UDPClientSocket.cpp
+	src/UDPServerSocket.cpp
 )
 
 target_include_directories(

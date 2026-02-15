@@ -2,12 +2,15 @@
 
 #include <string>
 #include <cstdint>
+#include <functional>
+#include <array>
 
 #ifdef _WIN32
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
-#define socklen_t int
+using socklen_t = int;
+
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -22,10 +25,11 @@
 #define WINDOWS_STYLE_DEFINITION
 
 #define closesocket close
-#define SOCKET int
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
-#define DWORD uint32_t
+
+using SOCKET = int;
+using DWORD = uint32_t;
 
 #endif // WINDOWS_STYLE_DEFINITION
 #endif
@@ -34,22 +38,24 @@ namespace web
 {
 	class UDPSocket
 	{
-	private:
+	public:
+		using Buffer = std::array<char, 1024>;
+
+	protected:
 		SOCKET udpSocket;
 		sockaddr_in address;
 
-	private:
+	protected:
 		void initializeSockets();
 
+	protected:
+		UDPSocket();
+
 	public:
-		UDPSocket(std::string_view ip, uint16_t port);
+		int sendData(std::string_view data, const UDPSocket* receiver = nullptr) const;
 
-		UDPSocket(uint16_t listenPort);
+		virtual void receiveData(const std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address)>& callback) = 0;
 
-		int sendData(std::string_view data) const;
-
-		std::string receiveData();
-
-		~UDPSocket();
+		virtual ~UDPSocket();
 	};
 }

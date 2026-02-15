@@ -22,69 +22,31 @@ namespace web
 #if _WIN32
 			throw std::runtime_error(std::format("Socket creation failed: {}", WSAGetLastError()));
 #else
-			// TODO: Linux exception
+			throw std::runtime_error(std::format("Socket creation failed: {}", strerror(errno)));
 #endif
 		}
 	}
 
-	UDPSocket::UDPSocket(std::string_view ip, uint16_t port) :
+	UDPSocket::UDPSocket() :
 		address()
 	{
 		this->initializeSockets();
-
-		address.sin_family = AF_INET;
-		address.sin_port = htons(port);
-
-		inet_pton(AF_INET, ip.data(), &address.sin_addr);
 	}
 
-	UDPSocket::UDPSocket(uint16_t listenPort) :
-		address()
+	int UDPSocket::sendData(std::string_view data, const UDPSocket* receiver) const
 	{
-		this->initializeSockets();
-
-		address.sin_family = AF_INET;
-		address.sin_port = htons(listenPort);
-		address.sin_addr.s_addr = INADDR_ANY;
-
-		if (bind(udpSocket, (sockaddr*)&address, sizeof(address)) == SOCKET_ERROR)
-		{
-#ifdef _WIN32
-			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
-#else
-			// TODO: Linux exception
-#endif
-		}
-	}
-
-	int UDPSocket::sendData(std::string_view data) const
-	{
-		int result = sendto(udpSocket, data.data(), data.size(), 0, reinterpret_cast<const sockaddr*>(&address), sizeof(address));
+		int result = sendto(udpSocket, data.data(), data.size(), 0, receiver ? reinterpret_cast<const sockaddr*>(&receiver->address) : reinterpret_cast<const sockaddr*>(&address), sizeof(address));
 
 		if (result == SOCKET_ERROR)
 		{
 #ifdef _WIN32
 			throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
 #else
-			// TODO: Linux exception
+			throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
 #endif
 		}
 
 		return result;
-	}
-
-	std::string UDPSocket::receiveData()
-	{
-		std::array<char, 1024> data{};
-		socklen_t size = sizeof(address);
-		int result = recvfrom(udpSocket, data.data(), data.size(), 0, reinterpret_cast<sockaddr*>(&address), &size);
-
-		if (result == SOCKET_ERROR)
-		{
-			return "";
-		}
-
-		return std::string(data.begin(), data.begin() + result);
 	}
 
 	UDPSocket::~UDPSocket()

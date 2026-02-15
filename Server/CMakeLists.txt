@@ -17,4 +17,4 @@ target_link_libraries(
 	UDPSocket
 )
 
-install(TARGETS ${PROJECT_NAME} DESTINATION server/bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)

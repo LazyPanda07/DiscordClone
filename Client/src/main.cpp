@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 
-#include <UDPSocket.hpp>
+#include <UDPClientSocket.hpp>
 
 int main(int argc, char** argv) try
 {
@@ -50,7 +50,7 @@ int main(int argc, char** argv) try
 
 			is >> port;
 
-			socket = std::make_unique<web::UDPSocket>(ip.data(), static_cast<uint16_t>(std::stoi(port)));
+			socket = std::make_unique<web::UDPClientSocket>(ip.data(), static_cast<uint16_t>(std::stoi(port)));
 
 			std::cout << ip << ':' << port << std::endl;
 		}

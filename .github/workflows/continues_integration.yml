@@ -14,7 +14,7 @@ jobs:
       matrix:
         config: 
           - { os: windows-latest, image: "", artifact-name: Windows, additional-command: "" }
-          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: Linux, additional-command: "sudo apt update && sudo apt install -y alsa-base libasound2-dev" }
+          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: Linux, additional-command: "sudo apt update && sudo apt install -y libasound2-dev" }
     runs-on: ${{ matrix.config.os }}
     container:
       image: ${{ matrix.config.image }}
@@ -42,6 +42,4 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.config.artifact-name }}
-        path: |
-          build/install-dir/client/bin/*
-          build/install-dir/server/bin/*
+        path: build/install-dir/bin/*

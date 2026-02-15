@@ -30,4 +30,4 @@ target_link_libraries(
 	UDPSocket
 )
 
-install(TARGETS ${PROJECT_NAME} DESTINATION client/bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
