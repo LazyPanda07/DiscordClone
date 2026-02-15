@@ -1,0 +1,35 @@
+name: Docker Distribution
+
+
+on:
+  workflow_dispatch:
+  
+
+env:
+  PROJECT_VERSION: v0.1.0  
+
+
+permissions:
+  packages: write
+
+
+jobs:
+  docker-publish-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v6
+  
+    - name: Build Docker image
+      run: |
+        mkdir build
+        cd build
+        cmake -DBUILD_CLIENT=OFF ..
+        cmake --build . --target build_docker_image
+
+    - name: Push Docker image
+      run: |
+        sudo docker login -u "${{ secrets.DOCKER_HUB_LOGIN }}" -p "${{ secrets.DOCKER_HUB_PASSWORD }}"
+        sudo docker push lazypanda07/discord_clone_server:${{ env.PROJECT_VERSION }}
+        echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u LazyPanda07 --password-stdin
+        sudo docker push ghcr.io/lazypanda07/discord_clone_server:${{ env.PROJECT_VERSION }}

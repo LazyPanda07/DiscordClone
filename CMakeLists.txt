@@ -25,6 +25,6 @@ endif()
 
 add_custom_target(
 	build_docker_image
-	WORKING_DIRECTORY docker
-	COMMAND sudo docker build --build-arg BUILD_TAG=${PROJECT_VERSION} -t lazypanda07/discord_clone:${PROJECT_VERSION} .
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/docker
+	COMMAND sudo docker build --build-arg BUILD_TAG=v${PROJECT_VERSION} -t lazypanda07/discord_clone_server:v${PROJECT_VERSION} .
 )
