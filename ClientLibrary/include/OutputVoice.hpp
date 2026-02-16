@@ -8,9 +8,11 @@
 
 #include <UDPSocket.hpp>
 
+#include "Export.hpp"
+
 namespace voice
 {
-	class OutputVoice
+	class CLIENT_LIBRARY_API OutputVoice
 	{
 	private:
 		static int callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData);

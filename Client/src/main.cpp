@@ -9,8 +9,8 @@
 #include <Windows.h>
 #endif
 
-#include "InputVoice.hpp"
-#include "OutputVoice.hpp"
+#include <InputVoice.hpp>
+#include <OutputVoice.hpp>
 
 void diagnoseAudioDevices();
 

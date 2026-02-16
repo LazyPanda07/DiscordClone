@@ -7,6 +7,8 @@ namespace voice
 {
 	int InputVoice::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
+		CLIENT_LIBRARY_API;
+
 		InputVoice& voice = *reinterpret_cast<InputVoice*>(userData);
 
 		if (status & RTAUDIO_INPUT_OVERFLOW)
