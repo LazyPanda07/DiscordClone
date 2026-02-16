@@ -7,6 +7,18 @@ add_executable(
 	src/main.cpp
 )
 
+if (WIN32)
+	target_sources(
+		${PROJECT_NAME} PRIVATE
+		src/Platform/Windows/WindowsHotkeys.cpp
+	)
+else()
+	target_sources(
+		${PROJECT_NAME} PRIVATE
+		src/Platform/Linux/LinuxHotkeys.cpp
+	)
+endif()
+
 target_include_directories(
 	${PROJECT_NAME} PRIVATE
 	include
