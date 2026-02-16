@@ -2,5 +2,8 @@
 
 namespace functionality
 {
+	void muteOrUnmute(voice::InputVoice& input)
+	{
 
+	}
 }

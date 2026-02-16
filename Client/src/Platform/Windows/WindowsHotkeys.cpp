@@ -33,20 +33,25 @@ namespace functionality
 	public:
 		Implementation(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice);
 
-		void addHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback);
+		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback);
 
 		~Implementation();
 	};
 
 	Hotkeys::Hotkeys(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice) :
-		implementation(std::make_unique<Implementation>(inputVoice, outputVoice))
+		implementation(new Implementation(inputVoice, outputVoice))
 	{
 		
 	}
 
-	void Hotkeys::addHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
+	void Hotkeys::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
 	{
-		implementation->addHotkey(callback);
+		implementation->registerHotkey(callback);
+	}
+
+	Hotkeys::~Hotkeys()
+	{
+		delete implementation;
 	}
 }
 
@@ -124,7 +129,7 @@ namespace functionality
 		SendMessage(hotkeyWindowHandle, Hotkeys::Implementation::initMessageId, reinterpret_cast<WPARAM>(this), 0);
 	}
 
-	void Hotkeys::Implementation::addHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
+	void Hotkeys::Implementation::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
 	{
 		hotkeys.emplace(currentHotkeyIndex++, callback);
 	}

@@ -4,13 +4,15 @@
 #include <memory>
 
 #include <UDPClientSocket.hpp>
+#include <InputVoice.hpp>
+#include <OutputVoice.hpp>
+#include <Functionality.hpp>
+
+#include "Hotkeys.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-
-#include <InputVoice.hpp>
-#include <OutputVoice.hpp>
 
 void diagnoseAudioDevices();
 
@@ -35,6 +37,7 @@ int main(int argc, char** argv) try
 	
 	std::unique_ptr<voice::InputVoice> input;
 	std::unique_ptr<voice::OutputVoice> output;
+	std::unique_ptr<functionality::Hotkeys> hotkeys;
 
 	diagnoseAudioDevices();
 
@@ -77,6 +80,15 @@ int main(int argc, char** argv) try
 
 			input = std::make_unique<voice::InputVoice>(*socket, bufferFrames, sampleRate);
 			output = std::make_unique<voice::OutputVoice>(*socket, bufferFrames, sampleRate);
+			hotkeys = std::make_unique<functionality::Hotkeys>(*input, *output);
+
+			hotkeys->registerHotkey
+			(
+				[](voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice)
+				{
+					functionality::muteOrUnmute(inputVoice);
+				}
+			);
 		}
 		else if (!command.find("help"))
 		{

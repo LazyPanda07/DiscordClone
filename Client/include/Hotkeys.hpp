@@ -12,13 +12,13 @@ namespace functionality
 	{
 	private:
 		class Implementation;
-		std::unique_ptr<Implementation> implementation;
+		Implementation* implementation;
 
 	public:
 		Hotkeys(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice);
 		
-		void addHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback);
+		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback);
 
-		~Hotkeys() = default;
+		~Hotkeys();
 	};
 }
