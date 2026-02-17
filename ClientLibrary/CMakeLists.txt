@@ -21,7 +21,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(rtaudio)
 FetchContent_MakeAvailable(UtilityLibrary)
 
-project(ClientLibrary)
+project(DiscordCloneClientLibrary)
 
 if (${BUILD_SHARED_CLIENT_LIBRARY})
 	set(LIBRARY_TYPE SHARED)
@@ -54,5 +54,10 @@ if (WIN32)
 endif()
 
 if (${BUILD_SHARED_CLIENT_LIBRARY})
-	install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+	install(
+		TARGETS ${PROJECT_NAME}
+		RUNTIME DESTINATION bin
+		ARCHIVE DESTINATION lib
+		LIBRARY DESTINATION lib
+	)
 endif()

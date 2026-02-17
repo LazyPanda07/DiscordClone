@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.27.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "")
-option(BUILD_CLIENT "" ON)
-option(BUILD_CLIENT_LIBRARY "" ON)
-option(BUILD_SERVER "" ON)
+option(BUILD_CLIENT "Build DiscordClone" ON)
+option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" ON)
+option(BUILD_SERVER "Build DiscordCloneServer" ON)
 
 project(DiscordCloneProject VERSION 0.1.0)
 

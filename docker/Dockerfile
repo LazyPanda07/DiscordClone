@@ -11,7 +11,7 @@ RUN git clone https://github.com/LazyPanda07/DiscordClone -b ${BUILD_TAG}
 
 WORKDIR /tmp/DiscordClone
 
-RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/DiscordClone -DBUILD_CLIENT=OFF .. && cmake --build . -j && cmake --install .
+RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/DiscordClone -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF .. && cmake --build . -j && cmake --install .
 
 FROM ubuntu:24.04 AS deploy
 
