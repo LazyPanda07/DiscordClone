@@ -35,7 +35,7 @@ int main(int argc, char** argv) try
 		{ "help", "" },
 		{ "exit", "" }
 	};
-	
+
 	std::unique_ptr<voice::InputVoice> input;
 	std::unique_ptr<voice::OutputVoice> output;
 	std::unique_ptr<functionality::Hotkeys> hotkeys;
@@ -83,6 +83,7 @@ int main(int argc, char** argv) try
 			output = std::make_unique<voice::OutputVoice>(*socket, bufferFrames, sampleRate);
 			hotkeys = std::make_unique<functionality::Hotkeys>(*input, *output);
 
+#if _WIN32
 			hotkeys->registerHotkey
 			(
 				[](voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice)
@@ -92,6 +93,7 @@ int main(int argc, char** argv) try
 				MOD_CONTROL | MOD_ALT,
 				VK_SPACE
 			);
+#endif
 		}
 		else if (!command.find("mute"))
 		{
@@ -121,21 +123,17 @@ catch (const std::exception& e)
 
 void diagnoseAudioDevices()
 {
-	RtAudio audio;
-	std::vector<uint32_t> devices = audio.getDeviceIds();
-	std::cout << "Found " << devices.size() << " audio devices:\n\n";
+	std::vector<RtAudio::DeviceInfo> devices = functionality::getAudioDevices();
 
-	for (uint32_t i : devices)
+	std::cout << std::format("Found {} audio devices:", devices.size()) << std::endl << std::endl;
+
+	for (const RtAudio::DeviceInfo& info : devices)
 	{
-		RtAudio::DeviceInfo info = audio.getDeviceInfo(i);
-
-		std::cout << "Device " << i << ": " << info.name << std::endl;
+		std::cout << "Device " << info.ID << ": " << info.name << std::endl;
 		std::cout << "  Input channels: " << info.inputChannels << std::endl;
 		std::cout << "  Output channels: " << info.outputChannels << std::endl;
 		std::cout << "  Default input: " << (info.isDefaultInput ? "yes" : "no") << std::endl;
 		std::cout << "  Default output: " << (info.isDefaultOutput ? "yes" : "no") << std::endl;
 		std::cout << std::endl;
 	}
-
-	std::cout << std::endl;
 }

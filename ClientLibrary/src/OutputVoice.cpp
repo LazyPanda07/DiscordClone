@@ -59,6 +59,16 @@ namespace voice
 		audio.startStream();
 	}
 
+	void OutputVoice::overrideDeviceId(uint32_t id)
+	{
+		parameters.deviceId = id;
+	}
+
+	void OutputVoice::restart()
+	{
+		// TOOD: restart
+	}
+
 	OutputVoice::~OutputVoice()
 	{
 

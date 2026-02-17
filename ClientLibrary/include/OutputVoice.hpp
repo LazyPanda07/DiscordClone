@@ -23,6 +23,10 @@ namespace voice
 	public:
 		OutputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);
 
+		void overrideDeviceId(uint32_t id);
+
+		void restart();
+
 		~OutputVoice();
 	};
 }

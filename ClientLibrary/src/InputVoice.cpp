@@ -46,6 +46,16 @@ namespace voice
 		audio.startStream();
 	}
 
+	void InputVoice::overrideDeviceId(uint32_t id)
+	{
+		parameters.deviceId = id;
+	}
+
+	void InputVoice::restart()
+	{
+		// TODO: restart
+	}
+
 	void InputVoice::startStream()
 	{
 #ifdef _WIN32

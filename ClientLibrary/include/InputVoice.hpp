@@ -20,6 +20,10 @@ namespace voice
 	public:
 		InputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);
 
+		void overrideDeviceId(uint32_t id);
+
+		void restart();
+
 		void startStream();
 
 		void stopStream();
