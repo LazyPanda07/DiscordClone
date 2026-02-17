@@ -14,7 +14,7 @@
 #include <Windows.h>
 #endif
 
-void diagnoseAudioDevices();
+void printAudioDevicesInfo();
 
 int main(int argc, char** argv) try
 {
@@ -27,20 +27,21 @@ int main(int argc, char** argv) try
 
 	std::string command;
 	std::unique_ptr<web::UDPSocket> socket;
+	std::unique_ptr<voice::InputVoice> input;
+	std::unique_ptr<voice::OutputVoice> output;
+	std::unique_ptr<functionality::Hotkeys> hotkeys;
 	std::vector<std::pair<std::string, std::string>> availableCommands =
 	{
 		{ "send", "<message>" },
 		{ "connect", "<ip:port>" },
-		{ "mute", "" },
+		{ "override_input_device_id", "<id>" },
+		{ "override_output_device_id", "<id>" },
+		{ "mute_and_unmute", "" },
 		{ "help", "" },
 		{ "exit", "" }
 	};
 
-	std::unique_ptr<voice::InputVoice> input;
-	std::unique_ptr<voice::OutputVoice> output;
-	std::unique_ptr<functionality::Hotkeys> hotkeys;
-
-	diagnoseAudioDevices();
+	printAudioDevicesInfo();
 
 	while (true)
 	{
@@ -95,7 +96,27 @@ int main(int argc, char** argv) try
 			);
 #endif
 		}
-		else if (!command.find("mute"))
+		else if (!command.find("override_input_device_id"))
+		{
+			std::istringstream is(command);
+			uint32_t id;
+
+			is >> command;
+			is >> id;
+
+			input->overrideDeviceId(id);
+		}
+		else if (!command.find("override_output_device_id"))
+		{
+			std::istringstream is(command);
+			uint32_t id;
+
+			is >> command;
+			is >> id;
+
+			output->overrideDeviceId(id);
+		}
+		else if (!command.find("mute_and_unmute"))
 		{
 			functionality::muteOrUnmute(*input);
 		}
@@ -121,7 +142,7 @@ catch (const std::exception& e)
 	return 1;
 }
 
-void diagnoseAudioDevices()
+void printAudioDevicesInfo()
 {
 	std::vector<RtAudio::DeviceInfo> devices = functionality::getAudioDevices();
 
