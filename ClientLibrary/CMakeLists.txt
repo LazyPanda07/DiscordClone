@@ -46,6 +46,13 @@ target_link_libraries(
 	UtilityLibrary
 )
 
+if (WIN32)
+	target_link_libraries(
+		${PROJECT_NAME} PUBLIC
+		winmm.lib
+	)
+endif()
+
 if (${BUILD_SHARED_CLIENT_LIBRARY})
 	install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 endif()

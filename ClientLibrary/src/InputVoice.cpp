@@ -6,9 +6,10 @@
 #ifdef _WIN32
 #include <Windows.h>
 #include <mmsystem.h>
-
-#pragma comment(lib, "winmm.lib")
 #endif
+
+#include "Generated/microphone_on.generated.hpp"
+#include "Generated/microphone_off.generated.hpp"
 
 namespace voice
 {
@@ -18,7 +19,7 @@ namespace voice
 
 		if (status & RTAUDIO_INPUT_OVERFLOW)
 		{
-			std::cerr << "Audio input overflow detected!" << std::endl;
+			// TODO: handle
 		}
 
 		if (!inputBuffer)
@@ -42,13 +43,13 @@ namespace voice
 
 		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &InputVoice::callback, this);
 
-		this->startStream();
+		audio.startStream();
 	}
 
 	void InputVoice::startStream()
 	{
 #ifdef _WIN32
-		
+		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOnWav)), nullptr, SND_MEMORY | SND_SYNC);
 #endif
 
 		audio.startStream();
@@ -57,7 +58,7 @@ namespace voice
 	void InputVoice::stopStream()
 	{
 #ifdef _WIN32
-
+		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOffWav)), nullptr, SND_MEMORY | SND_SYNC);
 #endif
 
 		audio.stopStream();

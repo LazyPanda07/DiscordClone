@@ -8,7 +8,7 @@ namespace voice
 
 		if (status & RTAUDIO_OUTPUT_UNDERFLOW)
 		{
-			std::cerr << "Audio output underflow detected!" << std::endl;
+			// TODO: handle
 		}
 
 		if (!outputBuffer)
