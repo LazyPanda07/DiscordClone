@@ -25,8 +25,6 @@ project(DiscordCloneClientLibrary)
 
 if (${BUILD_SHARED_CLIENT_LIBRARY})
 	set(LIBRARY_TYPE SHARED)
-
-	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 add_library(

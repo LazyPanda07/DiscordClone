@@ -32,8 +32,8 @@ namespace voice
 
 					for (size_t i = 0; i < frames; i++)
 					{
-						out[i * 2] = floatData[i];
-						out[i * 2 + 1] = floatData[i];
+						out[i * 2] = floatData[i] * voice.volume;
+						out[i * 2 + 1] = floatData[i] * voice.volume;
 					}
 				}
 			);
@@ -49,7 +49,10 @@ namespace voice
 	}
 
 	OutputVoice::OutputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate) :
-		socket(socket)
+		socket(socket),
+		volume(1.0),
+		bufferFrames(bufferFrames),
+		sampleRate(sampleRate)
 	{
 		parameters.deviceId = audio.getDefaultOutputDevice();
 		parameters.nChannels = 2;
@@ -66,7 +69,20 @@ namespace voice
 
 	void OutputVoice::restart()
 	{
-		// TOOD: restart
+		audio.stopStream();
+		audio.closeStream();
+
+		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &OutputVoice::callback, this);
+	}
+
+	void OutputVoice::setVolume(double volume)
+	{
+		this->volume = volume;
+	}
+
+	double OutputVoice::getVolume() const
+	{
+		return volume;
 	}
 
 	OutputVoice::~OutputVoice()

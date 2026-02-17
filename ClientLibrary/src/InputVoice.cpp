@@ -28,15 +28,25 @@ namespace voice
 		}
 
 		std::span<float> in(static_cast<float*>(inputBuffer), frames * voice.parameters.nChannels);
-		
+
+		if (voice.volume != 1.0)
+		{
+			for (float& value : in)
+			{
+				value *= voice.volume;
+			}
+		}
+
 		voice.socket.sendData(in);
 
 		return 0;
 	}
 
 	InputVoice::InputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate) :
-		uuid(utility::uuid::generateUUID()),
-		socket(socket)
+		socket(socket),
+		volume(1.0),
+		bufferFrames(bufferFrames),
+		sampleRate(sampleRate)
 	{
 		parameters.deviceId = audio.getDefaultInputDevice();
 		parameters.nChannels = 1;
@@ -53,7 +63,10 @@ namespace voice
 
 	void InputVoice::restart()
 	{
-		// TODO: restart
+		audio.stopStream();
+		audio.closeStream();
+
+		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &InputVoice::callback, this);
 	}
 
 	void InputVoice::startStream()
@@ -77,6 +90,16 @@ namespace voice
 	bool InputVoice::isStreamRunning() const
 	{
 		return audio.isStreamRunning();
+	}
+
+	void InputVoice::setVolume(double volume)
+	{
+		this->volume = volume;
+	}
+
+	double InputVoice::getVolume() const
+	{
+		return volume;
 	}
 
 	InputVoice::~InputVoice()

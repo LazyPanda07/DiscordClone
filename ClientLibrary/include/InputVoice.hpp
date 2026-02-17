@@ -12,10 +12,12 @@ namespace voice
 		static int callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData);
 
 	private:
-		std::string uuid;
 		RtAudio audio;
 		web::UDPSocket& socket;
 		RtAudio::StreamParameters parameters;
+		double volume;
+		uint32_t bufferFrames;
+		uint32_t sampleRate;
 
 	public:
 		InputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);
@@ -29,6 +31,10 @@ namespace voice
 		void stopStream();
 
 		bool isStreamRunning() const;
+
+		void setVolume(double volume);
+
+		double getVolume() const;
 
 		~InputVoice();
 	};

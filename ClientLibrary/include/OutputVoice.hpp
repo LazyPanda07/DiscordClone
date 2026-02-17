@@ -19,6 +19,9 @@ namespace voice
 		RtAudio audio;
 		web::UDPSocket& socket;
 		RtAudio::StreamParameters parameters;
+		double volume;
+		uint32_t bufferFrames;
+		uint32_t sampleRate;
 		
 	public:
 		OutputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);
@@ -26,6 +29,10 @@ namespace voice
 		void overrideDeviceId(uint32_t id);
 
 		void restart();
+
+		void setVolume(double volume);
+
+		double getVolume() const;
 
 		~OutputVoice();
 	};

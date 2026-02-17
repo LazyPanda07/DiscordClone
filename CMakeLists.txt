@@ -30,6 +30,7 @@ if (${BUILD_CLIENT_LIBRARY})
 		add_definitions(-DEXPORT_CLIENT_LIBRARY)
 	else()
 		set(BUILD_SHARED_CLIENT_LIBRARY ON)
+		set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 	endif()
 
 	add_subdirectory(ClientLibrary)

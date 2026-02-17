@@ -18,7 +18,7 @@ void printAudioDevicesInfo();
 
 int main(int argc, char** argv) try
 {
-	constexpr uint32_t sampleRate = 44100;
+	constexpr uint32_t sampleRate = 48000;
 	constexpr uint32_t bufferFrames = 256;
 
 #ifdef _WIN32
@@ -32,11 +32,12 @@ int main(int argc, char** argv) try
 	std::unique_ptr<functionality::Hotkeys> hotkeys;
 	std::vector<std::pair<std::string, std::string>> availableCommands =
 	{
-		{ "send", "<message>" },
 		{ "connect", "<ip:port>" },
 		{ "override_input_device_id", "<id>" },
 		{ "override_output_device_id", "<id>" },
 		{ "mute_and_unmute", "" },
+		{ "set_input_volume", "<0.0-1.0 value>" },
+		{ "set_output_volume", "<0.0-1.0 value>" },
 		{ "help", "" },
 		{ "exit", "" }
 	};
@@ -49,20 +50,7 @@ int main(int argc, char** argv) try
 
 		std::getline(std::cin, command);
 
-		if (!command.find("send"))
-		{
-			std::istringstream is(command);
-			std::string message;
-
-			is >> command;
-
-			std::getline(is, message);
-
-			message.erase(message.begin());
-
-			socket->sendData(message);
-		}
-		else if (!command.find("connect"))
+		if (!command.find("connect"))
 		{
 			std::istringstream is(command);
 			std::string ip;
@@ -105,6 +93,7 @@ int main(int argc, char** argv) try
 			is >> id;
 
 			input->overrideDeviceId(id);
+			input->restart();
 		}
 		else if (!command.find("override_output_device_id"))
 		{
@@ -115,6 +104,27 @@ int main(int argc, char** argv) try
 			is >> id;
 
 			output->overrideDeviceId(id);
+			output->restart();
+		}
+		else if (!command.find("set_input_volume"))
+		{
+			std::istringstream is(command);
+			double volume;
+
+			is >> command;
+			is >> volume;
+
+			input->setVolume(volume);
+		}
+		else if (!command.find("set_output_volume"))
+		{
+			std::istringstream is(command);
+			double volume;
+
+			is >> command;
+			is >> volume;
+
+			output->setVolume(volume);
 		}
 		else if (!command.find("mute_and_unmute"))
 		{
