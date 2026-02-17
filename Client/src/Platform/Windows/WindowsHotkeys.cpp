@@ -11,7 +11,8 @@ namespace functionality
 	{
 	private:
 		static constexpr auto windowClassName = TEXT("HotkeyWindow");
-		static constexpr auto initMessageId = WM_USER + 1;
+		static constexpr auto registerHotkeyId = WM_USER + 1;
+		static constexpr auto initMessageId = registerHotkeyId + 1;
 
 	private:
 		static LRESULT hotkeyWindowsProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -27,13 +28,14 @@ namespace functionality
 		HINSTANCE hInstance;
 		HWND hotkeyWindowHandle;
 		int currentHotkeyIndex;
+		DWORD hotkeysThreadId;
 		voice::InputVoice& inputVoice;
 		voice::OutputVoice& outputVoice;
 
 	public:
 		Implementation(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice);
 
-		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback);
+		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key);
 
 		~Implementation();
 	};
@@ -41,12 +43,12 @@ namespace functionality
 	Hotkeys::Hotkeys(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice) :
 		implementation(new Implementation(inputVoice, outputVoice))
 	{
-		
+
 	}
 
-	void Hotkeys::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
+	void Hotkeys::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
 	{
-		implementation->registerHotkey(callback);
+		implementation->registerHotkey(callback, modifiers, key);
 	}
 
 	Hotkeys::~Hotkeys()
@@ -73,6 +75,8 @@ namespace functionality
 		else if (msg == Hotkeys::Implementation::initMessageId)
 		{
 			implementation = reinterpret_cast<Hotkeys::Implementation*>(wparam);
+
+			return 0;
 		}
 
 		return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -104,50 +108,75 @@ namespace functionality
 
 	void Hotkeys::Implementation::messageLoop()
 	{
-		MSG msg;
+		MSG message;
 
-		while (GetMessage(&msg, nullptr, 0, 0) > 0)
+		hotkeysThreadId = GetCurrentThreadId();
+
+		this->createHotkeyWindow();
+
+		SendMessage(hotkeyWindowHandle, Hotkeys::Implementation::initMessageId, reinterpret_cast<WPARAM>(this), 0);
+
+		while (GetMessage(&message, nullptr, 0, 0) > 0)
 		{
-			TranslateMessage(&msg);
+			if (message.message == Hotkeys::Implementation::registerHotkeyId)
+			{
+				std::function<void(voice::InputVoice&, voice::OutputVoice&)>* callback = reinterpret_cast<std::function<void(voice::InputVoice&, voice::OutputVoice&)>*>(message.wParam);
+				std::tuple<uint32_t, uint32_t>* hotkey = reinterpret_cast<std::tuple<uint32_t, uint32_t>*>(message.lParam);
+				int id = currentHotkeyIndex++;
 
-			DispatchMessage(&msg);
+				RegisterHotKey(hotkeyWindowHandle, id, std::get<0>(*hotkey), std::get<1>(*hotkey));
+
+				hotkeys.emplace(id, *callback);
+
+				delete callback;
+				delete hotkey;
+
+				continue;
+			}
+
+			TranslateMessage(&message);
+
+			DispatchMessage(&message);
 		}
 	}
 
 	Hotkeys::Implementation::Implementation(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice) :
 		hInstance(GetModuleHandle(nullptr)),
+		hotkeyWindowHandle(nullptr),
 		currentHotkeyIndex(0),
+		hotkeysThreadId(0),
 		inputVoice(inputVoice),
 		outputVoice(outputVoice)
 	{
-		this->createHotkeyWindow();
-
-		RegisterHotKey(hotkeyWindowHandle, 1, MOD_CONTROL | MOD_ALT, VK_SPACE);
-
 		messageLoopFuture = std::async(std::launch::async, &Hotkeys::Implementation::messageLoop, this);
-
-		SendMessage(hotkeyWindowHandle, Hotkeys::Implementation::initMessageId, reinterpret_cast<WPARAM>(this), 0);
 	}
 
-	void Hotkeys::Implementation::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
+	void Hotkeys::Implementation::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
 	{
-		hotkeys.emplace(currentHotkeyIndex++, callback);
+		std::thread
+		(
+			[=, this]()
+			{
+				std::this_thread::sleep_for(std::chrono::seconds(5));
+
+				PostThreadMessage
+				(
+					hotkeysThreadId,
+					Hotkeys::Implementation::registerHotkeyId,
+					reinterpret_cast<WPARAM>(new std::function<void(voice::InputVoice&, voice::OutputVoice&)>(callback)),
+					reinterpret_cast<LPARAM>(new std::tuple<uint32_t, uint32_t>(modifiers, key))
+				);
+			}
+		).detach();
 	}
 
 	Hotkeys::Implementation::~Implementation()
 	{
-		SendMessage(hotkeyWindowHandle, WM_QUIT, 0, 0);
-
-		for (const auto& [hotkeyId, _] : hotkeys)
-		{
-			UnregisterHotKey(hotkeyWindowHandle, hotkeyId);
-		}
+		PostThreadMessage(hotkeysThreadId, WM_QUIT, 0, 0);
 
 		if (messageLoopFuture.valid())
 		{
 			messageLoopFuture.wait();
 		}
-
-		UnregisterClass(Implementation::windowClassName, hInstance);
 	}
 }

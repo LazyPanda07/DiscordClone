@@ -16,20 +16,34 @@ namespace voice
 			return 0;
 		}
 
-		voice.socket.receiveData
-		(
-			[outputBuffer, frames, &voice](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-			{
-				std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
-				std::span<const float> floatData(reinterpret_cast<const float*>(data.data()), size / sizeof(float));
-
-				for (size_t i = 0; i < frames; i++)
+		try
+		{
+			voice.socket.receiveData
+			(
+				[outputBuffer, frames, &voice](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 				{
-					out[i * 2] = floatData[i];
-					out[i * 2 + 1] = floatData[i];
+					if (size != web::UDPSocket::voicePacketSize)
+					{
+						return;
+					}
+
+					std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
+					std::span<const float> floatData(reinterpret_cast<const float*>(data.data()), size / sizeof(float));
+
+					for (size_t i = 0; i < frames; i++)
+					{
+						out[i * 2] = floatData[i];
+						out[i * 2 + 1] = floatData[i];
+					}
 				}
-			}
-		);
+			);
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+
+			exit(0);
+		}
 
 		return 0;
 	}

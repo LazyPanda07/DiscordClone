@@ -1,7 +1,7 @@
 #pragma once
 
-#include <array>
 #include <unordered_map>
+#include <tuple>
 
 #include <UDPClientSocket.hpp>
 
@@ -12,12 +12,19 @@ namespace voice
 	private:
 		struct Client
 		{
-		public:
-			std::string uuid;
-			web::UDPClientSocket socket;
+		private:
+			static std::tuple<std::string, uint16_t> getIpPort(const sockaddr_in& address);
 
 		public:
-			Client(std::string_view uuid, const sockaddr_in& address);
+			web::UDPClientSocket socket;
+			sockaddr_in address;
+			std::string ip;
+			uint16_t port;
+
+		public:
+			Client(const sockaddr_in& address);
+
+			bool operator ==(const sockaddr_in& address) const noexcept;
 
 			~Client() = default;
 		};
@@ -26,7 +33,7 @@ namespace voice
 		std::vector<Client> clients;
 
 	public:
-		VoiceServer() = default;
+		VoiceServer();
 
 		void operator ()(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket);
 

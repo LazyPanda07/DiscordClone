@@ -20,6 +20,12 @@ namespace voice
 	public:
 		InputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);
 
+		void startStream();
+
+		void stopStream();
+
+		bool isStreamRunning() const;
+
 		~InputVoice();
 	};
 }

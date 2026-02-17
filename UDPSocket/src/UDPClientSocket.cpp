@@ -46,15 +46,6 @@ namespace web
 		socklen_t size = sizeof(server);
 		int result = recvfrom(udpSocket, data.data(), data.size(), 0, reinterpret_cast<sockaddr*>(&server), &size);
 
-		if (result == SOCKET_ERROR)
-		{
-#ifdef _WIN32
-			throw std::runtime_error(std::format("Can't receive data: {}", WSAGetLastError()));
-#else
-			throw std::runtime_error(std::format("Can't receive data: {}", strerror(errno)));
-#endif
-		}
-
 		callback(data, result, server, *this);
 	}
 }

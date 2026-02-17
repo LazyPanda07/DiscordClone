@@ -17,7 +17,7 @@ namespace functionality
 	public:
 		Hotkeys(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice);
 		
-		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback);
+		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key);
 
 		~Hotkeys();
 	};

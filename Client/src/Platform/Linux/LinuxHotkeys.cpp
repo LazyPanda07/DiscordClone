@@ -26,9 +26,9 @@ namespace functionality
 
 	}
 
-	void Hotkeys::addHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
+	void Hotkeys::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
 	{
-		
+		implementation->registerHotkey(callback, modifiers, key);
 	}
 
 	Hotkeys::~Hotkeys()
@@ -47,9 +47,9 @@ namespace functionality
 		
 	}
 
-	void Hotkeys::Implementation::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback)
+	void Hotkeys::Implementation::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
 	{
-		hotkeys.emplace(currentHotkeyIndex++, callback);
+		
 	}
 
 	Hotkeys::Implementation::~Implementation()

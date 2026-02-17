@@ -3,6 +3,13 @@
 #include <span>
 #include <UUID.h>
 
+#ifdef _WIN32
+#include <Windows.h>
+#include <mmsystem.h>
+
+#pragma comment(lib, "winmm.lib")
+#endif
+
 namespace voice
 {
 	int InputVoice::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
@@ -20,16 +27,8 @@ namespace voice
 		}
 
 		std::span<float> in(static_cast<float*>(inputBuffer), frames * voice.parameters.nChannels);
-		web::UDPSocket::Buffer buffer{};
-		size_t currentSize = 0;
-
-		std::memcpy(buffer.data(), voice.uuid.data(), voice.uuid.size());
-		currentSize += voice.uuid.size();
-
-		std::memcpy(buffer.data() + currentSize, in.data(), in.size_bytes());
-		currentSize += in.size_bytes();
-
-		voice.socket.sendData(std::span<const char>(buffer.data(), currentSize));
+		
+		voice.socket.sendData(in);
 
 		return 0;
 	}
@@ -43,7 +42,30 @@ namespace voice
 
 		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &InputVoice::callback, this);
 
+		this->startStream();
+	}
+
+	void InputVoice::startStream()
+	{
+#ifdef _WIN32
+		
+#endif
+
 		audio.startStream();
+	}
+
+	void InputVoice::stopStream()
+	{
+#ifdef _WIN32
+
+#endif
+
+		audio.stopStream();
+	}
+
+	bool InputVoice::isStreamRunning() const
+	{
+		return audio.isStreamRunning();
 	}
 
 	InputVoice::~InputVoice()

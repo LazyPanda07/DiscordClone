@@ -31,6 +31,7 @@ int main(int argc, char** argv) try
 	{
 		{ "send", "<message>" },
 		{ "connect", "<ip:port>" },
+		{ "mute", "" },
 		{ "help", "" },
 		{ "exit", "" }
 	};
@@ -87,8 +88,14 @@ int main(int argc, char** argv) try
 				[](voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice)
 				{
 					functionality::muteOrUnmute(inputVoice);
-				}
+				},
+				MOD_CONTROL | MOD_ALT,
+				VK_SPACE
 			);
+		}
+		else if (!command.find("mute"))
+		{
+			functionality::muteOrUnmute(*input);
 		}
 		else if (!command.find("help"))
 		{

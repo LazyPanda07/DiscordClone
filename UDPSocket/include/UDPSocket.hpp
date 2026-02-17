@@ -47,7 +47,7 @@ namespace web
 		using ReceiveCallback = std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>;
 
 	public:
-		static constexpr size_t uuidSize = 36;
+		static constexpr size_t voicePacketSize = 1024;
 
 	protected:
 		SOCKET udpSocket;
