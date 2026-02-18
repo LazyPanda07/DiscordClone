@@ -14,9 +14,6 @@
 #include <Windows.h>
 #endif
 
-constexpr uint32_t sampleRate = 48000;
-constexpr uint32_t bufferFrames = 256;
-
 void printAudioDevicesInfo();
 
 void connect(std::string& command, std::unique_ptr<web::UDPSocket>& socket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys);
@@ -153,6 +150,9 @@ void printAudioDevicesInfo()
 
 void connect(std::string& command, std::unique_ptr<web::UDPSocket>& socket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys)
 {
+	constexpr uint32_t sampleRate = 48000;
+	constexpr uint32_t bufferFrames = 256;
+
 	std::istringstream is(command);
 	std::string ip;
 	std::string port;
@@ -165,7 +165,7 @@ void connect(std::string& command, std::unique_ptr<web::UDPSocket>& socket, std:
 
 	is >> port;
 
-	socket = std::make_unique<web::UDPClientSocket>(ip.data(), static_cast<uint16_t>(std::stoi(port)));
+	socket = std::make_unique<web::UDPClientSocket>(ip, static_cast<uint16_t>(std::stoi(port)));
 
 	std::cout << "Connected to: " << ip << ':' << port << std::endl;
 

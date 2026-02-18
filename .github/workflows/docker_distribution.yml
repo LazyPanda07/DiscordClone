@@ -6,7 +6,7 @@ on:
   
 
 env:
-  PROJECT_VERSION: v0.1.0  
+  PROJECT_VERSION: v0.1.0
 
 
 permissions:
@@ -26,6 +26,10 @@ jobs:
         cd build
         cmake -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF ..
         cmake --build . --target build_docker_image
+        
+    - name: Build Docker image for ghcr.io
+      working-directory: docker
+      run: sudo docker build --build-arg BUILD_TAG=${{ env.PROJECT_VERSION }} -t ghcr.io/lazypanda07/discord_clone_server:${{ env.PROJECT_VERSION }} .
 
     - name: Push Docker image
       run: |
