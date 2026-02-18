@@ -48,6 +48,8 @@ namespace voice
 		bufferFrames(bufferFrames),
 		sampleRate(sampleRate)
 	{
+		audio.showWarnings();
+
 		parameters.deviceId = audio.getDefaultInputDevice();
 		parameters.nChannels = 1;
 
@@ -63,16 +65,24 @@ namespace voice
 
 	void InputVoice::restart()
 	{
-		audio.stopStream();
-		audio.closeStream();
+		if (audio.isStreamRunning())
+		{
+			audio.abortStream();
+		}
+
+		if (audio.isStreamOpen())
+		{
+			audio.closeStream();
+		}
 
 		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &InputVoice::callback, this);
+		audio.startStream();
 	}
 
 	void InputVoice::startStream()
 	{
 #ifdef _WIN32
-		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOnWav)), nullptr, SND_MEMORY | SND_SYNC);
+		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOnWav)), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 
 		audio.startStream();
@@ -81,7 +91,7 @@ namespace voice
 	void InputVoice::stopStream()
 	{
 #ifdef _WIN32
-		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOffWav)), nullptr, SND_MEMORY | SND_SYNC);
+		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOffWav)), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 
 		audio.stopStream();

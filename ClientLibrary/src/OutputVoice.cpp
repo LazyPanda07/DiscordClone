@@ -54,6 +54,8 @@ namespace voice
 		bufferFrames(bufferFrames),
 		sampleRate(sampleRate)
 	{
+		audio.showWarnings();
+
 		parameters.deviceId = audio.getDefaultOutputDevice();
 		parameters.nChannels = 2;
 
@@ -69,10 +71,18 @@ namespace voice
 
 	void OutputVoice::restart()
 	{
-		audio.stopStream();
-		audio.closeStream();
+		if (audio.isStreamRunning())
+		{
+			audio.abortStream();
+		}
+
+		if (audio.isStreamOpen())
+		{
+			audio.closeStream();
+		}
 
 		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &OutputVoice::callback, this);
+		audio.startStream();
 	}
 
 	void OutputVoice::setVolume(double volume)
