@@ -66,14 +66,14 @@ jobs:
       shell: pwsh
       run: echo "VERSION=$($($($(Select-String -Path .\ClientLibrary\src\Functionality.cpp -Pattern version) -split '( = )')[3].TrimEnd(';')).Trim('\"'))" >> $Env:GITHUB_ENV
 
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v7
 
     - name: Create Windows and Linux zips
       run: |
-        zip -r Windows windows.zip
-        zip -r Linux linux.zip
-        zip -r LinuxClientLibrary linux_client_library.zip
-        zip -r WindowsClientLibrary windows_client_library.zip
+        zip -r windows.zip Windows
+        zip -r linux.zip Linux
+        zip -r linux_client_library.zip LinuxClientLibrary
+        zip -r windows_client_library.zip WindowsClientLibrary
 
     - name: Publish
       if: ${{ env.CURRENT_BRANCH == 'main' }}

@@ -24,7 +24,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -DBUILD_CLIENT=OFF ..
+        cmake -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF ..
         cmake --build . --target build_docker_image
 
     - name: Push Docker image
