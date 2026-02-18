@@ -8,6 +8,10 @@ on:
       - dev
 
 
+permissions:
+  contents: write
+
+
 jobs:
   build:
     strategy:
@@ -46,3 +50,33 @@ jobs:
         name: ${{ matrix.config.artifact-name }}
         path: ${{ matrix.config.upload-path }}
         
+
+  publish:
+    needs: 
+      - build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Get current branch
+      uses : LazyPanda07/extract-current-branch@master
+
+    - name: Setup release version variable
+      shell: pwsh
+      run: echo "VERSION=$($($($(Select-String -Path .\ClientLibrary\src\Functionality.cpp -Pattern version) -split '( = )')[3].TrimEnd(';')).Trim('\"'))" >> $Env:GITHUB_ENV
+
+    - uses: actions/download-artifact@v6
+
+    - name: Create Windows and Linux zips
+      run: |
+        zip -r Windows windows.zip
+        zip -r Linux linux.zip
+        zip -r LinuxClientLibrary linux_client_library.zip
+        zip -r WindowsClientLibrary windows_client_library.zip
+
+    - name: Publish
+      if: ${{ env.CURRENT_BRANCH == 'main' }}
+      run: gh release upload v${{ env.VERSION }} *.zip --clobber
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
