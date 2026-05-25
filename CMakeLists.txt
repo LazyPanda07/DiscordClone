@@ -18,6 +18,10 @@ if (WIN32)
 	endif()
 endif()
 
+if (UNIX)
+	add_definitions(-D__LINUX__)
+endif()
+
 add_subdirectory(UDPSocket)
 
 if (${BUILD_SERVER})
