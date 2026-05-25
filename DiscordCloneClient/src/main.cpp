@@ -29,9 +29,9 @@ struct Settings
 
 void printAudioDevicesInfo();
 
-std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, std::optional<bool>& connected);
+std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected);
 
-void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, std::optional<bool>& connected);
+void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected);
 
 void saveSettings(const Settings& settings);
 
@@ -71,16 +71,13 @@ int main(int argc, char** argv) try
 	{
 		std::optional<bool> connected;
 
-		connect(loadedSettings->reconnectIp, loadedSettings->reconnectPort, socket, input, output, hotkeys, connected);
+		connect(loadedSettings->reconnectIp, loadedSettings->reconnectPort, socket, input, output, hotkeys, *loadedSettings, connected);
 
 		if (connected && *connected)
 		{
 			settings = *loadedSettings;
 		}
 	}
-
-	input->setVolume(settings.inputVolume);
-	output->setVolume(settings.outputVolume);
 
 	std::optional<bool> connected;
 
@@ -94,7 +91,7 @@ int main(int argc, char** argv) try
 		{
 			connected = std::nullopt;
 
-			auto [ip, port] = connect(command, socket, input, output, hotkeys, connected);
+			auto [ip, port] = connect(command, socket, input, output, hotkeys, settings, connected);
 
 			if (connected)
 			{
@@ -265,7 +262,7 @@ void printAudioDevicesInfo()
 	}
 }
 
-std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, std::optional<bool>& connected)
+std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected)
 {
 	std::istringstream is(command);
 	std::string ip;
@@ -279,12 +276,12 @@ std::pair<std::string, std::string> connect(std::string& command, std::unique_pt
 
 	is >> port;
 
-	connect(ip, port, resultSocket, input, output, hotkeys, connected);
+	connect(ip, port, resultSocket, input, output, hotkeys, settings, connected);
 
 	return std::make_pair(std::move(ip), std::move(port));
 }
 
-void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, std::optional<bool>& connected)
+void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected)
 {
 	static constexpr uint32_t sampleRate = 48000;
 	static constexpr uint32_t bufferFrames = 256;
@@ -297,7 +294,7 @@ void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UD
 
 	resultSocket->receiveData
 	(
-		[&input, &output, &hotkeys, &resultSocket, &connected, ip, port](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+		[&input, &output, &hotkeys, &resultSocket, &settings, &connected, ip, port](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 		{
 			if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
 			{
@@ -306,6 +303,9 @@ void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UD
 				input = std::make_unique<voice::InputVoice>(*resultSocket, bufferFrames, sampleRate);
 				output = std::make_unique<voice::OutputVoice>(*resultSocket, bufferFrames, sampleRate);
 				hotkeys = std::make_unique<functionality::Hotkeys>(*input, *output);
+
+				input->setVolume(settings.inputVolume);
+				output->setVolume(settings.outputVolume);
 
 #ifndef __LINUX__
 				hotkeys->registerHotkey
