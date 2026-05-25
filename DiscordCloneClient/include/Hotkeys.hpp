@@ -12,6 +12,8 @@ namespace functionality
 	{
 	private:
 		class Implementation;
+
+	private:
 		Implementation* implementation;
 
 	public:

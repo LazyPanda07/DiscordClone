@@ -4,7 +4,7 @@
 
 namespace web
 {
-	void UDPClientSocket::initLocalAddress()
+	void UDPClientSocket::initLocalAddress(int64_t timeout)
 	{
 		localAddress = {};
 
@@ -20,10 +20,28 @@ namespace web
 			throw std::runtime_error(std::format("Bind failed: {}", strerror(errno)));
 #endif
 		}
+
+#ifdef _WIN32
+		DWORD timeoutValue = static_cast<DWORD>(timeout);
+#else
+		timeval timeoutValue;
+
+		timeoutValue.tv_sec = timeout / 1000;
+		timeoutValue.tv_usec = (timeout - timeoutValue.tv_sec * 1000) * 1000;
+#endif
+
+		if (setsockopt(udpSocket, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&timeoutValue), sizeof(timeoutValue)) == SOCKET_ERROR)
+		{
+			throw std::runtime_error("Can't set send timeout");
+		}
+
+		if (setsockopt(udpSocket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeoutValue), sizeof(timeoutValue)) == SOCKET_ERROR)
+		{
+			throw std::runtime_error("Can't set send receive");
+		}
 	}
 
-	UDPClientSocket::UDPClientSocket(std::string_view ip, uint16_t port) :
-		UDPSocket()
+	UDPClientSocket::UDPClientSocket(std::string_view ip, uint16_t port)
 	{
 		address.sin_family = AF_INET;
 		address.sin_port = htons(port);

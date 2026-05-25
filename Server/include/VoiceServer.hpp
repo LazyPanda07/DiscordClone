@@ -20,6 +20,7 @@ namespace voice
 			sockaddr_in address;
 			std::string ip;
 			uint16_t port;
+			bool echo;
 
 		public:
 			Client(const sockaddr_in& address);

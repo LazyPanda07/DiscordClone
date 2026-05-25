@@ -6,7 +6,7 @@ on:
   
 
 env:
-  PROJECT_VERSION: v0.1.0
+  PROJECT_VERSION: v0.2.0
 
 
 permissions:

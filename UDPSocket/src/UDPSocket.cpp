@@ -36,6 +36,11 @@ namespace web
 		return this->sendData(std::span<const char>(data), receiver);
 	}
 
+	int UDPSocket::sendData(std::string_view data, const sockaddr_in& address) const
+	{
+		return this->sendData(std::span<const char>(data), address);
+	}
+
 	UDPSocket::~UDPSocket()
 	{
 		closesocket(udpSocket);

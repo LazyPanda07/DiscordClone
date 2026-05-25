@@ -10,7 +10,7 @@ namespace web
 		sockaddr_in localAddress;
 
 	private:
-		void initLocalAddress();
+		void initLocalAddress(int64_t timeout = 5000);
 
 	public:
 		UDPClientSocket(std::string_view ip, uint16_t port);

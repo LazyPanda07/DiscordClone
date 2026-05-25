@@ -3,11 +3,14 @@
 #include <string>
 #include <cstdint>
 #include <functional>
+#include <format>
 #include <array>
 #include <span>
 #include <stdexcept>
 #include <format>
 #include <cstring>
+#include <optional>
+#include <variant>
 
 #ifdef _WIN32
 #include <WinSock2.h>
@@ -49,6 +52,12 @@ namespace web
 	public:
 		static constexpr size_t voicePacketSize = 1024;
 
+		static constexpr std::string_view hello = "hello";
+		static constexpr size_t helloPacketSize = hello.size();
+
+		static constexpr std::string_view echo = "echo";
+		static constexpr size_t echoPacketSize = echo.size();
+
 	protected:
 		SOCKET udpSocket;
 		sockaddr_in address;
@@ -61,9 +70,11 @@ namespace web
 
 	public:
 		template<typename T>
-		int sendData(std::span<T> data, const UDPSocket* receiver = nullptr) const;
+		int sendData(std::span<T> data, const std::optional<std::variant<const UDPSocket*, sockaddr_in>>& additionalData = nullptr) const;
 
 		int sendData(std::string_view data, const UDPSocket* receiver = nullptr) const;
+
+		int sendData(std::string_view data, const sockaddr_in& address) const;
 
 		virtual void receiveData(const ReceiveCallback& callback) = 0;
 
@@ -74,9 +85,31 @@ namespace web
 namespace web
 {
 	template<typename T>
-	int UDPSocket::sendData(std::span<T> data, const UDPSocket* receiver) const
+	int UDPSocket::sendData(std::span<T> data, const std::optional<std::variant<const UDPSocket*, sockaddr_in>>& additionalData) const
 	{
-		int result = sendto(udpSocket, reinterpret_cast<const char*>(data.data()), data.size_bytes(), 0, receiver ? reinterpret_cast<const sockaddr*>(&receiver->address) : reinterpret_cast<const sockaddr*>(&address), sizeof(address));
+		const sockaddr* toAddress = nullptr;
+
+		if (additionalData)
+		{
+			if (std::holds_alternative<const UDPSocket*>(*additionalData))
+			{
+				const UDPSocket* temp = std::get<const UDPSocket*>(*additionalData);
+
+				toAddress = temp ? reinterpret_cast<const sockaddr*>(&temp->address) : reinterpret_cast<const sockaddr*>(&address);
+			}
+			else if (std::holds_alternative<sockaddr_in>(*additionalData))
+			{
+				const sockaddr_in& temp = std::get<sockaddr_in>(*additionalData);
+
+				toAddress = reinterpret_cast<const sockaddr*>(&temp);
+			}
+			else
+			{
+				throw std::runtime_error(std::format("Wrong additionalData type: ", typeid(*additionalData).name()));
+			}
+		}
+		
+		int result = sendto(udpSocket, reinterpret_cast<const char*>(data.data()), data.size_bytes(), 0, toAddress, sizeof(sockaddr_in));
 
 		if (result == SOCKET_ERROR)
 		{

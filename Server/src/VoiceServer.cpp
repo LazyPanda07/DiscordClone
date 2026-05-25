@@ -19,7 +19,8 @@ namespace voice
 
 	VoiceServer::Client::Client(const sockaddr_in& address) :
 		address(address),
-		socket(address)
+		socket(address),
+		echo(false)
 	{
 		std::tie(ip, port) = VoiceServer::Client::getIpPort(address);
 	}
@@ -40,7 +41,22 @@ namespace voice
 
 	void VoiceServer::operator ()(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 	{
-		if (size != web::UDPSocket::voicePacketSize)
+		if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
+		{
+			socket.sendData(web::UDPSocket::hello, address);
+
+			return;
+		}
+		else if (size == web::UDPSocket::echoPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::echo.begin()))
+		{
+			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
+			{
+				it->echo = !it->echo;
+			}
+
+			return;
+		}
+		else if (size != web::UDPSocket::voicePacketSize)
 		{
 			if (size == SOCKET_ERROR)
 			{
@@ -66,7 +82,7 @@ namespace voice
 
 		for (Client& client : clients)
 		{
-			if (currentClient != &client)
+			if (currentClient != &client || currentClient->echo)
 			{
 				socket.sendData(std::span<const char>(data.data(), size), &client.socket);
 			}
