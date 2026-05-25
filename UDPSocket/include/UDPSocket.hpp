@@ -12,13 +12,7 @@
 #include <optional>
 #include <variant>
 
-#ifdef _WIN32
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-
-using socklen_t = int;
-
-#else
+#ifdef __LINUX__
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -39,6 +33,11 @@ using SOCKET = int;
 using DWORD = uint32_t;
 
 #endif // WINDOWS_STYLE_DEFINITION
+#else
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+
+using socklen_t = int;
 #endif
 
 namespace web
@@ -108,15 +107,21 @@ namespace web
 				throw std::runtime_error(std::format("Wrong additionalData type: ", typeid(*additionalData).name()));
 			}
 		}
+
+		if (!toAddress)
+		{
+			throw std::runtime_error("Wront toAddress initialization");
+		}
 		
 		int result = sendto(udpSocket, reinterpret_cast<const char*>(data.data()), data.size_bytes(), 0, toAddress, sizeof(sockaddr_in));
 
 		if (result == SOCKET_ERROR)
 		{
-#ifdef _WIN32
-			throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
-#else
+#ifdef __LINUX__
 			throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
+#else
+			
+			throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
 #endif
 		}
 

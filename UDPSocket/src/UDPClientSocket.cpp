@@ -14,20 +14,20 @@ namespace web
 
 		if (bind(udpSocket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) == SOCKET_ERROR)
 		{
-#ifdef _WIN32
-			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
-#else
+#ifdef __LINUX__
 			throw std::runtime_error(std::format("Bind failed: {}", strerror(errno)));
+#else
+			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
 #endif
 		}
 
-#ifdef _WIN32
-		DWORD timeoutValue = static_cast<DWORD>(timeout);
-#else
+#ifdef __LINUX__
 		timeval timeoutValue;
 
 		timeoutValue.tv_sec = timeout / 1000;
 		timeoutValue.tv_usec = (timeout - timeoutValue.tv_sec * 1000) * 1000;
+#else
+		DWORD timeoutValue = static_cast<DWORD>(timeout);
 #endif
 
 		if (setsockopt(udpSocket, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&timeoutValue), sizeof(timeoutValue)) == SOCKET_ERROR)

@@ -1,10 +1,10 @@
 #pragma once
 
 #ifdef EXPORT_CLIENT_LIBRARY
-#ifdef _WIN32
-#define CLIENT_LIBRARY_FUNCTION_API extern "C" __declspec(dllexport)
-#else
+#ifdef __LINUX__
 #define CLIENT_LIBRARY_FUNCTION_API extern "C" __attribute__((visibility("default")))
+#else
+#define CLIENT_LIBRARY_FUNCTION_API extern "C" __declspec(dllexport)
 #endif
 #else
 #define CLIENT_LIBRARY_FUNCTION_API

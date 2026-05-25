@@ -3,7 +3,7 @@
 #include <span>
 #include <UUID.h>
 
-#ifdef _WIN32
+#ifndef __LINUX__
 #include <Windows.h>
 #include <mmsystem.h>
 #endif
@@ -81,7 +81,7 @@ namespace voice
 
 	void InputVoice::startStream()
 	{
-#ifdef _WIN32
+#ifndef __LINUX__
 		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOnWav)), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 
@@ -90,7 +90,7 @@ namespace voice
 
 	void InputVoice::stopStream()
 	{
-#ifdef _WIN32
+#ifndef __LINUX__
 		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOffWav)), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 

@@ -6,7 +6,7 @@ namespace web
 {
 	void UDPSocket::initializeSockets()
 	{
-#if _WIN32
+#ifndef __LINUX__
 		WSADATA wsaData;
 
 		if (int result = WSAStartup(MAKEWORD(2, 2), &wsaData); result != 0)
@@ -17,10 +17,10 @@ namespace web
 
 		if (udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); udpSocket == INVALID_SOCKET)
 		{
-#if _WIN32
-			throw std::runtime_error(std::format("Socket creation failed: {}", WSAGetLastError()));
-#else
+#ifdef __LINUX__
 			throw std::runtime_error(std::format("Socket creation failed: {}", strerror(errno)));
+#else
+			throw std::runtime_error(std::format("Socket creation failed: {}", WSAGetLastError()));
 #endif
 		}
 	}

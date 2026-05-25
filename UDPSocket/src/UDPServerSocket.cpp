@@ -13,10 +13,10 @@ namespace web
 
 		if (bind(udpSocket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == SOCKET_ERROR)
 		{
-#ifdef _WIN32
-			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
-#else
+#ifdef __LINUX__
 			throw std::runtime_error(std::format("Bind failed: {}", strerror(errno)));
+#else
+			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
 #endif
 		}
 	}

@@ -15,7 +15,7 @@
 
 #include "Hotkeys.hpp"
 
-#ifdef _WIN32
+#ifndef __LINUX__
 #include <Windows.h>
 #endif
 
@@ -39,7 +39,7 @@ std::optional<Settings> loadSettings();
 
 int main(int argc, char** argv) try
 {
-#ifdef _WIN32
+#ifndef __LINUX__
 	SetConsoleOutputCP(CP_UTF8);
 #endif
 
@@ -307,7 +307,7 @@ void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UD
 				output = std::make_unique<voice::OutputVoice>(*resultSocket, bufferFrames, sampleRate);
 				hotkeys = std::make_unique<functionality::Hotkeys>(*input, *output);
 
-#if _WIN32
+#ifndef __LINUX__
 				hotkeys->registerHotkey
 				(
 					[](voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice)
