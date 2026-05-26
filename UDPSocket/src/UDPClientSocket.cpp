@@ -20,25 +20,6 @@ namespace web
 			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
 #endif
 		}
-
-#ifdef __LINUX__
-		timeval timeoutValue;
-
-		timeoutValue.tv_sec = timeout / 1000;
-		timeoutValue.tv_usec = (timeout - timeoutValue.tv_sec * 1000) * 1000;
-#else
-		DWORD timeoutValue = static_cast<DWORD>(timeout);
-#endif
-
-		if (setsockopt(udpSocket, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&timeoutValue), sizeof(timeoutValue)) == SOCKET_ERROR)
-		{
-			throw std::runtime_error("Can't set send timeout");
-		}
-
-		if (setsockopt(udpSocket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeoutValue), sizeof(timeoutValue)) == SOCKET_ERROR)
-		{
-			throw std::runtime_error("Can't set send receive");
-		}
 	}
 
 	UDPClientSocket::UDPClientSocket(std::string_view ip, uint16_t port)

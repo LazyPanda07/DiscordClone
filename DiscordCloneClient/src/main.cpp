@@ -292,6 +292,8 @@ void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UD
 
 	resultSocket->sendData(web::UDPSocket::hello);
 
+	std::this_thread::sleep_for(std::chrono::seconds(5));
+
 	resultSocket->receiveData
 	(
 		[&input, &output, &hotkeys, &resultSocket, &settings, &connected, ip, port](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
