@@ -2,16 +2,12 @@
 #include <sstream>
 #include <vector>
 #include <memory>
-#include <filesystem>
-#include <fstream>
+#include <chrono>
 
 #include <UDPClientSocket.hpp>
 #include <InputVoice.hpp>
 #include <OutputVoice.hpp>
 #include <Functionality.hpp>
-
-#include <JsonParser.h>
-#include <JsonBuilder.h>
 
 #include "Hotkeys.hpp"
 #include "Settings.hpp"
@@ -272,8 +268,8 @@ void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UD
 {
 	using namespace std::chrono_literals;
 
-	static constexpr uint32_t sampleRate = 48000;
-	static constexpr uint32_t bufferFrames = 256;
+	static constexpr uint32_t sampleRate = 48'000;
+	static constexpr uint32_t bufferFrames = 480;
 
 	resultSocket = std::make_unique<web::UDPClientSocket>(ip, static_cast<uint16_t>(std::stoi(port.data())));
 

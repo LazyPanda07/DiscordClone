@@ -94,9 +94,4 @@ namespace voice
 	{
 		return volume;
 	}
-
-	OutputVoice::~OutputVoice()
-	{
-
-	}
 }

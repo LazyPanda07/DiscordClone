@@ -111,9 +111,4 @@ namespace voice
 	{
 		return volume;
 	}
-
-	InputVoice::~InputVoice()
-	{
-
-	}
 }

@@ -69,7 +69,7 @@ namespace voice
 			return;
 		}
 
-		Client* currentClient = nullptr;
+		const Client* currentClient = nullptr;
 
 		if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it == clients.end())
 		{
@@ -80,7 +80,7 @@ namespace voice
 			currentClient = &*it;
 		}
 
-		for (Client& client : clients)
+		for (const Client& client : clients)
 		{
 			if (currentClient != &client || currentClient->echo)
 			{

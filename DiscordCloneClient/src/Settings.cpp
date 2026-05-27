@@ -36,6 +36,8 @@ namespace client
 
 	void Settings::saveSettings() const
 	{
+		
+
 		std::ofstream stream(Settings::settingsFile.data());
 
 		stream << *this;
@@ -55,7 +57,7 @@ namespace client
 
 	std::istream& operator >>(std::istream& stream, Settings& settings)
 	{
-		json::JsonParser parser(stream);;
+		json::JsonParser parser(stream);
 
 		parser.tryGet<std::string>(reconnectIpKey, settings.reconnectIp);
 		parser.tryGet<std::string>(reconnectPortKey, settings.reconnectPort);

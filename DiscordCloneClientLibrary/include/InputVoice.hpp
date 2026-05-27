@@ -36,6 +36,6 @@ namespace voice
 
 		double getVolume() const;
 
-		~InputVoice();
+		~InputVoice() = default;
 	};
 }
