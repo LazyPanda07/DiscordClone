@@ -14,28 +14,17 @@
 #include <JsonBuilder.h>
 
 #include "Hotkeys.hpp"
+#include "Settings.hpp"
 
 #ifndef __LINUX__
 #include <Windows.h>
 #endif
 
-struct Settings
-{
-	std::string reconnectIp;
-	std::string reconnectPort;
-	double inputVolume = 1.0;
-	double outputVolume = 1.0;
-};
-
 void printAudioDevicesInfo();
 
-std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected);
+std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected);
 
-void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected);
-
-void saveSettings(const Settings& settings);
-
-std::optional<Settings> loadSettings();
+void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected);
 
 int main(int argc, char** argv) try
 {
@@ -65,21 +54,21 @@ int main(int argc, char** argv) try
 
 	printAudioDevicesInfo();
 
-	Settings settings;
+	client::Settings settings;
 
-	if (std::optional<Settings> loadedSettings = loadSettings())
+	if (std::optional<client::Settings> loadedSettings = client::Settings::loadSettings())
 	{
-		std::optional<bool> connected;
+		bool connected;
 
 		connect(loadedSettings->reconnectIp, loadedSettings->reconnectPort, socket, input, output, hotkeys, *loadedSettings, connected);
 
-		if (connected && *connected)
+		if (connected)
 		{
 			settings = *loadedSettings;
 		}
 	}
 
-	std::optional<bool> connected;
+	bool connected;
 
 	while (true)
 	{
@@ -89,8 +78,6 @@ int main(int argc, char** argv) try
 
 		if (!command.find("connect"))
 		{
-			connected = std::nullopt;
-
 			auto [ip, port] = connect(command, socket, input, output, hotkeys, settings, connected);
 
 			if (connected)
@@ -98,7 +85,7 @@ int main(int argc, char** argv) try
 				settings.reconnectIp = ip;
 				settings.reconnectPort = port;
 
-				saveSettings(settings);
+				settings.saveSettings();
 			}
 		}
 		else if (!command.find("override_input_device_id"))
@@ -156,7 +143,7 @@ int main(int argc, char** argv) try
 
 			settings.inputVolume = volume;
 
-			saveSettings(settings);
+			settings.saveSettings();
 		}
 		else if (!command.find("set_output_volume"))
 		{
@@ -177,7 +164,7 @@ int main(int argc, char** argv) try
 
 			settings.outputVolume = volume;
 
-			saveSettings(settings);
+			settings.saveSettings();
 		}
 		else if (!command.find("get_input_volume"))
 		{
@@ -253,16 +240,16 @@ void printAudioDevicesInfo()
 
 	for (const RtAudio::DeviceInfo& info : devices)
 	{
-		std::cout << "Device " << info.ID << ": " << info.name << std::endl;
-		std::cout << "  Input channels: " << info.inputChannels << std::endl;
-		std::cout << "  Output channels: " << info.outputChannels << std::endl;
-		std::cout << "  Default input: " << (info.isDefaultInput ? "yes" : "no") << std::endl;
-		std::cout << "  Default output: " << (info.isDefaultOutput ? "yes" : "no") << std::endl;
+		std::cout << std::format("Device {}: {}", info.ID, info.name) << std::endl;
+		std::cout << std::format("\tInput channels: {}", info.inputChannels) << std::endl;
+		std::cout << std::format("\tOutput channels: {}", info.outputChannels) << std::endl;
+		std::cout << std::format("\tDefault input: {}", (info.isDefaultInput ? "yes" : "no")) << std::endl;
+		std::cout << std::format("\tDefault output: {}", (info.isDefaultOutput ? "yes" : "no")) << std::endl;
 		std::cout << std::endl;
 	}
 }
 
-std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected)
+std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected)
 {
 	std::istringstream is(command);
 	std::string ip;
@@ -281,8 +268,10 @@ std::pair<std::string, std::string> connect(std::string& command, std::unique_pt
 	return std::make_pair(std::move(ip), std::move(port));
 }
 
-void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const Settings& settings, std::optional<bool>& connected)
+void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected)
 {
+	using namespace std::chrono_literals;
+
 	static constexpr uint32_t sampleRate = 48000;
 	static constexpr uint32_t bufferFrames = 256;
 
@@ -292,76 +281,55 @@ void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UD
 
 	resultSocket->sendData(web::UDPSocket::hello);
 
-	std::this_thread::sleep_for(std::chrono::seconds(5));
-
-	resultSocket->receiveData
-	(
-		[&input, &output, &hotkeys, &resultSocket, &settings, &connected, ip, port](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-		{
-			if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
+	std::this_thread::sleep_for(50ms);
+	
+	for (size_t i = 0; i < 5; i++)
+	{
+		resultSocket->receiveData
+		(
+			[&input, &output, &hotkeys, &resultSocket, &settings, &connected, ip, port](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 			{
-				std::cout << "Connected to: " << ip << ':' << port << std::endl;
+				if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
+				{
+					std::cout << "Connected to: " << ip << ':' << port << std::endl;
 
-				input = std::make_unique<voice::InputVoice>(*resultSocket, bufferFrames, sampleRate);
-				output = std::make_unique<voice::OutputVoice>(*resultSocket, bufferFrames, sampleRate);
-				hotkeys = std::make_unique<functionality::Hotkeys>(*input, *output);
+					input = std::make_unique<voice::InputVoice>(*resultSocket, bufferFrames, sampleRate);
+					output = std::make_unique<voice::OutputVoice>(*resultSocket, bufferFrames, sampleRate);
+					hotkeys = std::make_unique<functionality::Hotkeys>(*input, *output);
 
-				input->setVolume(settings.inputVolume);
-				output->setVolume(settings.outputVolume);
+					input->setVolume(settings.inputVolume);
+					output->setVolume(settings.outputVolume);
 
 #ifndef __LINUX__
-				hotkeys->registerHotkey
-				(
-					[](voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice)
-					{
-						functionality::muteOrUnmute(inputVoice);
-					},
-					MOD_CONTROL | MOD_ALT,
-					VK_SPACE
-				);
+					hotkeys->registerHotkey
+					(
+						[](voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice)
+						{
+							functionality::muteOrUnmute(inputVoice);
+						},
+						MOD_CONTROL | MOD_ALT,
+						VK_SPACE
+					);
 #endif
-				connected = true;
+					connected = true;
+				}
+				else
+				{
+					connected = false;
+				}
 			}
-			else
-			{
-				std::cout << "Failed to connect to: " << ip << ':' << port << std::endl;
+		);
 
-				connected = false;
-			}
+		if (connected)
+		{
+			break;
 		}
-	);
-}
 
-void saveSettings(const Settings& settings)
-{
-	constexpr std::string_view settingsFile = "settings.json";
-
-	json::JsonBuilder builder;
-
-	builder["reconnectIp"] = settings.reconnectIp;
-	builder["reconnectPort"] = settings.reconnectPort;
-	builder["inputVolume"] = settings.inputVolume;
-	builder["outputVolume"] = settings.outputVolume;
-
-	std::ofstream(settingsFile.data()) << builder;
-}
-
-std::optional<Settings> loadSettings()
-{
-	constexpr std::string_view settingsFile = "settings.json";
-
-	if (!std::filesystem::exists(settingsFile))
-	{
-		return std::nullopt;
+		std::this_thread::sleep_for(1s);
 	}
 
-	Settings settings;
-	json::JsonParser parser(std::ifstream(settingsFile.data()));
-
-	parser.tryGet<std::string>("reconnectIp", settings.reconnectIp);
-	parser.tryGet<std::string>("reconnectPort", settings.reconnectPort);
-	parser.tryGet<double>("inputVolume", settings.inputVolume);
-	parser.tryGet<double>("outputVolume", settings.outputVolume);
-
-	return settings;
+	if (!connected)
+	{
+		std::cout << std::format("Failed to connect to: {}:{}", ip, port) << std::endl;
+	}
 }
