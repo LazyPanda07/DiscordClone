@@ -22,6 +22,8 @@ std::pair<std::string, uint16_t> parseIpPort(std::string& command);
 
 bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::SocketWrapper>& resultSocket, std::unique_ptr<wrapper::InputVoice>& input, std::unique_ptr<wrapper::OutputVoice>& output);
 
+void printDeviceInfo();
+
 int main(int argc, char** argv) try
 {
 #ifndef __LINUX__
@@ -44,7 +46,7 @@ int main(int argc, char** argv) try
 		{ "exit", "" }
 	};
 
-	utils::callApiFunction(&printDeviceInfo);
+	printDeviceInfo();
 
 	client::Settings settings;
 	std::unique_ptr<wrapper::SocketWrapper> socket;
@@ -296,4 +298,31 @@ bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::Socket
 	}
 
 	return result;
+}
+
+void printDeviceInfo()
+{
+	DeviceInformationArray devices = utils::callApiFunction(&getDeviceInformation);
+	uint64_t size = utils::callApiFunction(&getDeviceInformationSize, devices);
+
+	std::cout << std::format("Found {} audio devices:", size) << std::endl << std::endl;
+
+	for (uint64_t i = 0; i < size; i++)
+	{
+		uint32_t id = utils::callApiFunction(&getDeviceInformationId, devices, i);
+		std::string_view name = utils::callApiFunction(&getDeviceInformationName, devices, i);
+		uint32_t inputChannels = utils::callApiFunction(&getDeviceInformationInputChannels, devices, i);
+		uint32_t outputChannels = utils::callApiFunction(&getDeviceInformationOutputChannels, devices, i);
+		bool isDefaultInput = utils::callApiFunction(&getDeviceInformationDefaultInput, devices, i);
+		bool isDefaultOutput = utils::callApiFunction(&getDeviceInformationDefaultOutput, devices, i);
+
+		std::cout << std::format("Device {}: {}", id, name) << std::endl;
+		std::cout << std::format("\tInput channels: {}", inputChannels) << std::endl;
+		std::cout << std::format("\tOutput channels: {}", outputChannels) << std::endl;
+		std::cout << std::format("\tDefault input: {}", (isDefaultInput ? "yes" : "no")) << std::endl;
+		std::cout << std::format("\tDefault output: {}", (isDefaultOutput ? "yes" : "no")) << std::endl;
+		std::cout << std::endl;
+	}
+
+	deleteDeviceInformation(devices);
 }

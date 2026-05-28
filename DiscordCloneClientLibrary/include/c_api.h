@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+
 #if defined(SHARED_CLIENT_LIBRARY)
 #ifdef LIBRARY_SIDE
 #ifdef __LINUX__
@@ -21,9 +25,10 @@
 #endif
 
 typedef void* Exception;
+typedef void* UdpSocketObject;
 typedef void* InputVoiceStreamObject;
 typedef void* OutputVoiceStreamObject;
-typedef void* UdpSocketObject;
+typedef void* DeviceInformationArray;
 
 CLIENT_LIBRARY_FUNCTION_API UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception);
 
@@ -55,9 +60,23 @@ CLIENT_LIBRARY_FUNCTION_API void setOutputVolume(OutputVoiceStreamObject inputSt
 
 CLIENT_LIBRARY_FUNCTION_API double getOutputVolume(OutputVoiceStreamObject inputStream, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API const char* getVersion();
+CLIENT_LIBRARY_FUNCTION_API DeviceInformationArray getDeviceInformation(Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void printDeviceInfo(Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API uint64_t getDeviceInformationSize(DeviceInformationArray deviceInformation, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API uint32_t getDeviceInformationId(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API uint32_t getDeviceInformationInputChannels(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API uint32_t getDeviceInformationOutputChannels(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API bool getDeviceInformationDefaultInput(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API bool getDeviceInformationDefaultOutput(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API const char* getDeviceInformationName(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API const char* getVersion();
 
 CLIENT_LIBRARY_FUNCTION_API const char* getExceptionMessage(Exception exception);
 
@@ -70,3 +89,5 @@ CLIENT_LIBRARY_FUNCTION_API void deleteInputVoiceStream(InputVoiceStreamObject i
 CLIENT_LIBRARY_FUNCTION_API void deleteOutputVoiceStream(OutputVoiceStreamObject outputStream);
 
 CLIENT_LIBRARY_FUNCTION_API void deleteException(Exception exception);
+
+CLIENT_LIBRARY_FUNCTION_API void deleteDeviceInformation(DeviceInformationArray deviceInformation);

@@ -205,26 +205,129 @@ double getOutputVolume(OutputVoiceStreamObject inputStream, Exception* exception
 	return 0.0;
 }
 
+DeviceInformationArray getDeviceInformation(Exception* exception)
+{
+	try
+	{
+		std::vector<RtAudio::DeviceInfo>* result = new std::vector<RtAudio::DeviceInfo>();
+		std::vector<RtAudio::DeviceInfo> devices = functionality::getAudioDevices();
+
+		for (RtAudio::DeviceInfo& device : devices)
+		{
+			result->emplace_back(std::move(device));
+		}
+
+		return result;
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+uint64_t getDeviceInformationSize(DeviceInformationArray deviceInformation, Exception* exception)
+{
+	try
+	{
+		return static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation)->size();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return 0;
+}
+
+uint32_t getDeviceInformationId(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception)
+{
+	try
+	{
+		return (*static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation))[index].ID;
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return 0;
+}
+
+const char* getDeviceInformationName(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception)
+{
+	try
+	{
+		return (*static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation))[index].name.data();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+uint32_t getDeviceInformationInputChannels(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception)
+{
+	try
+	{
+		return (*static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation))[index].inputChannels;
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return 0;
+}
+
+uint32_t getDeviceInformationOutputChannels(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception)
+{
+	try
+	{
+		return (*static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation))[index].outputChannels;
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return 0;
+}
+
+bool getDeviceInformationDefaultInput(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception)
+{
+	try
+	{
+		return (*static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation))[index].isDefaultInput;
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return false;
+}
+
+bool getDeviceInformationDefaultOutput(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception)
+{
+	try
+	{
+		return (*static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation))[index].isDefaultOutput;
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return false;
+}
+
 const char* getVersion()
 {
 	return functionality::getDiscordCloneClientLibraryVersion().data();
-}
-
-void printDeviceInfo(Exception* exception)
-{
-	std::vector<RtAudio::DeviceInfo> devices = functionality::getAudioDevices();
-
-	std::cout << std::format("Found {} audio devices:", devices.size()) << std::endl << std::endl;
-
-	for (const RtAudio::DeviceInfo& info : devices)
-	{
-		std::cout << std::format("Device {}: {}", info.ID, info.name) << std::endl;
-		std::cout << std::format("\tInput channels: {}", info.inputChannels) << std::endl;
-		std::cout << std::format("\tOutput channels: {}", info.outputChannels) << std::endl;
-		std::cout << std::format("\tDefault input: {}", (info.isDefaultInput ? "yes" : "no")) << std::endl;
-		std::cout << std::format("\tDefault output: {}", (info.isDefaultOutput ? "yes" : "no")) << std::endl;
-		std::cout << std::endl;
-	}
 }
 
 const char* getExceptionMessage(Exception exception)
@@ -257,4 +360,9 @@ void deleteOutputVoiceStream(OutputVoiceStreamObject outputStream)
 void deleteException(Exception exception)
 {
 	delete static_cast<std::runtime_error*>(exception);
+}
+
+void deleteDeviceInformation(DeviceInformationArray deviceInformation)
+{
+	delete static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation);
 }
