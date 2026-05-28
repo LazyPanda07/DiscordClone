@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.0)
+cmake_minimum_required(VERSION 3.27.0)
 
 set(RTAUDIO_TAG e5f0774)
 set(UTILITY_LIBRARY_TAG v0.12.1)
