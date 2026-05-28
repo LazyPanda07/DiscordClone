@@ -19,8 +19,8 @@ jobs:
         config: 
           - { os: windows-latest, image: "", artifact-name: Windows, additional-command: "", cmake-parameters: "", upload-path: build/install-dir/bin/* }
           - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: Linux, additional-command: "sudo apt update && sudo apt install -y libasound2-dev", cmake-parameters: "", upload-path: build/install-dir/bin/* }
-          - { os: windows-latest, image: "", artifact-name: WindowsClientLibrary, additional-command: "", cmake-parameters: "-DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF", upload-path: build/install-dir/bin/*.dll }
-          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: LinuxClientLibrary, additional-command: "sudo apt update && sudo apt install -y libasound2-dev", cmake-parameters: "-DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF", upload-path: build/install-dir/lib/*.so }
+          - { os: windows-latest, image: "", artifact-name: WindowsClientLibrary, additional-command: "", cmake-parameters: "-DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -DBUILD_SHARED_LIBS=ON", upload-path: build/install-dir/bin/*.dll }
+          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: LinuxClientLibrary, additional-command: "sudo apt update && sudo apt install -y libasound2-dev", cmake-parameters: "-DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -DBUILD_SHARED_LIBS=ON", upload-path: build/install-dir/lib/*.so }
     runs-on: ${{ matrix.config.os }}
     container:
       image: ${{ matrix.config.image }}
@@ -28,7 +28,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
       
-    - name: Enable NMake
+    - name: Enable CL
       if: ${{ matrix.config.os == 'windows-latest' }}
       uses: ilammy/msvc-dev-cmd@v1.13.0
 

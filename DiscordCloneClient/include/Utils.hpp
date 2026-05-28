@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <stdexcept>
+#include <functional>
 
 #include <c_api.h>
 
