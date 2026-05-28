@@ -20,8 +20,6 @@ FetchContent_MakeAvailable(rtaudio)
 FetchContent_MakeAvailable(UtilityLibrary)
 
 if (${BUILD_SHARED_LIBS})
-	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 	add_definitions(-DLIBRARY_SIDE)
 endif()
 

@@ -24,6 +24,8 @@ if (UNIX)
 endif()
 
 if (${BUILD_SHARED_LIBS})
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 	add_definitions(-DSHARED_CLIENT_LIBRARY)
 endif()
 
