@@ -19,7 +19,7 @@ namespace client
 
 	public:
 		std::string reconnectIp;
-		std::string reconnectPort;
+		uint16_t reconnectPort;
 		double inputVolume;
 		double outputVolume;
 

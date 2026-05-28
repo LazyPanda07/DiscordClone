@@ -7,26 +7,24 @@ namespace functionality
 	class Hotkeys::Implementation
 	{
 	private:
-		std::unordered_map<int, std::function<void(voice::InputVoice&, voice::OutputVoice&)>> hotkeys;
+		std::unordered_map<int, std::function<void()>> hotkeys;
 		int currentHotkeyIndex;
-		voice::InputVoice& inputVoice;
-		voice::OutputVoice& outputVoice;
 
 	public:
-		Implementation(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice);
+		Implementation();
 
-		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key);
+		void registerHotkey(const std::function<void()>& callback, uint32_t modifiers, uint32_t key);
 
 		~Implementation();
 	};
 
-	Hotkeys::Hotkeys(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice) :
-		implementation(new Implementation(inputVoice, outputVoice))
+	Hotkeys::Hotkeys() :
+		implementation(new Implementation())
 	{
 
 	}
 
-	void Hotkeys::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
+	void Hotkeys::registerHotkey(const std::function<void()>& callback, uint32_t modifiers, uint32_t key)
 	{
 		implementation->registerHotkey(callback, modifiers, key);
 	}
@@ -39,15 +37,13 @@ namespace functionality
 
 namespace functionality
 {
-	Hotkeys::Implementation::Implementation(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice) :
-		currentHotkeyIndex(0),
-		inputVoice(inputVoice),
-		outputVoice(outputVoice)
+	Hotkeys::Implementation::Implementation() :
+		currentHotkeyIndex(0)
 	{
 		
 	}
 
-	void Hotkeys::Implementation::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
+	void Hotkeys::Implementation::registerHotkey(const std::function<void()>& callback, uint32_t modifiers, uint32_t key)
 	{
 		
 	}

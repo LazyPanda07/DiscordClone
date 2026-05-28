@@ -42,13 +42,17 @@
       "displayName": "Debug",
       "description": "Target Windows with the Visual Studio development environment. (Debug)",
       "inherits": "windows-base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     },
     {
       "name": "release",
       "description": "Target Windows with the Visual Studio development environment. (RelWithDebInfo)",
       "inherits": "windows-base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ],
   "buildPresets": [
@@ -56,7 +60,7 @@
       "name": "windows-install",
       "configurePreset": "release",
       "displayName": "Release",
-      "targets": ["install"]
+      "targets": [ "install" ]
     }
   ]
 }

@@ -3,24 +3,24 @@
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <thread>
 
-#include <UDPClientSocket.hpp>
-#include <InputVoice.hpp>
-#include <OutputVoice.hpp>
-#include <Functionality.hpp>
+#include <UDPSocket.hpp>
+#include <c_api.h>
 
 #include "Hotkeys.hpp"
 #include "Settings.hpp"
+#include "Wrappers/InputVoice.hpp"
+#include "Wrappers/OutputVoice.hpp"
+#include "Utils.hpp"
 
 #ifndef __LINUX__
 #include <Windows.h>
 #endif
 
-void printAudioDevicesInfo();
+std::pair<std::string, uint16_t> parseIpPort(std::string& command);
 
-std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected);
-
-void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected);
+bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::SocketWrapper>& resultSocket, std::unique_ptr<wrapper::InputVoice>& input, std::unique_ptr<wrapper::OutputVoice>& output);
 
 int main(int argc, char** argv) try
 {
@@ -29,10 +29,6 @@ int main(int argc, char** argv) try
 #endif
 
 	std::string command;
-	std::unique_ptr<web::UDPSocket> socket;
-	std::unique_ptr<voice::InputVoice> input;
-	std::unique_ptr<voice::OutputVoice> output;
-	std::unique_ptr<functionality::Hotkeys> hotkeys;
 	std::vector<std::pair<std::string, std::string>> availableCommands =
 	{
 		{ "connect", "<ip:port>" },
@@ -48,23 +44,33 @@ int main(int argc, char** argv) try
 		{ "exit", "" }
 	};
 
-	printAudioDevicesInfo();
+	utils::callApiFunction(&printDeviceInfo);
 
 	client::Settings settings;
+	std::unique_ptr<wrapper::SocketWrapper> socket;
+	std::unique_ptr<wrapper::InputVoice> input;
+	std::unique_ptr<wrapper::OutputVoice> output;
+	functionality::Hotkeys hotkeys;
 
 	if (std::optional<client::Settings> loadedSettings = client::Settings::loadSettings())
 	{
-		bool connected;
-
-		connect(loadedSettings->reconnectIp, loadedSettings->reconnectPort, socket, input, output, hotkeys, *loadedSettings, connected);
-
-		if (connected)
+		if (connect(loadedSettings->reconnectIp, loadedSettings->reconnectPort, socket, input, output))
 		{
 			settings = *loadedSettings;
 		}
 	}
 
-	bool connected;
+#ifndef __LINUX__
+	hotkeys.registerHotkey
+	(
+		[&input]()
+		{
+			input->muteOrUnmute();
+		},
+		MOD_CONTROL | MOD_ALT,
+		VK_SPACE
+	);
+#endif
 
 	while (true)
 	{
@@ -74,9 +80,11 @@ int main(int argc, char** argv) try
 
 		if (!command.find("connect"))
 		{
-			auto [ip, port] = connect(command, socket, input, output, hotkeys, settings, connected);
+			using namespace std::chrono_literals;
 
-			if (connected)
+			const auto& [ip, port] = parseIpPort(command);
+
+			if (connect(ip, port, socket, input, output))
 			{
 				settings.reconnectIp = ip;
 				settings.reconnectPort = port;
@@ -100,7 +108,6 @@ int main(int argc, char** argv) try
 			is >> id;
 
 			input->overrideDeviceId(id);
-			input->restart();
 		}
 		else if (!command.find("override_output_device_id"))
 		{
@@ -118,7 +125,6 @@ int main(int argc, char** argv) try
 			is >> id;
 
 			output->overrideDeviceId(id);
-			output->restart();
 		}
 		else if (!command.find("set_input_volume"))
 		{
@@ -193,7 +199,7 @@ int main(int argc, char** argv) try
 				continue;
 			}
 
-			functionality::muteOrUnmute(*input);
+			input->muteOrUnmute();
 		}
 		else if (!command.find("echo"))
 		{
@@ -225,27 +231,14 @@ catch (const std::exception& e)
 {
 	std::cerr << e.what() << std::endl;
 
+#ifndef __LINUX__
+	std::cin.get();
+#endif
+
 	return 1;
 }
 
-void printAudioDevicesInfo()
-{
-	std::vector<RtAudio::DeviceInfo> devices = functionality::getAudioDevices();
-
-	std::cout << std::format("Found {} audio devices:", devices.size()) << std::endl << std::endl;
-
-	for (const RtAudio::DeviceInfo& info : devices)
-	{
-		std::cout << std::format("Device {}: {}", info.ID, info.name) << std::endl;
-		std::cout << std::format("\tInput channels: {}", info.inputChannels) << std::endl;
-		std::cout << std::format("\tOutput channels: {}", info.outputChannels) << std::endl;
-		std::cout << std::format("\tDefault input: {}", (info.isDefaultInput ? "yes" : "no")) << std::endl;
-		std::cout << std::format("\tDefault output: {}", (info.isDefaultOutput ? "yes" : "no")) << std::endl;
-		std::cout << std::endl;
-	}
-}
-
-std::pair<std::string, std::string> connect(std::string& command, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected)
+std::pair<std::string, uint16_t> parseIpPort(std::string& command)
 {
 	std::istringstream is(command);
 	std::string ip;
@@ -259,73 +252,48 @@ std::pair<std::string, std::string> connect(std::string& command, std::unique_pt
 
 	is >> port;
 
-	connect(ip, port, resultSocket, input, output, hotkeys, settings, connected);
-
-	return std::make_pair(std::move(ip), std::move(port));
+	return std::make_pair(std::move(ip), std::stoi(port));
 }
 
-void connect(std::string_view ip, std::string_view port, std::unique_ptr<web::UDPSocket>& resultSocket, std::unique_ptr<voice::InputVoice>& input, std::unique_ptr<voice::OutputVoice>& output, std::unique_ptr<functionality::Hotkeys>& hotkeys, const client::Settings& settings, bool& connected)
+bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::SocketWrapper>& resultSocket, std::unique_ptr<wrapper::InputVoice>& input, std::unique_ptr<wrapper::OutputVoice>& output)
 {
 	using namespace std::chrono_literals;
 
-	static constexpr uint32_t sampleRate = 48'000;
-	static constexpr uint32_t bufferFrames = 480;
+	bool result = false;
 
-	resultSocket = std::make_unique<web::UDPClientSocket>(ip, static_cast<uint16_t>(std::stoi(port.data())));
+	resultSocket = std::make_unique<wrapper::SocketWrapper>(ip, port);
 
 	std::cout << std::format("Connecting to: {}:{}...", ip, port) << std::endl;
 
 	resultSocket->sendData(web::UDPSocket::hello);
 
 	std::this_thread::sleep_for(50ms);
-	
+
 	for (size_t i = 0; i < 5; i++)
 	{
-		resultSocket->receiveData
-		(
-			[&input, &output, &hotkeys, &resultSocket, &settings, &connected, ip, port](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-			{
-				if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
-				{
-					std::cout << "Connected to: " << ip << ':' << port << std::endl;
-
-					input = std::make_unique<voice::InputVoice>(*resultSocket, bufferFrames, sampleRate);
-					output = std::make_unique<voice::OutputVoice>(*resultSocket, bufferFrames, sampleRate);
-					hotkeys = std::make_unique<functionality::Hotkeys>(*input, *output);
-
-					input->setVolume(settings.inputVolume);
-					output->setVolume(settings.outputVolume);
-
-#ifndef __LINUX__
-					hotkeys->registerHotkey
-					(
-						[](voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice)
-						{
-							functionality::muteOrUnmute(inputVoice);
-						},
-						MOD_CONTROL | MOD_ALT,
-						VK_SPACE
-					);
-#endif
-					connected = true;
-				}
-				else
-				{
-					connected = false;
-				}
-			}
-		);
-
-		if (connected)
+		if (resultSocket->receiveData() == web::UDPSocket::hello)
 		{
+			std::cout << "Connected to: " << ip << ':' << port << std::endl;
+
+			result = true;
+
 			break;
 		}
 
 		std::this_thread::sleep_for(1s);
+
+		std::cout << std::format("Connecting to: {}:{}...", ip, port) << std::endl;
 	}
 
-	if (!connected)
+	if (result)
+	{
+		input = std::make_unique<wrapper::InputVoice>(*resultSocket);
+		output = std::make_unique<wrapper::OutputVoice>(*resultSocket);
+	}
+	else
 	{
 		std::cout << std::format("Failed to connect to: {}:{}", ip, port) << std::endl;
 	}
+
+	return result;
 }

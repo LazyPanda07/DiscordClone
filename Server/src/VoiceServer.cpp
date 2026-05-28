@@ -66,6 +66,8 @@ namespace voice
 				}
 			}
 
+			printf("Wrong voice packet size: %d\n", size);
+
 			return;
 		}
 

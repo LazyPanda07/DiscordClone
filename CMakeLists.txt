@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.27.0)
 set(CMAKE_CXX_STANDARD 23)
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "")
 option(BUILD_CLIENT "Build DiscordClone" ON)
-option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" ON)
+option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" OFF)
 option(BUILD_SERVER "Build DiscordCloneServer" ON)
 
 project(DiscordCloneProject VERSION 0.2.0)
@@ -28,20 +28,12 @@ if (${BUILD_SERVER})
 	add_subdirectory(Server)
 endif()
 
-if (${BUILD_CLIENT_LIBRARY})
-	if (${BUILD_CLIENT})
-		set(BUILD_SHARED_CLIENT_LIBRARY OFF)
-		add_definitions(-DEXPORT_CLIENT_LIBRARY)
-	else()
-		set(BUILD_SHARED_CLIENT_LIBRARY ON)
-		set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-	endif()
-
-	add_subdirectory(DiscordCloneClientLibrary)
-endif()
-
 if (${BUILD_CLIENT})
+	add_subdirectory(DiscordCloneClientLibrary)
+
 	add_subdirectory(DiscordCloneClient)
+elseif(${BUILD_CLIENT_LIBRARY})
+	add_subdirectory(DiscordCloneClientLibrary)
 endif()
 
 add_custom_target(

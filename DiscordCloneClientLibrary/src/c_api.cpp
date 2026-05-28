@@ -1,0 +1,260 @@
+#include "c_api.h"
+
+#include <UDPClientSocket.hpp>
+
+#include "Functionality.hpp"
+#include "InputVoice.hpp"
+#include "OutputVoice.hpp"
+
+static constexpr uint32_t bufferFrames = 480;
+static constexpr uint32_t sampleRate = 48'000;
+
+UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception)
+{
+	try
+	{
+		return new web::UDPClientSocket(ip, port);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+InputVoiceStreamObject createInputVoiceStream(UdpSocketObject socket, Exception* exception)
+{
+	try
+	{
+		return new voice::InputVoice(*reinterpret_cast<web::UDPSocket*>(socket), bufferFrames, sampleRate);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+OutputVoiceStreamObject createOutputVoiceStream(UdpSocketObject socket, Exception* exception)
+{
+	try
+	{
+		return new voice::OutputVoice(*reinterpret_cast<web::UDPSocket*>(socket), bufferFrames, sampleRate);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void sendData(UdpSocketObject socket, const char* data, uint64_t size, Exception* exception)
+{
+	try
+	{
+		static_cast<web::UDPSocket*>(socket)->sendData(std::string_view(data, size));
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint64_t size, void* userData), void* userData, Exception* exception)
+{
+	try
+	{
+		static_cast<web::UDPSocket*>(socket)->receiveData
+		(
+			[callback, userData](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+			{
+				if (size == SOCKET_ERROR)
+				{
+#ifdef __LINUX__
+					throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
+#else
+
+					throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
+#endif
+				}
+
+				callback(data.data(), size, userData);
+			}
+		);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void overrideInputDeviceId(InputVoiceStreamObject inputStream, uint32_t id, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::InputVoice*>(inputStream)->overrideDeviceId(id);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void muteOrUnmute(InputVoiceStreamObject inputStream, Exception* exception)
+{
+	try
+	{
+		functionality::muteOrUnmute(*static_cast<voice::InputVoice*>(inputStream));
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void restartInput(InputVoiceStreamObject inputStream, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::InputVoice*>(inputStream)->restart();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void setInputVolume(InputVoiceStreamObject inputStream, double volume, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::InputVoice*>(inputStream)->setVolume(volume);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+double getInputVolume(InputVoiceStreamObject inputStream, Exception* exception)
+{
+	try
+	{
+		return static_cast<voice::InputVoice*>(inputStream)->getVolume();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return 0.0;
+}
+
+void overrideOutputDeviceId(OutputVoiceStreamObject outputStream, uint32_t id, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::OutputVoice*>(outputStream)->overrideDeviceId(id);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void restartOutput(OutputVoiceStreamObject outputStream, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::OutputVoice*>(outputStream)->restart();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void setOutputVolume(OutputVoiceStreamObject inputStream, double volume, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::OutputVoice*>(inputStream)->setVolume(volume);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+double getOutputVolume(OutputVoiceStreamObject inputStream, Exception* exception)
+{
+	try
+	{
+		return static_cast<voice::OutputVoice*>(inputStream)->getVolume();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return 0.0;
+}
+
+const char* getVersion()
+{
+	return functionality::getDiscordCloneClientLibraryVersion().data();
+}
+
+void printDeviceInfo(Exception* exception)
+{
+	std::vector<RtAudio::DeviceInfo> devices = functionality::getAudioDevices();
+
+	std::cout << std::format("Found {} audio devices:", devices.size()) << std::endl << std::endl;
+
+	for (const RtAudio::DeviceInfo& info : devices)
+	{
+		std::cout << std::format("Device {}: {}", info.ID, info.name) << std::endl;
+		std::cout << std::format("\tInput channels: {}", info.inputChannels) << std::endl;
+		std::cout << std::format("\tOutput channels: {}", info.outputChannels) << std::endl;
+		std::cout << std::format("\tDefault input: {}", (info.isDefaultInput ? "yes" : "no")) << std::endl;
+		std::cout << std::format("\tDefault output: {}", (info.isDefaultOutput ? "yes" : "no")) << std::endl;
+		std::cout << std::endl;
+	}
+}
+
+const char* getExceptionMessage(Exception exception)
+{
+	if (!exception)
+	{
+		return nullptr;
+	}
+
+	return static_cast<std::runtime_error*>(exception)->what();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void deleteSocket(UdpSocketObject socket)
+{
+	delete static_cast<web::UDPSocket*>(socket);
+}
+
+void deleteInputVoiceStream(InputVoiceStreamObject inputStream)
+{
+	delete static_cast<voice::InputVoice*>(inputStream);
+}
+
+void deleteOutputVoiceStream(OutputVoiceStreamObject outputStream)
+{
+	delete static_cast<voice::OutputVoice*>(outputStream);
+}
+
+void deleteException(Exception exception)
+{
+	delete static_cast<std::runtime_error*>(exception);
+}

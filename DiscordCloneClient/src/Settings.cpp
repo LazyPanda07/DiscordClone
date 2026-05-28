@@ -28,6 +28,7 @@ namespace client
 	}
 
 	Settings::Settings() :
+		reconnectPort(8080),
 		inputVolume(1.0),
 		outputVolume(1.0)
 	{
@@ -60,7 +61,7 @@ namespace client
 		json::JsonParser parser(stream);
 
 		parser.tryGet<std::string>(reconnectIpKey, settings.reconnectIp);
-		parser.tryGet<std::string>(reconnectPortKey, settings.reconnectPort);
+		parser.tryGet<uint16_t>(reconnectPortKey, settings.reconnectPort);
 		parser.tryGet<double>(inputVolumeKey, settings.inputVolume);
 		parser.tryGet<double>(outputVolumeKey, settings.outputVolume);
 

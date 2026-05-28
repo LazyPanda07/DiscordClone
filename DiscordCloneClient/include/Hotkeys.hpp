@@ -3,9 +3,6 @@
 #include <memory>
 #include <functional>
 
-#include <InputVoice.hpp>
-#include <OutputVoice.hpp>
-
 namespace functionality
 {
 	class Hotkeys
@@ -17,9 +14,9 @@ namespace functionality
 		Implementation* implementation;
 
 	public:
-		Hotkeys(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice);
+		Hotkeys();
 		
-		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key);
+		void registerHotkey(const std::function<void()>& callback, uint32_t modifiers, uint32_t key);
 
 		~Hotkeys();
 	};

@@ -9,5 +9,5 @@ namespace functionality
 
 	std::vector<RtAudio::DeviceInfo> getAudioDevices();
 
-	std::string_view getDiscordCloneVersion();
+	std::string_view getDiscordCloneClientLibraryVersion();
 }

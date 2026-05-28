@@ -23,30 +23,28 @@ namespace functionality
 		void messageLoop();
 
 	private:
-		std::unordered_map<int, std::function<void(voice::InputVoice&, voice::OutputVoice&)>> hotkeys;
+		std::unordered_map<int, std::function<void()>> hotkeys;
 		std::future<void> messageLoopFuture;
 		HINSTANCE hInstance;
 		HWND hotkeyWindowHandle;
 		int currentHotkeyIndex;
 		DWORD hotkeysThreadId;
-		voice::InputVoice& inputVoice;
-		voice::OutputVoice& outputVoice;
 
 	public:
-		Implementation(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice);
+		Implementation();
 
-		void registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key);
+		void registerHotkey(const std::function<void()>& callback, uint32_t modifiers, uint32_t key);
 
 		~Implementation();
 	};
 
-	Hotkeys::Hotkeys(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice) :
-		implementation(new Implementation(inputVoice, outputVoice))
+	Hotkeys::Hotkeys() :
+		implementation(new Implementation())
 	{
 
 	}
 
-	void Hotkeys::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
+	void Hotkeys::registerHotkey(const std::function<void()>& callback, uint32_t modifiers, uint32_t key)
 	{
 		implementation->registerHotkey(callback, modifiers, key);
 	}
@@ -67,7 +65,7 @@ namespace functionality
 		{
 			if (auto it = implementation->hotkeys.find(static_cast<int>(wparam)); it != implementation->hotkeys.end())
 			{
-				it->second(implementation->inputVoice, implementation->outputVoice);
+				it->second();
 			}
 
 			return 0;
@@ -120,7 +118,7 @@ namespace functionality
 		{
 			if (message.message == Hotkeys::Implementation::registerHotkeyId)
 			{
-				std::function<void(voice::InputVoice&, voice::OutputVoice&)>* callback = reinterpret_cast<std::function<void(voice::InputVoice&, voice::OutputVoice&)>*>(message.wParam);
+				std::function<void()>* callback = reinterpret_cast<std::function<void()>*>(message.wParam);
 				std::tuple<uint32_t, uint32_t>* hotkey = reinterpret_cast<std::tuple<uint32_t, uint32_t>*>(message.lParam);
 				int id = currentHotkeyIndex++;
 
@@ -140,18 +138,16 @@ namespace functionality
 		}
 	}
 
-	Hotkeys::Implementation::Implementation(voice::InputVoice& inputVoice, voice::OutputVoice& outputVoice) :
+	Hotkeys::Implementation::Implementation() :
 		hInstance(GetModuleHandle(nullptr)),
 		hotkeyWindowHandle(nullptr),
 		currentHotkeyIndex(0),
-		hotkeysThreadId(0),
-		inputVoice(inputVoice),
-		outputVoice(outputVoice)
+		hotkeysThreadId(0)
 	{
 		messageLoopFuture = std::async(std::launch::async, &Hotkeys::Implementation::messageLoop, this);
 	}
 
-	void Hotkeys::Implementation::registerHotkey(const std::function<void(voice::InputVoice&, voice::OutputVoice&)>& callback, uint32_t modifiers, uint32_t key)
+	void Hotkeys::Implementation::registerHotkey(const std::function<void()>& callback, uint32_t modifiers, uint32_t key)
 	{
 		std::thread
 		(
@@ -163,7 +159,7 @@ namespace functionality
 				(
 					hotkeysThreadId,
 					Hotkeys::Implementation::registerHotkeyId,
-					reinterpret_cast<WPARAM>(new std::function<void(voice::InputVoice&, voice::OutputVoice&)>(callback)),
+					reinterpret_cast<WPARAM>(new std::function<void()>(callback)),
 					reinterpret_cast<LPARAM>(new std::tuple<uint32_t, uint32_t>(modifiers, key))
 				);
 			}

@@ -49,7 +49,7 @@ namespace web
 		using ReceiveCallback = std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>;
 
 	public:
-		static constexpr size_t voicePacketSize = 1024;
+		static constexpr size_t voicePacketSize = 480 * sizeof(float);
 
 		static constexpr std::string_view hello = "hello";
 		static constexpr size_t helloPacketSize = hello.size();
@@ -110,21 +110,28 @@ namespace web
 
 		if (!toAddress)
 		{
-			throw std::runtime_error("Wront toAddress initialization");
+			throw std::runtime_error("Wrong toAddress initialization");
+		}
+
+		int totalSend = 0;
+
+		while (totalSend != data.size_bytes())
+		{
+			int temp = sendto(udpSocket, reinterpret_cast<const char*>(data.data()) + totalSend, data.size_bytes() - totalSend, 0, toAddress, sizeof(sockaddr_in));
+
+			if (temp == SOCKET_ERROR)
+			{
+#ifdef __LINUX__
+				throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
+#else
+
+				throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
+#endif
+			}
+
+			totalSend += temp;
 		}
 		
-		int result = sendto(udpSocket, reinterpret_cast<const char*>(data.data()), data.size_bytes(), 0, toAddress, sizeof(sockaddr_in));
-
-		if (result == SOCKET_ERROR)
-		{
-#ifdef __LINUX__
-			throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
-#else
-			
-			throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
-#endif
-		}
-
-		return result;
+		return totalSend;
 	}
 }

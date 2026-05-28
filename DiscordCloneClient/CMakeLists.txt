@@ -17,6 +17,10 @@ add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
 	src/Settings.cpp
+	src/Utils.cpp
+	src/Wrappers/SocketWrapper.cpp
+	src/Wrappers/InputVoice.cpp
+	src/Wrappers/OutputVoice.cpp
 )
 
 if (WIN32)

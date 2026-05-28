@@ -4,7 +4,7 @@
 
 namespace web
 {
-	void UDPClientSocket::initLocalAddress(int64_t timeout)
+	void UDPClientSocket::initLocalAddress()
 	{
 		localAddress = {};
 

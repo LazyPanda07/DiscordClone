@@ -4,7 +4,6 @@ set(RTAUDIO_TAG e5f0774)
 set(UTILITY_LIBRARY_TAG v0.12.0)
 set(BUILD_SHARED_LIBS OFF)
 set(RTAUDIO_BUILD_STATIC_LIBS ON)
-set(LIBRARY_TYPE STATIC)
 
 FetchContent_Declare(
 	rtaudio
@@ -21,17 +20,20 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(rtaudio)
 FetchContent_MakeAvailable(UtilityLibrary)
 
-project(DiscordCloneClientLibrary)
+if (${BUILD_SHARED_LIBS})
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-if (${BUILD_SHARED_CLIENT_LIBRARY})
-	set(LIBRARY_TYPE SHARED)
+	add_definitions(-DEXPORT_CLIENT_LIBRARY)
 endif()
 
+project(DiscordCloneClientLibrary)
+
 add_library(
-	${PROJECT_NAME} ${LIBRARY_TYPE}
+	${PROJECT_NAME}
 	src/InputVoice.cpp
 	src/OutputVoice.cpp
 	src/Functionality.cpp
+	src/c_api.cpp
 )
 
 target_include_directories(
@@ -53,7 +55,7 @@ if (WIN32)
 	)
 endif()
 
-if (${BUILD_SHARED_CLIENT_LIBRARY})
+if (${BUILD_SHARED_LIBS})
 	install(
 		TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION bin

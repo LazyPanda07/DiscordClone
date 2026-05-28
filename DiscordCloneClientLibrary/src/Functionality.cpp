@@ -27,7 +27,7 @@ namespace functionality
 		return result;
 	}
 
-	std::string_view getDiscordCloneVersion()
+	std::string_view getDiscordCloneClientLibraryVersion()
 	{
 		constexpr std::string_view version = "0.2.0";
 
