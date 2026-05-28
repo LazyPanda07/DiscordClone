@@ -2,11 +2,19 @@
 
 #include <stdint.h>
 
-#ifdef EXPORT_CLIENT_LIBRARY
+#if defined(SHARED_CLIENT_LIBRARY)
+#ifdef LIBRARY_SIDE
 #ifdef __LINUX__
 #define CLIENT_LIBRARY_FUNCTION_API extern "C" __attribute__((visibility("default")))
 #else
 #define CLIENT_LIBRARY_FUNCTION_API extern "C" __declspec(dllexport)
+#endif
+#else
+#ifdef __LINUX__
+#define CLIENT_LIBRARY_FUNCTION_API extern "C"
+#else
+#define CLIENT_LIBRARY_FUNCTION_API extern "C" __declspec(dllimport)
+#endif
 #endif
 #else
 #define CLIENT_LIBRARY_FUNCTION_API

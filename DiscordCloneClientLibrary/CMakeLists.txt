@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.27.0)
 
 set(RTAUDIO_TAG e5f0774)
 set(UTILITY_LIBRARY_TAG v0.12.0)
-set(BUILD_SHARED_LIBS OFF)
 set(RTAUDIO_BUILD_STATIC_LIBS ON)
 
 FetchContent_Declare(
@@ -23,7 +22,7 @@ FetchContent_MakeAvailable(UtilityLibrary)
 if (${BUILD_SHARED_LIBS})
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-	add_definitions(-DEXPORT_CLIENT_LIBRARY)
+	add_definitions(-DLIBRARY_SIDE)
 endif()
 
 project(DiscordCloneClientLibrary)

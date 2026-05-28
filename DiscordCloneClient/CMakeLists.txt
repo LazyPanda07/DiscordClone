@@ -13,6 +13,8 @@ FetchContent_MakeAvailable(JSON)
 
 project(DiscordClone)
 
+add_definitions(-DPROJECT_NAME="${PROJECT_NAME}")
+
 add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
@@ -45,5 +47,12 @@ target_link_libraries(
 	DiscordCloneClientLibrary
 	JSON
 )
+
+if (WIN32)
+	target_link_libraries(
+		${PROJECT_NAME} PRIVATE
+		OneCore
+	)
+endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

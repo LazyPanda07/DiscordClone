@@ -4,6 +4,7 @@
 #include <ostream>
 #include <istream>
 #include <optional>
+#include <filesystem>
 
 #include <JsonObject.h>
 
@@ -15,6 +16,8 @@ namespace client
 		static inline constexpr std::string_view settingsFile = "settings.json";
 
 	public:
+		static std::filesystem::path getPathToSettings();
+
 		static std::optional<Settings> loadSettings();
 
 	public:

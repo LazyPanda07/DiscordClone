@@ -3,6 +3,12 @@
 #include <filesystem>
 #include <fstream>
 
+#ifdef __LINUX__
+#include <cstdlib>
+#else
+#include <ShlObj.h>
+#endif
+
 #include <JsonParser.h>
 
 static constexpr std::string_view reconnectIpKey = "reconnectIp";
@@ -12,15 +18,62 @@ static constexpr std::string_view outputVolumeKey = "outputVolume";
 
 namespace client
 {
+	std::filesystem::path Settings::getPathToSettings()
+	{
+		std::filesystem::path result;
+
+#ifdef __LINUX__
+		
+		if (const char* home = std::getenv("HOME"))
+		{
+			result = home;
+		}
+		else
+		{
+			throw std::runtime_error("Can't get HOME variable");
+		}
+#else
+		PWSTR path = nullptr;
+		HRESULT resultCode = SHGetKnownFolderPath
+		(
+			FOLDERID_RoamingAppData,
+			0,
+			nullptr,
+			&path
+		);
+
+		if (!SUCCEEDED(resultCode))
+		{
+			throw std::runtime_error(std::format("Can't get path to {}", Settings::settingsFile));
+		}
+
+		result = path;
+
+		CoTaskMemFree(path);		
+#endif
+		result /= PROJECT_NAME;
+
+		if (!std::filesystem::exists(result))
+		{
+			std::filesystem::create_directories(result);
+		}
+
+		result /= Settings::settingsFile;
+
+		return result;
+	}
+
 	std::optional<Settings> Settings::loadSettings()
 	{
-		if (!std::filesystem::exists(Settings::settingsFile))
+		std::filesystem::path settingsPath = Settings::getPathToSettings();
+
+		if (!std::filesystem::exists(settingsPath))
 		{
 			return std::nullopt;
 		}
 
 		Settings result;
-		std::ifstream stream(Settings::settingsFile.data());
+		std::ifstream stream(settingsPath);
 
 		stream >> result;
 
@@ -37,9 +90,7 @@ namespace client
 
 	void Settings::saveSettings() const
 	{
-		
-
-		std::ofstream stream(Settings::settingsFile.data());
+		std::ofstream stream(Settings::getPathToSettings());
 
 		stream << *this;
 	}

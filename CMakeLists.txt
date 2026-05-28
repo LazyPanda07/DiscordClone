@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.27.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 option(BUILD_CLIENT "Build DiscordClone" ON)
 option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" OFF)
 option(BUILD_SERVER "Build DiscordCloneServer" ON)
@@ -20,6 +21,10 @@ endif()
 
 if (UNIX)
 	add_definitions(-D__LINUX__)
+endif()
+
+if (${BUILD_SHARED_LIBS})
+	add_definitions(-DSHARED_CLIENT_LIBRARY)
 endif()
 
 add_subdirectory(UDPSocket)
