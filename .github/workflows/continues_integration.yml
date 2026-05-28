@@ -13,48 +13,166 @@ permissions:
 
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        config: 
-          - { os: windows-latest, image: "", artifact-name: Windows, additional-command: "", cmake-parameters: "", upload-path: build/install-dir/bin/* }
-          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: Linux, additional-command: "sudo apt update && sudo apt install -y libasound2-dev", cmake-parameters: "", upload-path: build/install-dir/bin/* }
-          - { os: windows-latest, image: "", artifact-name: WindowsClientLibrary, additional-command: "", cmake-parameters: "-DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -DBUILD_SHARED_LIBS=ON", upload-path: build/install-dir/bin/*.dll }
-          - { os: ubuntu-latest, image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04, artifact-name: LinuxClientLibrary, additional-command: "sudo apt update && sudo apt install -y libasound2-dev", cmake-parameters: "-DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -DBUILD_SHARED_LIBS=ON", upload-path: build/install-dir/lib/*.so }
-    runs-on: ${{ matrix.config.os }}
-    container:
-      image: ${{ matrix.config.image }}
+  windows-client-build:
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v6
-      
+  
     - name: Enable CL
-      if: ${{ matrix.config.os == 'windows-latest' }}
       uses: ilammy/msvc-dev-cmd@v1.13.0
-
-    - name: Additional action
-      if: ${{ matrix.config.additional-command != '' }}
-      run: ${{ matrix.config.additional-command }}
 
     - name: Build
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_INSTALL_PREFIX=install-dir -DCMAKE_BUILD_TYPE=Release ${{ matrix.config.cmake-parameters }} -G "Ninja" ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_SERVER=OFF -G "Ninja" ..
         cmake --build . -j
         cmake --install .
 
-    - name: Upload ${{ matrix.config.artifact-name }}
-      uses: actions/upload-artifact@v6
+    - name: Upload Windows client
+      uses: actions/upload-artifact@v7
       with:
-        name: ${{ matrix.config.artifact-name }}
-        path: ${{ matrix.config.upload-path }}
-        
+        name: windows_client
+        path: build/install-dir/bin/*
 
-  publish:
-    needs: 
-      - build
+
+  windows-server-build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v6
+  
+    - name: Enable CL
+      uses: ilammy/msvc-dev-cmd@v1.13.0
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF -G "Ninja" ..
+        cmake --build . -j
+        cmake --install .
+
+    - name: Upload Windows server
+      uses: actions/upload-artifact@v7
+      with:
+        name: windows_server
+        path: build/install-dir/bin/*
+  
+
+  windows-client-library-build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v6
+  
+    - name: Enable CL
+      uses: ilammy/msvc-dev-cmd@v1.13.0
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -G "Ninja" ..
+        cmake --build . -j
+        cmake --install .
+
+    - name: Upload Windows client library
+      uses: actions/upload-artifact@v7
+      with:
+        name: windows_client_library
+        path: build/install-dir/bin/*
+
+
+  linux-client-build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04
+
+    steps:
+    - uses: actions/checkout@v6
+  
+    - name: Install dependencies
+      run: |
+        sudo apt update 
+        sudo apt install -y libasound2-dev
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_SERVER=OFF -G "Ninja" ..
+        cmake --build . -j
+        cmake --install .
+
+    - name: Upload Linux client
+      uses: actions/upload-artifact@v7
+      with:
+        name: linux_client
+        path: build/install-dir/bin/*
+
+
+  linux-server-build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04
+
+    steps:
+    - uses: actions/checkout@v6
+  
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF -G "Ninja" ..
+        cmake --build . -j
+        cmake --install .
+
+    - name: Upload Linux server
+      uses: actions/upload-artifact@v7
+      with:
+        name: linux_server
+        path: build/install-dir/bin/*
+  
+
+  linux-client-library-build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04
+
+    steps:
+    - uses: actions/checkout@v6
+  
+    - name: Install dependencies
+      run: |
+        sudo apt update 
+        sudo apt install -y libasound2-dev
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -G "Ninja" ..
+        cmake --build . -j
+        cmake --install .
+
+    - name: Upload Linux client library
+      uses: actions/upload-artifact@v7
+      with:
+        name: linux_client_library
+        path: build/install-dir/bin/*
+
+        
+  publish:
+    runs-on: ubuntu-latest
+    needs: 
+      - windows-client-build
+      - windows-server-build
+      - windows-client-library-build
+      - linux-client-build
+      - linux-server-build
+      - linux-client-library-build 
 
     steps:
     - uses: actions/checkout@v6
@@ -70,10 +188,12 @@ jobs:
 
     - name: Create Windows and Linux zips
       run: |
-        zip -r windows.zip Windows
-        zip -r linux.zip Linux
-        zip -r linux_client_library.zip LinuxClientLibrary
-        zip -r windows_client_library.zip WindowsClientLibrary
+        zip -r windows.zip windows-client-build
+        zip -r windows_server.zip windows-server-build
+        zip -r windows_client_library.zip windows-client-library-build
+        zip -r linux.zip linux-client-build
+        zip -r linux_server.zip linux-server-build
+        zip -r linux_client_library.zip linux-client-library-build
 
     - name: Publish
       if: ${{ env.CURRENT_BRANCH == 'main' }}
