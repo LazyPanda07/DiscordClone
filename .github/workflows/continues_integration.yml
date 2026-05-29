@@ -82,7 +82,9 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: windows_client_library
-        path: build/install-dir/bin/*
+        path: |
+          build/install-dir/bin/*
+          DiscordCloneClientLibrary/include/c_api.h
 
 
   linux-client-build:
@@ -161,7 +163,9 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: linux_client_library
-        path: build/install-dir/lib/*.so
+        path: |
+          build/install-dir/lib/*.so
+          DiscordCloneClientLibrary/include/c_api.h
 
         
   publish:
