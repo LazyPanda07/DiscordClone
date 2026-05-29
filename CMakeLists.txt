@@ -7,7 +7,7 @@ option(BUILD_CLIENT "Build DiscordClone" ON)
 option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" OFF)
 option(BUILD_SERVER "Build DiscordCloneServer" ON)
 
-project(DiscordCloneProject VERSION 0.3.0)
+project(DiscordCloneProject VERSION 0.3.1)
 
 include(FetchContent)
 

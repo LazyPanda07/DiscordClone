@@ -30,11 +30,17 @@ jobs:
         cmake --build . -j
         cmake --install .
 
+    - name: Copy binaries
+      shell: bash
+      run: |
+        mkdir out
+        mv build/install-dir/bin/* out
+
     - name: Upload Windows client
       uses: actions/upload-artifact@v7
       with:
         name: windows_client
-        path: build/install-dir/bin/*
+        path: out/*
 
 
   windows-server-build:
@@ -53,12 +59,18 @@ jobs:
         cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF -G "Ninja" ..
         cmake --build . -j
         cmake --install .
+        
+    - name: Copy binaries
+      shell: bash
+      run: |
+        mkdir out
+        mv build/install-dir/bin/* out
 
     - name: Upload Windows server
       uses: actions/upload-artifact@v7
       with:
         name: windows_server
-        path: build/install-dir/bin/*
+        path: out/*
   
 
   windows-client-library-build:
@@ -78,13 +90,19 @@ jobs:
         cmake --build . -j
         cmake --install .
 
+    - name: Copy binaries
+      shell: bash
+      run: |
+        mkdir out
+        mkdir out/include
+        mv build/install-dir/bin/* out
+        mv DiscordCloneClientLibrary/include/c_api.h out/include
+
     - name: Upload Windows client library
       uses: actions/upload-artifact@v7
       with:
         name: windows_client_library
-        path: |
-          build/install-dir/bin/*
-          DiscordCloneClientLibrary/include/c_api.h
+        path: out/*
 
 
   linux-client-build:
@@ -108,11 +126,16 @@ jobs:
         cmake --build . -j
         cmake --install .
 
+    - name: Copy binaries
+      run: |
+        mkdir out
+        mv build/install-dir/bin/* out
+
     - name: Upload Linux client
       uses: actions/upload-artifact@v7
       with:
         name: linux_client
-        path: build/install-dir/bin/*
+        path: out/*
 
 
   linux-server-build:
@@ -131,11 +154,16 @@ jobs:
         cmake --build . -j
         cmake --install .
 
+    - name: Copy binaries
+      run: |
+        mkdir out
+        mv build/install-dir/bin/* out
+
     - name: Upload Linux server
       uses: actions/upload-artifact@v7
       with:
         name: linux_server
-        path: build/install-dir/bin/*
+        path: out/*
   
 
   linux-client-library-build:
@@ -159,13 +187,18 @@ jobs:
         cmake --build . -j
         cmake --install .
 
+    - name: Copy binaries
+      run: |
+        mkdir out
+        mkdir out/include
+        mv build/install-dir/lib/*.so out
+        mv DiscordCloneClientLibrary/include/c_api.h out/include
+
     - name: Upload Linux client library
       uses: actions/upload-artifact@v7
       with:
         name: linux_client_library
-        path: |
-          build/install-dir/lib/*.so
-          DiscordCloneClientLibrary/include/c_api.h
+        path: out/*
 
         
   publish:
