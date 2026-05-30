@@ -41,8 +41,26 @@ namespace web
 		return this->sendData(std::span<const char>(data), address);
 	}
 
+	void UDPSocket::close()
+	{
+		if (udpSocket == SOCKET_ERROR)
+		{
+			return;
+		}
+
+#ifdef __LINUX__
+		shutdown(udpSocket, SHUT_RDWR);
+#else
+		shutdown(udpSocket, SD_BOTH);
+#endif
+
+		closesocket(udpSocket);
+
+		udpSocket = SOCKET_ERROR;
+	}
+
 	UDPSocket::~UDPSocket()
 	{
-		closesocket(udpSocket);
+		this->close();
 	}
 }

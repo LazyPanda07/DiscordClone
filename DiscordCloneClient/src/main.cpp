@@ -22,6 +22,8 @@ std::pair<std::string, uint16_t> parseIpPort(std::string& command);
 
 bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::SocketWrapper>& resultSocket, std::unique_ptr<wrapper::InputVoice>& input, std::unique_ptr<wrapper::OutputVoice>& output);
 
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapper::InputVoice>& input, const std::unique_ptr<wrapper::OutputVoice>& output);
+
 void printDeviceInfo();
 
 int main(int argc, char** argv) try
@@ -73,6 +75,8 @@ int main(int argc, char** argv) try
 		VK_SPACE
 	);
 #endif
+
+	restoreVolume(settings, input, output);
 
 	while (true)
 	{
@@ -298,6 +302,17 @@ bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::Socket
 	}
 
 	return result;
+}
+
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapper::InputVoice>& input, const std::unique_ptr<wrapper::OutputVoice>& output)
+{
+	if (!input || !output)
+	{
+		return;
+	}
+
+	input->setVolume(settings.inputVolume);
+	output->setVolume(settings.outputVolume);
 }
 
 void printDeviceInfo()

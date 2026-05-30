@@ -77,6 +77,8 @@ namespace web
 
 		virtual void receiveData(const ReceiveCallback& callback) = 0;
 
+		void close();
+
 		virtual ~UDPSocket();
 	};
 }

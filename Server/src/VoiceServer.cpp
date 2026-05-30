@@ -1,5 +1,8 @@
 #include "VoiceServer.hpp"
 
+#include <iostream>
+#include <format>
+
 namespace voice
 {
 	std::tuple<std::string, uint16_t> VoiceServer::Client::getIpPort(const sockaddr_in& address)
@@ -60,13 +63,15 @@ namespace voice
 		{
 			if (size == SOCKET_ERROR)
 			{
-				if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it == clients.end())
+				if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
 				{
 					clients.erase(it);
 				}
 			}
 
-			printf("Wrong voice packet size: %d\n", size);
+			auto [otherIp, otherPort] = VoiceServer::Client::getIpPort(address);
+
+			std::cout << std::format("Wrong voice packet size: {}, from {}:{}", size, otherIp, otherPort) << std::endl;
 
 			return;
 		}

@@ -225,12 +225,12 @@ jobs:
 
     - name: Create Windows and Linux zips
       run: |
-        zip -r windows.zip windows_client
-        zip -r windows_server.zip windows_server
-        zip -r windows_client_library.zip windows_client_library
-        zip -r linux.zip linux_client
-        zip -r linux_server.zip linux_server
-        zip -r linux_client_library.zip linux_client_library
+        zip -r windows.zip windows_client/*
+        zip -r windows_server.zip windows_server/*
+        zip -r windows_client_library.zip windows_client_library/*
+        zip -r linux.zip linux_client/*
+        zip -r linux_server.zip linux_server/*
+        zip -r linux_client_library.zip linux_client_library/*
 
     - name: Publish
       if: ${{ env.CURRENT_BRANCH == 'main' }}

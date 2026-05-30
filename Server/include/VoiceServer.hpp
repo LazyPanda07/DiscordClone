@@ -12,7 +12,7 @@ namespace voice
 	private:
 		struct Client
 		{
-		private:
+		public:
 			static std::tuple<std::string, uint16_t> getIpPort(const sockaddr_in& address);
 
 		public:
