@@ -25,7 +25,7 @@
 #ifndef WINDOWS_STYLE_DEFINITION
 #define WINDOWS_STYLE_DEFINITION
 
-#define closesocket close
+#define closesocket ::close
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 
