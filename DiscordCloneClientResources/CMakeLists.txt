@@ -13,3 +13,11 @@ target_include_directories(
 )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+if (WIN32)
+	install(
+		CODE [[
+			file(REMOVE ${CMAKE_INSTALL_PREFIX}/bin/DiscordCloneClientResources.lib)
+		]]
+	)
+endif()
