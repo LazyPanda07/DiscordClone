@@ -12,9 +12,4 @@ target_include_directories(
 	include
 )
 
-install(
-	TARGETS ${PROJECT_NAME}
-	RUNTIME DESTINATION bin
-	ARCHIVE DESTINATION lib
-	LIBRARY DESTINATION lib
-)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
