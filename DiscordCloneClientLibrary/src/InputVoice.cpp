@@ -1,15 +1,36 @@
 #include "InputVoice.hpp"
 
 #include <span>
+#include <filesystem>
+
 #include <UUID.h>
 
-#ifndef __LINUX__
+#ifdef __LINUX__
+#include <dlfcn.h>
+#else
 #include <Windows.h>
 #include <mmsystem.h>
 #endif
 
-#include "Generated/microphone_on.generated.hpp"
-#include "Generated/microphone_off.generated.hpp"
+#ifdef __LINUX__
+using HMODULE = void*;
+#endif
+
+using GetResourceSignature = const uint8_t* (*)(uint64_t*);
+
+static void* resourceLibrary = nullptr;
+
+static void loadResourceLibrary();
+
+static const uint8_t* callGetMicrophoneOffSound(uint64_t* size);
+
+static const uint8_t* callGetMicrophoneOnSound(uint64_t* size);
+
+#ifdef __LINUX__
+
+#else
+
+#endif
 
 namespace voice
 {
@@ -48,6 +69,8 @@ namespace voice
 		bufferFrames(bufferFrames),
 		sampleRate(sampleRate)
 	{
+		loadResourceLibrary();
+
 		audio.showWarnings();
 
 		parameters.deviceId = audio.getDefaultInputDevice();
@@ -81,8 +104,10 @@ namespace voice
 
 	void InputVoice::startStream()
 	{
+		uint64_t size = 0;
+
 #ifndef __LINUX__
-		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOnWav)), nullptr, SND_MEMORY | SND_ASYNC);
+		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOnSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 
 		audio.startStream();
@@ -90,8 +115,10 @@ namespace voice
 
 	void InputVoice::stopStream()
 	{
+		uint64_t size = 0;
+
 #ifndef __LINUX__
-		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(microphoneOffWav)), nullptr, SND_MEMORY | SND_ASYNC);
+		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOffSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 
 		audio.stopStream();
@@ -111,4 +138,52 @@ namespace voice
 	{
 		return volume;
 	}
+}
+
+void loadResourceLibrary()
+{
+	if (resourceLibrary)
+	{
+		return;
+	}
+
+	std::filesystem::path currentPath(std::filesystem::current_path());
+
+#ifdef __LINUX__
+	currentPath /= "libDiscordCloneClientResources.so";
+
+	resourceLibrary = dlopen(currentPath.string().data(), RTLD_LAZY);
+#else
+	currentPath /= "DiscordCloneClientResources.dll";
+
+	resourceLibrary = LoadLibraryA(currentPath.string().data());
+#endif
+}
+
+const uint8_t* callGetMicrophoneOffSound(uint64_t* size)
+{
+	if (!resourceLibrary)
+	{
+		return nullptr;
+	}
+
+#ifdef __LINUX__
+	return reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOffSound"))(size);
+#else
+	return reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOffSound"))(size);
+#endif
+}
+
+const uint8_t* callGetMicrophoneOnSound(uint64_t* size)
+{
+	if (!resourceLibrary)
+	{
+		return nullptr;
+	}
+
+#ifdef __LINUX__
+	return reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOnSound"))(size);
+#else
+	return reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOnSound"))(size);
+#endif
 }

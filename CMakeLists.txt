@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.27.0)
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_DEBUG_POSTFIX "")
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 option(BUILD_CLIENT "Build DiscordClone" ON)
@@ -39,6 +40,7 @@ if (${BUILD_CLIENT})
 	add_subdirectory(DiscordCloneClientLibrary)
 
 	add_subdirectory(DiscordCloneClient)
+	add_subdirectory(DiscordCloneClientResources)
 elseif(${BUILD_CLIENT_LIBRARY})
 	add_subdirectory(DiscordCloneClientLibrary)
 endif()

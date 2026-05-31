@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #endif
 
-#if defined(SHARED_CLIENT_LIBRARY)
+#ifdef SHARED_CLIENT_LIBRARY
 #ifdef LIBRARY_SIDE
 #ifdef __LINUX__
 #define CLIENT_LIBRARY_FUNCTION_API extern "C" __attribute__((visibility("default")))
