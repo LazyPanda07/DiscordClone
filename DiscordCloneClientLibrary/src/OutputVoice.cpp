@@ -22,18 +22,19 @@ namespace voice
 			(
 				[outputBuffer, frames, &voice](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 				{
-					if (size != web::UDPSocket::voicePacketSize)
+					if (size == SOCKET_ERROR)
 					{
 						return;
 					}
 
 					std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
-					std::span<const float> floatData(reinterpret_cast<const float*>(data.data()), size / sizeof(float));
+					std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> input{};					
+					int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, input.data(), voice.bufferFrames, 0);
 
-					for (size_t i = 0; i < frames; i++)
+					for (size_t i = 0; i < samples; i++)
 					{
-						out[i * 2] = floatData[i] * voice.volume;
-						out[i * 2 + 1] = floatData[i] * voice.volume;
+						out[i * 2] = input[i] * voice.volume;
+						out[i * 2 + 1] = input[i] * voice.volume;
 					}
 				}
 			);
@@ -52,7 +53,8 @@ namespace voice
 		socket(socket),
 		volume(1.0),
 		bufferFrames(bufferFrames),
-		sampleRate(sampleRate)
+		sampleRate(sampleRate),
+		decoder(nullptr)
 	{
 		audio.showWarnings();
 
@@ -62,6 +64,13 @@ namespace voice
 		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &OutputVoice::callback, this);
 
 		audio.startStream();
+
+		int errorCode = 0;
+		
+		if (decoder = opus_decoder_create(sampleRate, 1, &errorCode); errorCode != OPUS_OK)
+		{
+			throw std::runtime_error(std::format("Can't create Opus decoder: {}", opus_strerror(errorCode)));
+		}
 	}
 
 	void OutputVoice::overrideDeviceId(uint32_t id)

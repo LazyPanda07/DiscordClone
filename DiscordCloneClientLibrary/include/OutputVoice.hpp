@@ -5,7 +5,7 @@
 #include <span>
 
 #include <RtAudio.h>
-
+#include <opus.h>
 #include <UDPSocket.hpp>
 
 namespace voice
@@ -22,6 +22,7 @@ namespace voice
 		double volume;
 		uint32_t bufferFrames;
 		uint32_t sampleRate;
+		OpusDecoder* decoder;
 		
 	public:
 		OutputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);

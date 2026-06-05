@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.27.0)
 
 set(RTAUDIO_TAG e5f0774)
-set(UTILITY_LIBRARY_TAG v0.12.1)
+set(UTILITY_LIBRARY_VERSION 0.12.1)
+set(OPUS_VERSION 1.6.1)
 set(RTAUDIO_BUILD_STATIC_LIBS ON)
+set(OPUS_X86_PRESUME_AVX2 ON)
 
 FetchContent_Declare(
 	rtaudio
@@ -13,11 +15,18 @@ FetchContent_Declare(
 FetchContent_Declare(
 	UtilityLibrary
 	GIT_REPOSITORY https://github.com/LazyPanda07/UtilityLibrary.git
-	GIT_TAG ${UTILITY_LIBRARY_TAG}
+	GIT_TAG v${UTILITY_LIBRARY_VERSION}
+)
+
+FetchContent_Declare(
+	opus
+	GIT_REPOSITORY https://gitlab.xiph.org/xiph/opus.git
+	GIT_TAG v${OPUS_VERSION}
 )
 
 FetchContent_MakeAvailable(rtaudio)
 FetchContent_MakeAvailable(UtilityLibrary)
+FetchContent_MakeAvailable(opus)
 
 if (${BUILD_SHARED_LIBS})
 	add_definitions(-DLIBRARY_SIDE)
@@ -43,6 +52,7 @@ target_link_libraries(
 	UDPSocket
 	rtaudio
 	UtilityLibrary
+	opus
 )
 
 if (WIN32)

@@ -58,7 +58,15 @@ namespace voice
 			}
 		}
 
-		voice.socket.sendData(in);
+		std::array<uint8_t, web::UDPSocket::voicePacketSize> outputData{};
+		int bytes = opus_encode_float(voice.encoder, in.data(), frames, outputData.data(), outputData.size());
+
+		if (bytes < 0)
+		{
+			throw std::runtime_error(std::format("Fail encoding: {}", opus_strerror(bytes)));
+		}
+
+		voice.socket.sendData(std::span<uint8_t>(outputData.data(), bytes));
 
 		return 0;
 	}
@@ -67,7 +75,8 @@ namespace voice
 		socket(socket),
 		volume(1.0),
 		bufferFrames(bufferFrames),
-		sampleRate(sampleRate)
+		sampleRate(sampleRate),
+		encoder(nullptr)
 	{
 		loadResourceLibrary();
 
@@ -79,6 +88,13 @@ namespace voice
 		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &InputVoice::callback, this);
 
 		audio.startStream();
+
+		int errorCode = 0;
+
+		if (encoder = opus_encoder_create(sampleRate, 1, OPUS_APPLICATION_VOIP, &errorCode); errorCode != OPUS_OK)
+		{
+			throw std::runtime_error(std::format("Can't create Opus encoder: {}", opus_strerror(errorCode)));
+		}
 	}
 
 	void InputVoice::overrideDeviceId(uint32_t id)
@@ -137,6 +153,16 @@ namespace voice
 	double InputVoice::getVolume() const
 	{
 		return volume;
+	}
+
+	InputVoice::~InputVoice()
+	{
+		if (encoder)
+		{
+			opus_encoder_destroy(encoder);
+
+			encoder = nullptr;
+		}
 	}
 }
 

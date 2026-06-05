@@ -1,7 +1,7 @@
 #pragma once
 
 #include <RtAudio.h>
-
+#include <opus.h>
 #include <UDPSocket.hpp>
 
 namespace voice
@@ -18,6 +18,7 @@ namespace voice
 		double volume;
 		uint32_t bufferFrames;
 		uint32_t sampleRate;
+		OpusEncoder* encoder;
 
 	public:
 		InputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);
@@ -36,6 +37,6 @@ namespace voice
 
 		double getVolume() const;
 
-		~InputVoice() = default;
+		~InputVoice();
 	};
 }

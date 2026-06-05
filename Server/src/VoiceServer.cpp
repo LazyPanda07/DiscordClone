@@ -59,14 +59,11 @@ namespace voice
 
 			return;
 		}
-		else if (size != web::UDPSocket::voicePacketSize)
+		else if (size == SOCKET_ERROR)
 		{
-			if (size == SOCKET_ERROR)
+			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
 			{
-				if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
-				{
-					clients.erase(it);
-				}
+				clients.erase(it);
 			}
 
 			auto [otherIp, otherPort] = VoiceServer::Client::getIpPort(address);
