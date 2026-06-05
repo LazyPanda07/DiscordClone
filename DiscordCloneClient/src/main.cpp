@@ -324,7 +324,7 @@ void printDeviceInfo(const std::unique_ptr<wrapper::InputVoice>& input)
 
 	if (input)
 	{
-		std::cout << std::format("Microphone state: {}", input->isStreamRunning() ? "🟢" : "🔴") << std::endl;
+		std::cout << std::endl << std::format("Microphone state: {}", input->isStreamRunning() ? "🟢" : "🔴") << std::endl;
 	}
 
 	std::cout << std::format("Found {} audio devices:", size) << std::endl << std::endl;
