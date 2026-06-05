@@ -16,6 +16,8 @@ namespace wrapper
 
 		void muteOrUnmute();
 
+		bool isStreamRunning() const;
+
 		void setVolume(double volume);
 
 		double getVolume() const;

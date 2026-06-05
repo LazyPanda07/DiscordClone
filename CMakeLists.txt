@@ -7,6 +7,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 option(BUILD_CLIENT "Build DiscordClone" ON)
 option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" OFF)
 option(BUILD_SERVER "Build DiscordCloneServer" ON)
+option(BUILD_SHARED_CLIENT_LIBRARY "Build DiscordCloneClientLibrary as shared library" OFF)
 
 project(DiscordCloneProject VERSION 0.4.0)
 
@@ -24,7 +25,7 @@ if (UNIX)
 	add_definitions(-D__LINUX__)
 endif()
 
-if (${BUILD_SHARED_LIBS})
+if (${BUILD_SHARED_CLIENT_LIBRARY})
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 	add_definitions(-DSHARED_CLIENT_LIBRARY)

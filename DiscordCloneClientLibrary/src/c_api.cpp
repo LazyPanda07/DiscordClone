@@ -117,6 +117,20 @@ void muteOrUnmute(InputVoiceStreamObject inputStream, Exception* exception)
 	}
 }
 
+bool isStreamRunning(InputVoiceStreamObject inputStream, Exception* exception)
+{
+	try
+	{
+		return static_cast<voice::InputVoice*>(inputStream)->isStreamRunning();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return false;
+}
+
 void restartInput(InputVoiceStreamObject inputStream, Exception* exception)
 {
 	try

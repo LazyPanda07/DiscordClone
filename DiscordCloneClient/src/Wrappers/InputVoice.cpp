@@ -21,6 +21,11 @@ namespace wrapper
 		utils::callApiFunction(&::muteOrUnmute, implementation);
 	}
 
+	bool InputVoice::isStreamRunning() const
+	{
+		return utils::callApiFunction(&::isStreamRunning, implementation);
+	}
+
 	void InputVoice::setVolume(double volume)
 	{
 		utils::callApiFunction(&setInputVolume, implementation, volume);

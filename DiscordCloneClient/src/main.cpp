@@ -24,7 +24,7 @@ bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::Socket
 
 void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapper::InputVoice>& input, const std::unique_ptr<wrapper::OutputVoice>& output);
 
-void printDeviceInfo();
+void printDeviceInfo(const std::unique_ptr<wrapper::InputVoice>& input);
 
 int main(int argc, char** argv) try
 {
@@ -48,8 +48,6 @@ int main(int argc, char** argv) try
 		{ "exit", "" }
 	};
 
-	printDeviceInfo();
-
 	client::Settings settings;
 	std::unique_ptr<wrapper::SocketWrapper> socket;
 	std::unique_ptr<wrapper::InputVoice> input;
@@ -64,12 +62,16 @@ int main(int argc, char** argv) try
 		}
 	}
 
+	printDeviceInfo(input);
+
 #ifndef __LINUX__
 	hotkeys.registerHotkey
 	(
 		[&input]()
 		{
 			input->muteOrUnmute();
+
+			printDeviceInfo(input);
 		},
 		MOD_CONTROL | MOD_ALT,
 		VK_SPACE
@@ -315,10 +317,15 @@ void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapp
 	output->setVolume(settings.outputVolume);
 }
 
-void printDeviceInfo()
+void printDeviceInfo(const std::unique_ptr<wrapper::InputVoice>& input)
 {
 	DeviceInformationArray devices = utils::callApiFunction(&getDeviceInformation);
 	uint64_t size = utils::callApiFunction(&getDeviceInformationSize, devices);
+
+	if (input)
+	{
+		std::cout << std::format("Microphone state: {}", input->isStreamRunning() ? "🟢" : "🔴") << std::endl;
+	}
 
 	std::cout << std::format("Found {} audio devices:", size) << std::endl << std::endl;
 

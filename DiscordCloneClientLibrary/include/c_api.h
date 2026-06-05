@@ -46,6 +46,8 @@ CLIENT_LIBRARY_FUNCTION_API void overrideInputDeviceId(InputVoiceStreamObject in
 
 CLIENT_LIBRARY_FUNCTION_API void muteOrUnmute(InputVoiceStreamObject inputStream, Exception* exception);
 
+CLIENT_LIBRARY_FUNCTION_API bool isStreamRunning(InputVoiceStreamObject inputStream, Exception* exception);
+
 CLIENT_LIBRARY_FUNCTION_API void restartInput(InputVoiceStreamObject inputStream, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void setInputVolume(InputVoiceStreamObject inputStream, double volume, Exception* exception);

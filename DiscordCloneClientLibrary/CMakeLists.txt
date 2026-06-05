@@ -28,14 +28,18 @@ FetchContent_MakeAvailable(rtaudio)
 FetchContent_MakeAvailable(UtilityLibrary)
 FetchContent_MakeAvailable(opus)
 
-if (${BUILD_SHARED_LIBS})
+if (${BUILD_SHARED_CLIENT_LIBRARY})
+	set(LIBRARY_TYPE SHARED)
+
 	add_definitions(-DLIBRARY_SIDE)
+else()
+	set(LIBRARY_TYPE STATIC)
 endif()
 
 project(DiscordCloneClientLibrary)
 
 add_library(
-	${PROJECT_NAME}
+	${PROJECT_NAME} ${LIBRARY_TYPE}
 	src/InputVoice.cpp
 	src/OutputVoice.cpp
 	src/Functionality.cpp
@@ -62,7 +66,7 @@ if (WIN32)
 	)
 endif()
 
-if (${BUILD_SHARED_LIBS})
+if (${BUILD_SHARED_CLIENT_LIBRARY})
 	install(
 		TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION bin
