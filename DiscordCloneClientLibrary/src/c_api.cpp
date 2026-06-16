@@ -1,13 +1,15 @@
 #include "c_api.h"
 
+#include <chrono>
+
 #include <UDPClientSocket.hpp>
 
 #include "Functionality.hpp"
 #include "InputVoice.hpp"
 #include "OutputVoice.hpp"
 
-static constexpr uint32_t bufferFrames = 480;
 static constexpr uint32_t sampleRate = 48'000;
+static constexpr uint32_t bufferFrames = 480;
 
 UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception)
 {
@@ -65,7 +67,7 @@ void sendData(UdpSocketObject socket, const char* data, uint64_t size, Exception
 	}
 }
 
-void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint64_t size, void* userData), void* userData, Exception* exception)
+void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint64_t size, void* userData), int32_t flags, void* userData, Exception* exception)
 {
 	try
 	{
@@ -84,13 +86,52 @@ void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint6
 				}
 
 				callback(data.data(), size, userData);
-			}
+			},
+			flags
 		);
 	}
 	catch (const std::exception& e)
 	{
 		*exception = new std::runtime_error(e.what());
 	}
+}
+
+int64_t ping(UdpSocketObject socket, Exception* exception)
+{
+	try
+	{
+		web::UDPSocket& udpSocket = *static_cast<web::UDPSocket*>(socket);
+
+		udpSocket.sendData(web::UDPSocket::ping);
+
+		auto start = std::chrono::high_resolution_clock::now();
+
+		udpSocket.receiveData
+		(
+			[](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+			{
+				if (size == SOCKET_ERROR)
+				{
+#ifdef __LINUX__
+					throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
+#else
+
+					throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
+#endif
+				}
+			}
+		);
+
+		auto end = std::chrono::high_resolution_clock::now();
+
+		return std::chrono::duration_cast<std::chrono::milliseconds>((end - start)).count();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return 0;
 }
 
 void overrideInputDeviceId(InputVoiceStreamObject inputStream, uint32_t id, Exception* exception)

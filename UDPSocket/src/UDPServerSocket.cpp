@@ -21,12 +21,12 @@ namespace web
 		}
 	}
 
-	void UDPServerSocket::receiveData(const ReceiveCallback& callback)
+	void UDPServerSocket::receiveData(const ReceiveCallback& callback, int32_t flags)
 	{
 		sockaddr_in client{};
 		Buffer data{};
 		socklen_t size = sizeof(client);
-		int result = recvfrom(udpSocket, data.data(), data.size(), 0, reinterpret_cast<sockaddr*>(&client), &size);
+		int result = recvfrom(udpSocket, data.data(), data.size(), flags, reinterpret_cast<sockaddr*>(&client), &size);
 
 		callback(data, result, client, *this);
 	}

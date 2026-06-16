@@ -2,7 +2,7 @@
 
 #include "Utils.hpp"
 
-namespace wrapper
+namespace wrappers
 {
 	OutputVoice::OutputVoice(SocketWrapper& socket) :
 		implementation(utils::callApiFunction(&createOutputVoiceStream, socket.implementation))

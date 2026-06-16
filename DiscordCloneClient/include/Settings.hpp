@@ -5,6 +5,7 @@
 #include <istream>
 #include <optional>
 #include <filesystem>
+#include <functional>
 
 #include <JsonObject.h>
 
@@ -26,10 +27,13 @@ namespace client
 		double inputVolume;
 		double outputVolume;
 
+	private:
+		void saveSettings() const;
+
 	public:
 		Settings();
 
-		void saveSettings() const;
+		void modifySettings(const std::function<void(Settings&)>& modifyFunctor);
 
 		json::JsonObject operator *() const;
 

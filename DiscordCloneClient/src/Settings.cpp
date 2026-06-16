@@ -95,6 +95,13 @@ namespace client
 		stream << *this;
 	}
 
+	void Settings::modifySettings(const std::function<void(Settings&)>& modifyFunctor)
+	{
+		modifyFunctor(*this);
+
+		this->saveSettings();
+	}
+
 	json::JsonObject Settings::operator *() const
 	{
 		json::JsonObject result;

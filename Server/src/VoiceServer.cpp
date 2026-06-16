@@ -59,6 +59,12 @@ namespace voice
 
 			return;
 		}
+		else if (size == web::UDPSocket::pingPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::ping.begin()))
+		{
+			socket.sendData(web::UDPSocket::ping, address);
+
+			return;
+		}
 		else if (size == SOCKET_ERROR)
 		{
 			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())

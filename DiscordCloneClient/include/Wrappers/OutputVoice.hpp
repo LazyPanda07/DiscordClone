@@ -2,7 +2,7 @@
 
 #include "SocketWrapper.hpp"
 
-namespace wrapper
+namespace wrappers
 {
 	class OutputVoice
 	{

@@ -57,6 +57,15 @@ namespace web
 		static constexpr std::string_view echo = "echo";
 		static constexpr size_t echoPacketSize = echo.size();
 
+		static constexpr std::string_view ping = "ping";
+		static constexpr size_t pingPacketSize = ping.size();
+
+#ifdef __LINUX__
+		static constexpr int32_t customNonBlockingFlag = MSG_DONTWAIT;
+#else
+		static constexpr int32_t customNonBlockingFlag = 0xff;
+#endif
+		
 	protected:
 		SOCKET udpSocket;
 		sockaddr_in address;
@@ -75,7 +84,7 @@ namespace web
 
 		int sendData(std::string_view data, const sockaddr_in& address) const;
 
-		virtual void receiveData(const ReceiveCallback& callback) = 0;
+		virtual void receiveData(const ReceiveCallback& callback, int32_t flags = 0) = 0;
 
 		void close();
 

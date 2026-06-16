@@ -4,7 +4,7 @@
 
 static void callback(const char* data, uint64_t size, void* userData);
 
-namespace wrapper
+namespace wrappers
 {
 	SocketWrapper::SocketWrapper(std::string_view ip, uint16_t port) :
 		implementation(utils::callApiFunction(&createSocket, ip.data(), port))
@@ -17,13 +17,18 @@ namespace wrapper
 		utils::callApiFunction(&::sendData, implementation, data.data(), data.size());
 	}
 
-	std::string SocketWrapper::receiveData()
+	std::string SocketWrapper::receiveData(int32_t flags)
 	{
 		std::string result;
 
-		utils::callApiFunction(&::receiveData, implementation, &callback, &result);
+		utils::callApiFunction(&::receiveData, implementation, &callback, flags, &result);
 
 		return result;
+	}
+
+	int64_t SocketWrapper::ping() const
+	{
+		return utils::callApiFunction(&::ping, implementation);
 	}
 
 	SocketWrapper::~SocketWrapper()

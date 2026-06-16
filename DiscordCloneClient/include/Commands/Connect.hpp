@@ -1,0 +1,38 @@
+#pragma once
+
+#include "Command.hpp"
+
+#include <functional>
+
+#include "Wrappers/SocketWrapper.hpp"
+#include "Settings.hpp"
+
+namespace commands
+{
+	class Connect : public Command
+	{
+	private:
+		std::unique_ptr<wrappers::SocketWrapper>& socket;
+		client::Settings& settings;
+		std::function<void()> onSuccess;
+
+	private:
+		bool connect(std::string_view ip, int16_t port);
+
+		bool sendHello();
+
+		bool receiveHello();
+
+	private:
+		bool run(std::istream& stream) override;
+
+		uint32_t getChecks() const override;
+
+	public:
+		Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, client::Settings& settings, const std::function<void()>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks);
+
+		std::string_view getHelpText() const override;
+
+		~Connect() = default;
+	};
+}

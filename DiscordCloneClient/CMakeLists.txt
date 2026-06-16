@@ -23,6 +23,21 @@ add_executable(
 	src/Wrappers/SocketWrapper.cpp
 	src/Wrappers/InputVoice.cpp
 	src/Wrappers/OutputVoice.cpp
+	src/Commands/Command.cpp
+	src/Checks/Check.cpp
+	src/Checks/CheckInputStream.cpp
+	src/Checks/CheckOutputStream.cpp
+	src/Checks/CheckSocket.cpp
+	src/Commands/Connect.cpp
+	src/Commands/OverrideInputDeviceId.cpp
+	src/Commands/OverrideOutputDeviceId.cpp
+	src/Commands/SetInputVolume.cpp
+	src/Commands/SetOutputVolume.cpp
+	src/Commands/GetInputVolume.cpp
+	src/Commands/GetOutputVolume.cpp
+	src/Commands/MuteOrUnmute.cpp
+	src/Commands/Echo.cpp
+	src/Commands/Exit.cpp
 )
 
 if (WIN32)

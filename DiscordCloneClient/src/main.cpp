@@ -4,6 +4,7 @@
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <ranges>
 
 #include <UDPSocket.hpp>
 #include <c_api.h>
@@ -13,50 +14,93 @@
 #include "Wrappers/InputVoice.hpp"
 #include "Wrappers/OutputVoice.hpp"
 #include "Utils.hpp"
+#include "Checks/CheckSocket.hpp"
+#include "Checks/CheckInputStream.hpp"
+#include "Checks/CheckOutputStream.hpp"
+#include "Commands/Connect.hpp"
+#include "Commands/OverrideInputDeviceId.hpp"
+#include "Commands/OverrideOutputDeviceId.hpp"
+#include "Commands/SetInputVolume.hpp"
+#include "Commands/SetOutputVolume.hpp"
+#include "Commands/GetInputVolume.hpp"
+#include "Commands/GetOutputVolume.hpp"
+#include "Commands/MuteOrUnmute.hpp"
+#include "Commands/Echo.hpp"
+#include "Commands/Exit.hpp"
 
 #ifndef __LINUX__
 #include <Windows.h>
 #endif
 
-std::pair<std::string, uint16_t> parseIpPort(std::string& command);
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::InputVoice>& input, const std::unique_ptr<wrappers::OutputVoice>& output);
 
-bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::SocketWrapper>& resultSocket, std::unique_ptr<wrapper::InputVoice>& input, std::unique_ptr<wrapper::OutputVoice>& output);
+void printDeviceInfo(const std::unique_ptr<wrappers::InputVoice>& input);
 
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapper::InputVoice>& input, const std::unique_ptr<wrapper::OutputVoice>& output);
-
-void printDeviceInfo(const std::unique_ptr<wrapper::InputVoice>& input);
+void help(const std::vector<std::unique_ptr<commands::Command>>& commands);
 
 int main(int argc, char** argv) try
 {
 #ifndef __LINUX__
 	SetConsoleOutputCP(CP_UTF8);
 #endif
-
-	std::string command;
-	std::vector<std::pair<std::string, std::string>> availableCommands =
-	{
-		{ "connect", "<ip:port>" },
-		{ "override_input_device_id", "<id>" },
-		{ "override_output_device_id", "<id>" },
-		{ "mute_and_unmute", "" },
-		{ "set_input_volume", "<volume>" },
-		{ "set_output_volume", "<volume>" },
-		{ "get_input_volume", "" },
-		{ "get_output_volume", "" },
-		{ "echo", "" },
-		{ "help", "" },
-		{ "exit", "" }
-	};
-
 	client::Settings settings;
-	std::unique_ptr<wrapper::SocketWrapper> socket;
-	std::unique_ptr<wrapper::InputVoice> input;
-	std::unique_ptr<wrapper::OutputVoice> output;
+	std::unique_ptr<wrappers::SocketWrapper> socket;
+	std::unique_ptr<wrappers::InputVoice> input;
+	std::unique_ptr<wrappers::OutputVoice> output;
 	functionality::Hotkeys hotkeys;
+	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &input, &output]()
+		{
+			std::vector<std::unique_ptr<checks::Check>> result;
+
+			result.emplace_back(std::make_unique<checks::CheckSocket>(socket));
+			result.emplace_back(std::make_unique<checks::CheckInputStream>(input));
+			result.emplace_back(std::make_unique<checks::CheckOutputStream>(output));
+
+			return result;
+		}();
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &input, &output, &settings, &checks]()
+		{
+			std::vector<std::unique_ptr<commands::Command>> result;
+
+			result.emplace_back
+			(
+				std::make_unique<commands::Connect>
+				(
+					socket,
+					settings,
+					[&socket, &input, &output]()
+					{
+						input = std::make_unique<wrappers::InputVoice>(*socket);
+						output = std::make_unique<wrappers::OutputVoice>(*socket);
+					},
+					checks
+				)
+			);
+			result.emplace_back(std::make_unique<commands::SetInputVolume>(input, settings, checks));
+			result.emplace_back(std::make_unique<commands::SetOutputVolume>(output, settings, checks));
+			result.emplace_back(std::make_unique<commands::GetInputVolume>(input, checks));
+			result.emplace_back(std::make_unique<commands::GetOutputVolume>(output, checks));
+			result.emplace_back(std::make_unique<commands::MuteOrUnmute>(input, checks));
+			result.emplace_back(std::make_unique<commands::Echo>(socket, checks));
+			result.emplace_back(std::make_unique<commands::OverrideInputDeviceId>(input, checks));
+			result.emplace_back(std::make_unique<commands::OverrideOutputDeviceId>(output, checks));
+			result.emplace_back(std::make_unique<commands::Exit>(checks));
+
+			return result;
+		}();
 
 	if (std::optional<client::Settings> loadedSettings = client::Settings::loadSettings())
 	{
-		if (connect(loadedSettings->reconnectIp, loadedSettings->reconnectPort, socket, input, output))
+		auto it = std::ranges::find(commands, "connect", &commands::Command::command);
+
+		if (it == commands.end())
+		{
+			throw std::runtime_error("Can't find connect command");
+		}
+
+		std::istringstream stream(std::format("{}:{}", loadedSettings->reconnectIp, loadedSettings->reconnectPort));
+
+		if ((*it)->conditionalRun(stream))
 		{
 			settings = *loadedSettings;
 		}
@@ -82,155 +126,36 @@ int main(int argc, char** argv) try
 
 	while (true)
 	{
+		std::string inputCommand;
+
 		std::cout << "Enter command: ";
 
-		std::getline(std::cin, command);
+		std::getline(std::cin, inputCommand);
 
-		if (!command.find("connect"))
+		std::istringstream is(inputCommand);
+		std::string command;
+
+		is >> command;
+
+		if (command == "help")
 		{
-			using namespace std::chrono_literals;
+			help(commands);
 
-			const auto& [ip, port] = parseIpPort(command);
-
-			if (connect(ip, port, socket, input, output))
-			{
-				settings.reconnectIp = ip;
-				settings.reconnectPort = port;
-
-				settings.saveSettings();
-			}
+			continue;
 		}
-		else if (!command.find("override_input_device_id"))
+
+		auto it = std::ranges::find(commands, command, &commands::Command::command);
+
+		if (it == commands.end())
 		{
-			if (!input)
-			{
-				std::cout << "Input not initialized" << std::endl;
+			std::cout << "Wrong command: " << command;
 
-				continue;
-			}
+			help(commands);
 
-			std::istringstream is(command);
-			uint32_t id;
-
-			is >> command;
-			is >> id;
-
-			input->overrideDeviceId(id);
+			continue;
 		}
-		else if (!command.find("override_output_device_id"))
-		{
-			if (!output)
-			{
-				std::cout << "Output not initialized" << std::endl;
 
-				continue;
-			}
-
-			std::istringstream is(command);
-			uint32_t id;
-
-			is >> command;
-			is >> id;
-
-			output->overrideDeviceId(id);
-		}
-		else if (!command.find("set_input_volume"))
-		{
-			if (!input)
-			{
-				std::cout << "Input not initialized" << std::endl;
-
-				continue;
-			}
-
-			std::istringstream is(command);
-			double volume;
-
-			is >> command;
-			is >> volume;
-
-			input->setVolume(volume);
-
-			settings.inputVolume = volume;
-
-			settings.saveSettings();
-		}
-		else if (!command.find("set_output_volume"))
-		{
-			if (!output)
-			{
-				std::cout << "Output not initialized" << std::endl;
-
-				continue;
-			}
-
-			std::istringstream is(command);
-			double volume;
-
-			is >> command;
-			is >> volume;
-
-			output->setVolume(volume);
-
-			settings.outputVolume = volume;
-
-			settings.saveSettings();
-		}
-		else if (!command.find("get_input_volume"))
-		{
-			if (!input)
-			{
-				std::cout << "Input not initialized" << std::endl;
-
-				continue;
-			}
-
-			std::cout << input->getVolume() << std::endl;
-		}
-		else if (!command.find("get_output_volume"))
-		{
-			if (!output)
-			{
-				std::cout << "Output not initialized" << std::endl;
-
-				continue;
-			}
-
-			std::cout << output->getVolume() << std::endl;
-		}
-		else if (!command.find("mute_and_unmute"))
-		{
-			if (!input)
-			{
-				std::cout << "Input not initialized" << std::endl;
-
-				continue;
-			}
-
-			input->muteOrUnmute();
-		}
-		else if (!command.find("echo"))
-		{
-			if (!socket)
-			{
-				std::cout << "Not connected" << std::endl;
-
-				continue;
-			}
-
-			socket->sendData(web::UDPSocket::echo);
-		}
-		else if (!command.find("help"))
-		{
-			for (const auto& [command, message] : availableCommands)
-			{
-				std::cout << command << ": " << message << std::endl;
-			}
-		}
-		else if (!command.find("exit"))
-		{
-			exit(0);
-		}
+		(*it)->conditionalRun(is);
 	}
 
 	return 0;
@@ -240,73 +165,15 @@ catch (const std::exception& e)
 	std::cerr << e.what() << std::endl;
 
 #ifndef __LINUX__
+	std::cout << "Press any button to continue" << std::endl;
+
 	std::cin.get();
 #endif
 
 	return 1;
 }
 
-std::pair<std::string, uint16_t> parseIpPort(std::string& command)
-{
-	std::istringstream is(command);
-	std::string ip;
-	std::string port;
-
-	is >> command;
-
-	std::getline(is, ip, ':');
-
-	ip.erase(ip.begin());
-
-	is >> port;
-
-	return std::make_pair(std::move(ip), std::stoi(port));
-}
-
-bool connect(std::string_view ip, uint16_t port, std::unique_ptr<wrapper::SocketWrapper>& resultSocket, std::unique_ptr<wrapper::InputVoice>& input, std::unique_ptr<wrapper::OutputVoice>& output)
-{
-	using namespace std::chrono_literals;
-
-	bool result = false;
-
-	resultSocket = std::make_unique<wrapper::SocketWrapper>(ip, port);
-
-	std::cout << std::format("Connecting to: {}:{}...", ip, port) << std::endl;
-
-	resultSocket->sendData(web::UDPSocket::hello);
-
-	std::this_thread::sleep_for(50ms);
-
-	for (size_t i = 0; i < 5; i++)
-	{
-		if (resultSocket->receiveData() == web::UDPSocket::hello)
-		{
-			std::cout << "Connected to: " << ip << ':' << port << std::endl;
-
-			result = true;
-
-			break;
-		}
-
-		std::this_thread::sleep_for(1s);
-
-		std::cout << std::format("Connecting to: {}:{}...", ip, port) << std::endl;
-	}
-
-	if (result)
-	{
-		input = std::make_unique<wrapper::InputVoice>(*resultSocket);
-		output = std::make_unique<wrapper::OutputVoice>(*resultSocket);
-	}
-	else
-	{
-		std::cout << std::format("Failed to connect to: {}:{}", ip, port) << std::endl;
-	}
-
-	return result;
-}
-
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapper::InputVoice>& input, const std::unique_ptr<wrapper::OutputVoice>& output)
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::InputVoice>& input, const std::unique_ptr<wrappers::OutputVoice>& output)
 {
 	if (!input || !output)
 	{
@@ -317,7 +184,7 @@ void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapp
 	output->setVolume(settings.outputVolume);
 }
 
-void printDeviceInfo(const std::unique_ptr<wrapper::InputVoice>& input)
+void printDeviceInfo(const std::unique_ptr<wrappers::InputVoice>& input)
 {
 	DeviceInformationArray devices = utils::callApiFunction(&getDeviceInformation);
 	uint64_t size = utils::callApiFunction(&getDeviceInformationSize, devices);
@@ -347,4 +214,14 @@ void printDeviceInfo(const std::unique_ptr<wrapper::InputVoice>& input)
 	}
 
 	deleteDeviceInformation(devices);
+}
+
+void help(const std::vector<std::unique_ptr<commands::Command>>& commands)
+{
+	for (const std::unique_ptr<commands::Command>& command : commands)
+	{
+		std::cout << command->command << ": " << command->getHelpText() << std::endl;
+	}
+
+	std::cout << "help: " << std::endl;
 }

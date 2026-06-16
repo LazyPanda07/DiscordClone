@@ -38,12 +38,34 @@ namespace web
 		this->initLocalAddress();
 	}
 
-	void UDPClientSocket::receiveData(const ReceiveCallback& callback)
+	void UDPClientSocket::receiveData(const ReceiveCallback& callback, int32_t flags)
 	{
 		sockaddr_in server{};
 		Buffer data{};
 		socklen_t size = sizeof(server);
-		int result = recvfrom(udpSocket, data.data(), data.size(), 0, reinterpret_cast<sockaddr*>(&server), &size);
+
+#ifndef __LINUX__
+		u_long mode = 1;
+		bool customNonBlocking = flags == UDPSocket::customNonBlockingFlag;
+		
+		if (customNonBlocking)
+		{
+			ioctlsocket(udpSocket, FIONBIO, &mode);
+
+			flags = 0;
+		}
+
+		int result = recvfrom(udpSocket, data.data(), data.size(), flags, reinterpret_cast<sockaddr*>(&server), &size);
+
+		if (customNonBlocking)
+		{
+			mode = 0;
+
+			ioctlsocket(udpSocket, FIONBIO, &mode);
+		}
+#else
+		int result = recvfrom(udpSocket, data.data(), data.size(), flags, reinterpret_cast<sockaddr*>(&server), &size);
+#endif
 
 		callback(data, result, server, *this);
 	}
