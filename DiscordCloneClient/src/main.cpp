@@ -150,7 +150,7 @@ int main(int argc, char** argv) try
 
 		if (it == commands.end())
 		{
-			std::cout << "Wrong command: " << command;
+			std::cout << "Wrong command: " << command << std::endl;
 
 			help(commands);
 
