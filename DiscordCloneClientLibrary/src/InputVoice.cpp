@@ -55,25 +55,20 @@ namespace voice
 			}
 		}
 
-		std::array<int16_t, 480> intInData{};
-		std::array<int16_t, 480> intOutData{};
-		std::array<float, 480> floatOutData{};
+		functionality::toInt(in, voice.intInData);
 
-		functionality::toInt(in, intInData);
+		speex_echo_capture(voice.echoState, voice.intInData.data(), voice.intOutData.data());
 
-		speex_echo_capture(voice.echoState, intInData.data(), intOutData.data());
+		functionality::toFloat(voice.intOutData, voice.floatOutData);
 
-		functionality::toFloat(intOutData, floatOutData);
-
-		std::array<uint8_t, web::UDPSocket::voicePacketSize> outputData{};
-		int bytes = opus_encode_float(voice.encoder, floatOutData.data(), frames, outputData.data(), outputData.size());
+		int bytes = opus_encode_float(voice.encoder, voice.floatOutData.data(), frames, voice.outputData.data(), voice.outputData.size());
 
 		if (bytes < 0)
 		{
 			throw std::runtime_error(std::format("Fail encoding: {}", opus_strerror(bytes)));
 		}
 
-		voice.socket.sendData(std::span<uint8_t>(outputData.data(), bytes));
+		voice.socket.sendData(std::span<uint8_t>(voice.outputData.data(), bytes));
 
 		return 0;
 	}
@@ -85,7 +80,11 @@ namespace voice
 		sampleRate(sampleRate),
 		encoder(nullptr),
 		echoState(echoState),
-		preprocessState(preprocessState)
+		preprocessState(preprocessState),
+		intInData({}),
+		intOutData({}),
+		floatOutData({}),
+		outputData({})
 	{
 		loadResourceLibrary();
 

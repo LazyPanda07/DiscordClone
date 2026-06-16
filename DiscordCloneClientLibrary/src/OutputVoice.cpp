@@ -34,17 +34,15 @@ namespace voice
 					}
 
 					std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
-					std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> input{};
-					std::array<int16_t, web::UDPSocket::voicePacketSize / sizeof(float)> echoCancelation{};
-					int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, input.data(), voice.frameSize, 0);
+					int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, voice.inputDataBuffer.data(), voice.frameSize, 0);
 
-					functionality::toInt(input, echoCancelation);
+					functionality::toInt(voice.inputDataBuffer, voice.echoCancelation);
 
-					speex_echo_playback(voice.echoState, echoCancelation.data());
+					speex_echo_playback(voice.echoState, voice.echoCancelation.data());
 
 					if (voice.volume != 1.0)
 					{
-						for (float& value : input)
+						for (float& value : voice.inputDataBuffer)
 						{
 							value *= voice.volume;
 						}
@@ -52,8 +50,8 @@ namespace voice
 
 					for (size_t i = 0; i < samples; i++)
 					{
-						out[i * 2] = input[i];
-						out[i * 2 + 1] = input[i];
+						out[i * 2] = voice.inputDataBuffer[i];
+						out[i * 2 + 1] = voice.inputDataBuffer[i];
 					}
 				},
 				web::UDPSocket::customNonBlockingFlag
@@ -81,7 +79,9 @@ namespace voice
 		sampleRate(sampleRate),
 		decoder(nullptr),
 		echoState(echoState),
-		preprocessState(preprocessState)
+		preprocessState(preprocessState),
+		inputDataBuffer({}),
+		echoCancelation({})
 	{
 		audio.showWarnings();
 

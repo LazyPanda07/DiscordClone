@@ -28,6 +28,8 @@ namespace voice
 		OpusDecoder* decoder;
 		SpeexEchoState* echoState;
 		SpeexPreprocessState* preprocessState;
+		std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> inputDataBuffer;
+		std::array<int16_t, web::UDPSocket::voicePacketSize / sizeof(float)> echoCancelation;
 		
 	public:
 		OutputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate, SpeexEchoState* echoState, SpeexPreprocessState* preprocessState);
