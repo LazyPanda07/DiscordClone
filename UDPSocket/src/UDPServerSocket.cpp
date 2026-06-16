@@ -21,7 +21,7 @@ namespace web
 		}
 	}
 
-	void UDPServerSocket::receiveData(const ReceiveCallback& callback, int32_t flags)
+	bool UDPServerSocket::receiveData(const ReceiveCallback& callback, int32_t flags)
 	{
 		sockaddr_in client{};
 		Buffer data{};
@@ -29,5 +29,7 @@ namespace web
 		int result = recvfrom(udpSocket, data.data(), data.size(), flags, reinterpret_cast<sockaddr*>(&client), &size);
 
 		callback(data, result, client, *this);
+
+		return result != SOCKET_ERROR;
 	}
 }

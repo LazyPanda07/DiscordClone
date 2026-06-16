@@ -3,7 +3,8 @@
 #include <span>
 #include <filesystem>
 
-#include <UUID.h>
+#include <speex/speex_echo.h>
+#include <speex/speex_preprocess.h>
 
 #ifdef __LINUX__
 #include <dlfcn.h>
@@ -11,6 +12,8 @@
 #include <Windows.h>
 #include <mmsystem.h>
 #endif
+
+#include "Functionality.hpp"
 
 #ifdef __LINUX__
 using HMODULE = void*;
@@ -25,12 +28,6 @@ static void loadResourceLibrary();
 static const uint8_t* callGetMicrophoneOffSound(uint64_t* size);
 
 static const uint8_t* callGetMicrophoneOnSound(uint64_t* size);
-
-#ifdef __LINUX__
-
-#else
-
-#endif
 
 namespace voice
 {
@@ -58,8 +55,18 @@ namespace voice
 			}
 		}
 
+		std::array<int16_t, 480> intInData{};
+		std::array<int16_t, 480> intOutData{};
+		std::array<float, 480> floatOutData{};
+
+		functionality::toInt(in, intInData);
+
+		speex_echo_capture(voice.echoState, intInData.data(), intOutData.data());
+
+		functionality::toFloat(intOutData, floatOutData);
+
 		std::array<uint8_t, web::UDPSocket::voicePacketSize> outputData{};
-		int bytes = opus_encode_float(voice.encoder, in.data(), frames, outputData.data(), outputData.size());
+		int bytes = opus_encode_float(voice.encoder, floatOutData.data(), frames, outputData.data(), outputData.size());
 
 		if (bytes < 0)
 		{
@@ -71,12 +78,14 @@ namespace voice
 		return 0;
 	}
 
-	InputVoice::InputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate) :
+	InputVoice::InputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate, SpeexEchoState* echoState, SpeexPreprocessState* preprocessState) :
 		socket(socket),
 		volume(1.0),
-		bufferFrames(bufferFrames),
+		frameSize(frameSize),
 		sampleRate(sampleRate),
-		encoder(nullptr)
+		encoder(nullptr),
+		echoState(echoState),
+		preprocessState(preprocessState)
 	{
 		loadResourceLibrary();
 
@@ -85,7 +94,7 @@ namespace voice
 		parameters.deviceId = audio.getDefaultInputDevice();
 		parameters.nChannels = 1;
 
-		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &InputVoice::callback, this);
+		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &frameSize, &InputVoice::callback, this);
 
 		audio.startStream();
 
@@ -114,7 +123,7 @@ namespace voice
 			audio.closeStream();
 		}
 
-		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &InputVoice::callback, this);
+		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &frameSize, &InputVoice::callback, this);
 		audio.startStream();
 	}
 

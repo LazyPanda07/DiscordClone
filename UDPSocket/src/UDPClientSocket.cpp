@@ -38,7 +38,7 @@ namespace web
 		this->initLocalAddress();
 	}
 
-	void UDPClientSocket::receiveData(const ReceiveCallback& callback, int32_t flags)
+	bool UDPClientSocket::receiveData(const ReceiveCallback& callback, int32_t flags)
 	{
 		sockaddr_in server{};
 		Buffer data{};
@@ -68,5 +68,7 @@ namespace web
 #endif
 
 		callback(data, result, server, *this);
+
+		return result != SOCKET_ERROR;
 	}
 }

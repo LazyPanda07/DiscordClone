@@ -84,7 +84,7 @@ namespace web
 
 		int sendData(std::string_view data, const sockaddr_in& address) const;
 
-		virtual void receiveData(const ReceiveCallback& callback, int32_t flags = 0) = 0;
+		virtual bool receiveData(const ReceiveCallback& callback, int32_t flags = 0) = 0;
 
 		void close();
 

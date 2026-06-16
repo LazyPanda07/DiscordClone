@@ -6,6 +6,9 @@
 
 #include <RtAudio.h>
 #include <opus.h>
+#include <speex/speex_echo.h>
+#include <speex/speex_preprocess.h>
+
 #include <UDPSocket.hpp>
 
 namespace voice
@@ -20,12 +23,14 @@ namespace voice
 		web::UDPSocket& socket;
 		RtAudio::StreamParameters parameters;
 		double volume;
-		uint32_t bufferFrames;
+		uint32_t frameSize;
 		uint32_t sampleRate;
 		OpusDecoder* decoder;
+		SpeexEchoState* echoState;
+		SpeexPreprocessState* preprocessState;
 		
 	public:
-		OutputVoice(web::UDPSocket& socket, uint32_t bufferFrames, uint32_t sampleRate);
+		OutputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate, SpeexEchoState* echoState, SpeexPreprocessState* preprocessState);
 
 		void overrideDeviceId(uint32_t id);
 

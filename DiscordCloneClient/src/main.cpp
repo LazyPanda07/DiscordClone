@@ -89,6 +89,8 @@ int main(int argc, char** argv) try
 			return result;
 		}();
 
+	utils::callApiFunction(&initializeEchoCancelation);
+
 	if (std::optional<client::Settings> loadedSettings = client::Settings::loadSettings())
 	{
 		auto it = std::ranges::find(commands, "connect", &commands::Command::command);

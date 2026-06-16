@@ -11,10 +11,13 @@ option(BUILD_SHARED_CLIENT_LIBRARY "Build DiscordCloneClientLibrary as shared li
 
 project(DiscordCloneProject VERSION 0.4.0)
 
+add_definitions(-DDISABLE_WARNINGS) # disable speexdsp warnings
+
 include(FetchContent)
 
 if (WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
+	add_definitions(-DNOMINMAX)
 
 	if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")

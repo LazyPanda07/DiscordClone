@@ -17,7 +17,7 @@ namespace web
 
 		UDPClientSocket(const sockaddr_in& address);
 
-		void receiveData(const ReceiveCallback& callback, int32_t flags = 0) override;
+		bool receiveData(const ReceiveCallback& callback, int32_t flags = 0) override;
 
 		~UDPClientSocket() = default;
 	};
