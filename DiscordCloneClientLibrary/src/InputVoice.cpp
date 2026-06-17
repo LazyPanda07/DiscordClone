@@ -59,6 +59,8 @@ namespace voice
 
 		speex_echo_capture(voice.echoState, voice.intInData.data(), voice.intOutData.data());
 
+		speex_preprocess_run(voice.preprocessState, voice.intOutData.data());
+
 		functionality::toFloat(voice.intOutData, voice.floatOutData);
 
 		int bytes = opus_encode_float(voice.encoder, voice.floatOutData.data(), frames, voice.outputData.data(), voice.outputData.size());
@@ -131,7 +133,7 @@ namespace voice
 		uint64_t size = 0;
 
 #ifndef __LINUX__
-		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOnSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
+		PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOnSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 
 		audio.startStream();
@@ -142,7 +144,7 @@ namespace voice
 		uint64_t size = 0;
 
 #ifndef __LINUX__
-		PlaySound(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOffSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
+		PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOffSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
 
 		audio.stopStream();

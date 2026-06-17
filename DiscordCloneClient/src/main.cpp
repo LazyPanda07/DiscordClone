@@ -150,7 +150,7 @@ int main(int argc, char** argv) try
 
 		if (it == commands.end())
 		{
-			std::cout << "Wrong command: " << command << std::endl;
+			std::cout << "\033[31m" << "Wrong command: " << command << "\033[0m" << std::endl;
 
 			help(commands);
 
@@ -220,6 +220,8 @@ void printDeviceInfo(const std::unique_ptr<wrappers::InputVoice>& input)
 
 void help(const std::vector<std::unique_ptr<commands::Command>>& commands)
 {
+	std::cout << "Available commands:" << std::endl;
+	
 	for (const std::unique_ptr<commands::Command>& command : commands)
 	{
 		std::cout << command->command << ": " << command->getHelpText() << std::endl;

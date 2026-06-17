@@ -89,7 +89,6 @@ namespace voice
 		parameters.nChannels = 2;
 
 		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &frameSize, &OutputVoice::callback, this);
-
 		audio.startStream();
 
 		int errorCode = 0;
