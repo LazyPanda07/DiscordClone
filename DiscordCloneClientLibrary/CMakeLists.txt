@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.27.0)
 set(RTAUDIO_TAG e5f0774)
 set(UTILITY_LIBRARY_VERSION 0.12.1)
 set(OPUS_VERSION 1.6.1)
-set(SPEEX_DSP_TAG ed26e53f0a272c649af0642fdc815d3042a9430b)
 set(RTAUDIO_BUILD_STATIC_LIBS ON)
 set(OPUS_X86_PRESUME_AVX2 ON)
 
@@ -25,16 +24,9 @@ FetchContent_Declare(
 	GIT_TAG v${OPUS_VERSION}
 )
 
-FetchContent_Declare(
-	speexdsp
-	GIT_REPOSITORY https://gitlab.xiph.org/xiph/speexdsp.git
-	GIT_TAG ${SPEEX_DSP_TAG}
-)
-
 FetchContent_MakeAvailable(rtaudio)
 FetchContent_MakeAvailable(UtilityLibrary)
 FetchContent_MakeAvailable(opus)
-FetchContent_MakeAvailable(speexdsp)
 
 if (${BUILD_SHARED_CLIENT_LIBRARY})
 	set(LIBRARY_TYPE SHARED)
@@ -65,7 +57,6 @@ target_link_libraries(
 	rtaudio
 	UtilityLibrary
 	opus
-	speexdsp
 )
 
 if (WIN32)

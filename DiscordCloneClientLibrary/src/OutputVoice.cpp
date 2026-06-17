@@ -17,8 +17,6 @@ namespace voice
 
 		if (!outputBuffer)
 		{
-			speex_echo_playback(voice.echoState, silence.data());
-
 			return 0;
 		}
 
@@ -36,10 +34,6 @@ namespace voice
 					std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
 					int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, voice.inputDataBuffer.data(), voice.frameSize, 0);
 
-					functionality::toInt(voice.inputDataBuffer, voice.echoCancelation);
-
-					speex_echo_playback(voice.echoState, voice.echoCancelation.data());
-
 					if (voice.volume != 1.0)
 					{
 						for (float& value : voice.inputDataBuffer)
@@ -56,11 +50,6 @@ namespace voice
 				},
 				web::UDPSocket::customNonBlockingFlag
 			);
-
-			if (!result)
-			{
-				speex_echo_playback(voice.echoState, silence.data());
-			}
 		}
 		catch (const std::exception& e)
 		{
@@ -72,16 +61,13 @@ namespace voice
 		return 0;
 	}
 
-	OutputVoice::OutputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate, SpeexEchoState* echoState, SpeexPreprocessState* preprocessState) :
+	OutputVoice::OutputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate) :
 		socket(socket),
 		volume(1.0),
 		frameSize(frameSize),
 		sampleRate(sampleRate),
 		decoder(nullptr),
-		echoState(echoState),
-		preprocessState(preprocessState),
-		inputDataBuffer({}),
-		echoCancelation({})
+		inputDataBuffer({})
 	{
 		audio.showWarnings();
 

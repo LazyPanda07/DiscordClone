@@ -2,9 +2,6 @@
 
 #include <chrono>
 
-#include <speex/speex_echo.h>
-#include <speex/speex_preprocess.h>
-
 #include <UDPClientSocket.hpp>
 
 #include "Functionality.hpp"
@@ -14,46 +11,12 @@
 static constexpr uint32_t sampleRate = 48'000;
 static constexpr uint32_t frameSize = 480;
 static constexpr int32_t tailLength = frameSize * 12;
-static SpeexEchoState* echoState = nullptr;
-static SpeexPreprocessState* preprocessState = nullptr;
 
-void initializeEchoCancelation(Exception* exception)
+void initialize(Exception* exception)
 {
-	int32_t localSampleRate = sampleRate;
-	int32_t denoise = 1;
-	int32_t agc = 0;
-
 	try
 	{
-		if (echoState = speex_echo_state_init(frameSize, tailLength); !echoState)
-		{
-			throw std::runtime_error("Can't initialize echo state");
-		}
-
-		if (speex_echo_ctl(echoState, SPEEX_ECHO_SET_SAMPLING_RATE, &localSampleRate))
-		{
-			throw std::runtime_error("Can't set sampling rate");
-		}
-
-		if (preprocessState = speex_preprocess_state_init(frameSize, localSampleRate); !preprocessState)
-		{
-			throw std::runtime_error("Can't initialize preprocess");
-		}
-
-		if (speex_preprocess_ctl(preprocessState, SPEEX_PREPROCESS_SET_ECHO_STATE, echoState))
-		{
-			throw std::runtime_error("Can't set echo state into preprocess");
-		}
-
-		if (speex_preprocess_ctl(preprocessState, SPEEX_PREPROCESS_SET_DENOISE, &denoise))
-		{
-			throw std::runtime_error("Can't set denoise to preprocess");
-		}
-
-		if (speex_preprocess_ctl(preprocessState, SPEEX_PREPROCESS_SET_AGC, &agc))
-		{
-			throw std::runtime_error("Can't unset Automatic Gain Control");
-		}
+		
 	}
 	catch (const std::exception& e)
 	{
@@ -79,7 +42,7 @@ InputVoiceStreamObject createInputVoiceStream(UdpSocketObject socket, Exception*
 {
 	try
 	{
-		return new voice::InputVoice(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate, echoState, preprocessState);
+		return new voice::InputVoice(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate);
 	}
 	catch (const std::exception& e)
 	{
@@ -93,7 +56,7 @@ OutputVoiceStreamObject createOutputVoiceStream(UdpSocketObject socket, Exceptio
 {
 	try
 	{
-		return new voice::OutputVoice(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate, echoState, preprocessState);
+		return new voice::OutputVoice(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate);
 	}
 	catch (const std::exception& e)
 	{

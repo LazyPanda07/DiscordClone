@@ -89,7 +89,7 @@ int main(int argc, char** argv) try
 			return result;
 		}();
 
-	utils::callApiFunction(&initializeEchoCancelation);
+	utils::callApiFunction(&initialize);
 
 	if (std::optional<client::Settings> loadedSettings = client::Settings::loadSettings())
 	{

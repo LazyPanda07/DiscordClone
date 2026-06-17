@@ -11,8 +11,6 @@ option(BUILD_SHARED_CLIENT_LIBRARY "Build DiscordCloneClientLibrary as shared li
 
 project(DiscordCloneProject VERSION 0.4.0)
 
-add_definitions(-DDISABLE_WARNINGS) # disable speexdsp warnings
-
 include(FetchContent)
 
 if (WIN32)

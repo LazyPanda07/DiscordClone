@@ -3,9 +3,6 @@
 #include <span>
 #include <filesystem>
 
-#include <speex/speex_echo.h>
-#include <speex/speex_preprocess.h>
-
 #ifdef __LINUX__
 #include <dlfcn.h>
 #else
@@ -55,15 +52,7 @@ namespace voice
 			}
 		}
 
-		functionality::toInt(in, voice.intInData);
-
-		speex_echo_capture(voice.echoState, voice.intInData.data(), voice.intOutData.data());
-
-		speex_preprocess_run(voice.preprocessState, voice.intOutData.data());
-
-		functionality::toFloat(voice.intOutData, voice.floatOutData);
-
-		int bytes = opus_encode_float(voice.encoder, voice.floatOutData.data(), frames, voice.outputData.data(), voice.outputData.size());
+		int bytes = opus_encode_float(voice.encoder, in.data(), frames, voice.outputData.data(), voice.outputData.size());
 
 		if (bytes < 0)
 		{
@@ -75,17 +64,12 @@ namespace voice
 		return 0;
 	}
 
-	InputVoice::InputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate, SpeexEchoState* echoState, SpeexPreprocessState* preprocessState) :
+	InputVoice::InputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate) :
 		socket(socket),
 		volume(1.0),
 		frameSize(frameSize),
 		sampleRate(sampleRate),
 		encoder(nullptr),
-		echoState(echoState),
-		preprocessState(preprocessState),
-		intInData({}),
-		intOutData({}),
-		floatOutData({}),
 		outputData({})
 	{
 		loadResourceLibrary();

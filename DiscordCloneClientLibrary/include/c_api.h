@@ -30,7 +30,7 @@ typedef void* InputVoiceStreamObject;
 typedef void* OutputVoiceStreamObject;
 typedef void* DeviceInformationArray;
 
-CLIENT_LIBRARY_FUNCTION_API void initializeEchoCancelation(Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void initialize(Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception);
 
