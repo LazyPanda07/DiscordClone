@@ -43,6 +43,7 @@ int main(int argc, char** argv) try
 #ifndef __LINUX__
 	SetConsoleOutputCP(CP_UTF8);
 #endif
+
 	client::Settings settings;
 	std::unique_ptr<wrappers::SocketWrapper> socket;
 	std::unique_ptr<wrappers::InputVoice> input;
@@ -93,6 +94,8 @@ int main(int argc, char** argv) try
 
 	if (std::optional<client::Settings> loadedSettings = client::Settings::loadSettings())
 	{
+		settings = *loadedSettings;
+
 		auto it = std::ranges::find(commands, "connect", &commands::Command::command);
 
 		if (it == commands.end())
@@ -100,11 +103,21 @@ int main(int argc, char** argv) try
 			throw std::runtime_error("Can't find connect command");
 		}
 
-		std::istringstream stream(std::format("{}:{}", loadedSettings->reconnectIp, loadedSettings->reconnectPort));
-
-		if ((*it)->conditionalRun(stream))
+		if (settings.reconnectIp.size())
 		{
-			settings = *loadedSettings;
+			std::istringstream stream(std::format("{}:{}", loadedSettings->reconnectIp, loadedSettings->reconnectPort));
+
+			if (!(*it)->conditionalRun(stream))
+			{
+				settings.modifySettings
+				(
+					[](client::Settings& self)
+					{
+						self.reconnectIp = "";
+						self.reconnectPort = 8080;
+					}
+				);
+			}
 		}
 	}
 
@@ -118,6 +131,8 @@ int main(int argc, char** argv) try
 			input->muteOrUnmute();
 
 			printDeviceInfo(input);
+
+			std::cout << "Enter command: ";
 		},
 		MOD_CONTROL | MOD_ALT,
 		VK_SPACE

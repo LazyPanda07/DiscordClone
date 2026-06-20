@@ -1,6 +1,7 @@
 #include "Settings.hpp"
 
 #include <filesystem>
+#include <iostream>
 #include <fstream>
 
 #ifdef __LINUX__
