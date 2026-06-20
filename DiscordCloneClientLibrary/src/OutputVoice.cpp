@@ -120,14 +120,14 @@ namespace voice
 template<size_t Size>
 void fillSound(const std::array<float, Size>& sound, std::span<float> out)
 {
-	if (sound.size() != out.size())
+	if (sound.size() * 2 != out.size())
 	{
 		std::cerr << std::format("Wrong fill size. Sound: {}, out: {}", sound.size(), out.size()) << std::endl;
 
 		return;
 	}
 
-	for (size_t i = 0; i < out.size(); i++)
+	for (size_t i = 0; i < sound.size(); i++)
 	{
 		out[i * 2] = sound[i];
 		out[i * 2 + 1] = sound[i];
