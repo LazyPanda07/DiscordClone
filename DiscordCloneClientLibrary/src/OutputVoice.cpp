@@ -7,7 +7,7 @@ namespace voice
 {
 	int OutputVoice::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
-		constexpr std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> silence{};
+		static constexpr std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> silence{};
 
 		OutputVoice& voice = *reinterpret_cast<OutputVoice*>(userData);
 		std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
