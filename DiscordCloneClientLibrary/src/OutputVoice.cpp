@@ -1,14 +1,16 @@
 #include "OutputVoice.hpp"
 
-#include "Functionality.hpp"
+template<size_t Size>
+static void fillSound(const std::array<float, Size>& sound, std::span<float> out);
 
 namespace voice
 {
 	int OutputVoice::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
-		constexpr std::array<int16_t, web::UDPSocket::voicePacketSize / sizeof(float)> silence{};
+		constexpr std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> silence{};
 
 		OutputVoice& voice = *reinterpret_cast<OutputVoice*>(userData);
+		std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
 
 		if (status & RTAUDIO_OUTPUT_UNDERFLOW)
 		{
@@ -17,6 +19,8 @@ namespace voice
 
 		if (!outputBuffer)
 		{
+			fillSound(silence, out);
+
 			return 0;
 		}
 
@@ -24,14 +28,15 @@ namespace voice
 		{
 			bool result = voice.socket.receiveData
 			(
-				[outputBuffer, frames, &voice](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+				[outputBuffer, frames, &voice, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 				{
 					if (size == SOCKET_ERROR)
 					{
+						fillSound(silence, out);
+
 						return;
 					}
 
-					std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
 					int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, voice.inputDataBuffer.data(), voice.frameSize, 0);
 
 					if (voice.volume != 1.0)
@@ -42,11 +47,7 @@ namespace voice
 						}
 					}
 
-					for (size_t i = 0; i < samples; i++)
-					{
-						out[i * 2] = voice.inputDataBuffer[i];
-						out[i * 2 + 1] = voice.inputDataBuffer[i];
-					}
+					fillSound(voice.inputDataBuffer, out);
 				}
 			);
 		}
@@ -113,5 +114,22 @@ namespace voice
 	double OutputVoice::getVolume() const
 	{
 		return volume;
+	}
+}
+
+template<size_t Size>
+void fillSound(const std::array<float, Size>& sound, std::span<float> out)
+{
+	if (sound.size() != out.size())
+	{
+		std::cerr << std::format("Wrong fill size. Sound: {}, out: {}", sound.size(), out.size()) << std::endl;
+
+		return;
+	}
+
+	for (size_t i = 0; i < out.size(); i++)
+	{
+		out[i * 2] = sound[i];
+		out[i * 2 + 1] = sound[i];
 	}
 }
