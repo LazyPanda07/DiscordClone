@@ -20,6 +20,10 @@ namespace web
 			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
 #endif
 		}
+
+		u_long mode = 1;
+
+		ioctlsocket(udpSocket, FIONBIO, &mode);
 	}
 
 	UDPClientSocket::UDPClientSocket(std::string_view ip, uint16_t port)
@@ -44,28 +48,7 @@ namespace web
 		Buffer data{};
 		socklen_t size = sizeof(server);
 
-#ifndef __LINUX__
-		u_long mode = 1;
-		bool customNonBlocking = flags == UDPSocket::customNonBlockingFlag;
-		
-		if (customNonBlocking)
-		{
-			ioctlsocket(udpSocket, FIONBIO, &mode);
-
-			flags = 0;
-		}
-
 		int result = recvfrom(udpSocket, data.data(), data.size(), flags, reinterpret_cast<sockaddr*>(&server), &size);
-
-		if (customNonBlocking)
-		{
-			mode = 0;
-
-			ioctlsocket(udpSocket, FIONBIO, &mode);
-		}
-#else
-		int result = recvfrom(udpSocket, data.data(), data.size(), flags, reinterpret_cast<sockaddr*>(&server), &size);
-#endif
 
 		callback(data, result, server, *this);
 

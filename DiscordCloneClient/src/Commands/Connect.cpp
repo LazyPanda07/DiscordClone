@@ -42,7 +42,7 @@ namespace commands
 	{
 		try
 		{
-			return socket->receiveData(web::UDPSocket::customNonBlockingFlag) == web::UDPSocket::hello;
+			return socket->receiveData() == web::UDPSocket::hello;
 		}
 		catch (const std::exception&)
 		{

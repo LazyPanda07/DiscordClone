@@ -60,12 +60,6 @@ namespace web
 		static constexpr std::string_view ping = "ping";
 		static constexpr size_t pingPacketSize = ping.size();
 
-#ifdef __LINUX__
-		static constexpr int32_t customNonBlockingFlag = MSG_DONTWAIT;
-#else
-		static constexpr int32_t customNonBlockingFlag = 0xff;
-#endif
-		
 	protected:
 		SOCKET udpSocket;
 		sockaddr_in address;

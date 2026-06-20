@@ -10,7 +10,6 @@
 
 static constexpr uint32_t sampleRate = 48'000;
 static constexpr uint32_t frameSize = 480;
-static constexpr int32_t tailLength = frameSize * 12;
 
 void initialize(Exception* exception)
 {

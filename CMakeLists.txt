@@ -9,7 +9,7 @@ option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" OFF)
 option(BUILD_SERVER "Build DiscordCloneServer" ON)
 option(BUILD_SHARED_CLIENT_LIBRARY "Build DiscordCloneClientLibrary as shared library" OFF)
 
-project(DiscordCloneProject VERSION 0.4.0)
+project(DiscordCloneProject VERSION 0.5.0)
 
 include(FetchContent)
 

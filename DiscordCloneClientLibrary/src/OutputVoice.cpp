@@ -47,8 +47,7 @@ namespace voice
 						out[i * 2] = voice.inputDataBuffer[i];
 						out[i * 2 + 1] = voice.inputDataBuffer[i];
 					}
-				},
-				web::UDPSocket::customNonBlockingFlag
+				}
 			);
 		}
 		catch (const std::exception& e)
