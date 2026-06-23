@@ -11,7 +11,7 @@
 
 namespace voice
 {
-	class OutputVoice
+	class Speaker
 	{
 	private:
 		static int callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData);
@@ -27,7 +27,7 @@ namespace voice
 		std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> inputDataBuffer;
 		
 	public:
-		OutputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate);
+		Speaker(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate);
 
 		void overrideDeviceId(uint32_t id);
 
@@ -37,6 +37,6 @@ namespace voice
 
 		double getVolume() const;
 
-		~OutputVoice() = default;
+		~Speaker() = default;
 	};
 }

@@ -6,7 +6,7 @@ namespace commands
 {
 	bool MuteOrUnmute::run(std::istream& stream)
 	{
-		input->muteOrUnmute();
+		microphone->muteOrUnmute();
 
 		return true;
 	}
@@ -16,9 +16,9 @@ namespace commands
 		return checks::Check::AvailableChecks::inputStream;
 	}
 
-	MuteOrUnmute::MuteOrUnmute(const std::unique_ptr<wrappers::InputVoice>& input, const std::vector<std::unique_ptr<checks::Check>>& checks) :
+	MuteOrUnmute::MuteOrUnmute(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks) :
 		Command(commandName, checks),
-		input(input)
+		microphone(microphone)
 	{
 
 	}

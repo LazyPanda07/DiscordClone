@@ -4,20 +4,24 @@
 
 namespace wrappers
 {
-	class OutputVoice
+	class MicrophoneWrapper
 	{
 	private:
-		OutputVoiceStreamObject implementation;
+		MicrophoneObject implementation;
 
 	public:
-		OutputVoice(SocketWrapper& socket);
+		MicrophoneWrapper(SocketWrapper& socket);
 
 		void overrideDeviceId(uint32_t id);
+
+		void muteOrUnmute();
+
+		bool isStreamRunning() const;
 
 		void setVolume(double volume);
 
 		double getVolume() const;
 
-		~OutputVoice();
+		~MicrophoneWrapper();
 	};
 }

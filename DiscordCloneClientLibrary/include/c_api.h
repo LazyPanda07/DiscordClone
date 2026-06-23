@@ -26,17 +26,17 @@
 
 typedef void* Exception;
 typedef void* UdpSocketObject;
-typedef void* InputVoiceStreamObject;
-typedef void* OutputVoiceStreamObject;
+typedef void* MicrophoneObject;
+typedef void* SpeakerObject;
 typedef void* DeviceInformationArray;
 
 CLIENT_LIBRARY_FUNCTION_API void initialize(Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API InputVoiceStreamObject createInputVoiceStream(UdpSocketObject socket, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API MicrophoneObject createMicrophone(UdpSocketObject socket, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API OutputVoiceStreamObject createOutputVoiceStream(UdpSocketObject socket, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API SpeakerObject createSpeaker(UdpSocketObject socket, Exception* exception);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,25 +52,25 @@ CLIENT_LIBRARY_FUNCTION_API void receiveData(UdpSocketObject socket, void(*callb
  */
 CLIENT_LIBRARY_FUNCTION_API int64_t ping(UdpSocketObject socket, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void overrideInputDeviceId(InputVoiceStreamObject inputStream, uint32_t id, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void overrideMicrophoneDeviceId(MicrophoneObject microphone, uint32_t id, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void muteOrUnmute(InputVoiceStreamObject inputStream, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void muteOrUnmute(MicrophoneObject microphone, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API bool isStreamRunning(InputVoiceStreamObject inputStream, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API bool isStreamRunning(MicrophoneObject microphone, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void restartInput(InputVoiceStreamObject inputStream, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void restartMicrophone(MicrophoneObject microphone, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void setInputVolume(InputVoiceStreamObject inputStream, double volume, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void setMicrophoneVolume(MicrophoneObject microphone, double volume, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API double getInputVolume(InputVoiceStreamObject inputStream, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API double getMicrophoneVolume(MicrophoneObject microphone, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void overrideOutputDeviceId(OutputVoiceStreamObject outputStream, uint32_t id, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void overrideSpeakerDeviceId(SpeakerObject speaker, uint32_t id, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void restartOutput(OutputVoiceStreamObject outputStream, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void restartSpeaker(SpeakerObject speaker, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void setOutputVolume(OutputVoiceStreamObject inputStream, double volume, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API void setSpeakerVolume(SpeakerObject microphone, double volume, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API double getOutputVolume(OutputVoiceStreamObject inputStream, Exception* exception);
+CLIENT_LIBRARY_FUNCTION_API double getSpeakerVolume(SpeakerObject microphone, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API DeviceInformationArray getDeviceInformation(Exception* exception);
 
@@ -96,9 +96,9 @@ CLIENT_LIBRARY_FUNCTION_API const char* getExceptionMessage(Exception exception)
 
 CLIENT_LIBRARY_FUNCTION_API void deleteSocket(UdpSocketObject socket);
 
-CLIENT_LIBRARY_FUNCTION_API void deleteInputVoiceStream(InputVoiceStreamObject inputStream);
+CLIENT_LIBRARY_FUNCTION_API void deleteMicrophone(MicrophoneObject microphone);
 
-CLIENT_LIBRARY_FUNCTION_API void deleteOutputVoiceStream(OutputVoiceStreamObject outputStream);
+CLIENT_LIBRARY_FUNCTION_API void deleteSpeaker(SpeakerObject speaker);
 
 CLIENT_LIBRARY_FUNCTION_API void deleteException(Exception exception);
 

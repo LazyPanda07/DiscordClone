@@ -11,19 +11,19 @@
 
 #include "Hotkeys.hpp"
 #include "Settings.hpp"
-#include "Wrappers/InputVoice.hpp"
-#include "Wrappers/OutputVoice.hpp"
+#include "Wrappers/MicrophoneWrapper.hpp"
+#include "Wrappers/SpeakerWrapper.hpp"
 #include "Utils.hpp"
 #include "Checks/CheckSocket.hpp"
-#include "Checks/CheckInputStream.hpp"
-#include "Checks/CheckOutputStream.hpp"
+#include "Checks/CheckMicrophone.hpp"
+#include "Checks/CheckSpeaker.hpp"
 #include "Commands/Connect.hpp"
 #include "Commands/OverrideInputDeviceId.hpp"
 #include "Commands/OverrideOutputDeviceId.hpp"
-#include "Commands/SetInputVolume.hpp"
-#include "Commands/SetOutputVolume.hpp"
-#include "Commands/GetInputVolume.hpp"
-#include "Commands/GetOutputVolume.hpp"
+#include "Commands/SetMicrophoneVolume.hpp"
+#include "Commands/SetSpeakerVolume.hpp"
+#include "Commands/GetMicrophoneVolume.hpp"
+#include "Commands/GetSpeakerVolume.hpp"
 #include "Commands/MuteOrUnmute.hpp"
 #include "Commands/Echo.hpp"
 #include "Commands/Exit.hpp"
@@ -32,9 +32,9 @@
 #include <Windows.h>
 #endif
 
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::InputVoice>& input, const std::unique_ptr<wrappers::OutputVoice>& output);
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& input, const std::unique_ptr<wrappers::SpeakerWrapper>& output);
 
-void printDeviceInfo(const std::unique_ptr<wrappers::InputVoice>& input);
+void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& input);
 
 void help(const std::vector<std::unique_ptr<commands::Command>>& commands);
 
@@ -46,16 +46,16 @@ int main(int argc, char** argv) try
 
 	client::Settings settings;
 	std::unique_ptr<wrappers::SocketWrapper> socket;
-	std::unique_ptr<wrappers::InputVoice> input;
-	std::unique_ptr<wrappers::OutputVoice> output;
+	std::unique_ptr<wrappers::MicrophoneWrapper> input;
+	std::unique_ptr<wrappers::SpeakerWrapper> output;
 	functionality::Hotkeys hotkeys;
 	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &input, &output]()
 		{
 			std::vector<std::unique_ptr<checks::Check>> result;
 
 			result.emplace_back(std::make_unique<checks::CheckSocket>(socket));
-			result.emplace_back(std::make_unique<checks::CheckInputStream>(input));
-			result.emplace_back(std::make_unique<checks::CheckOutputStream>(output));
+			result.emplace_back(std::make_unique<checks::CheckMicrophone>(input));
+			result.emplace_back(std::make_unique<checks::CheckSpeaker>(output));
 
 			return result;
 		}();
@@ -71,16 +71,16 @@ int main(int argc, char** argv) try
 					settings,
 					[&socket, &input, &output]()
 					{
-						input = std::make_unique<wrappers::InputVoice>(*socket);
-						output = std::make_unique<wrappers::OutputVoice>(*socket);
+						input = std::make_unique<wrappers::MicrophoneWrapper>(*socket);
+						output = std::make_unique<wrappers::SpeakerWrapper>(*socket);
 					},
 					checks
 				)
 			);
-			result.emplace_back(std::make_unique<commands::SetInputVolume>(input, settings, checks));
-			result.emplace_back(std::make_unique<commands::SetOutputVolume>(output, settings, checks));
-			result.emplace_back(std::make_unique<commands::GetInputVolume>(input, checks));
-			result.emplace_back(std::make_unique<commands::GetOutputVolume>(output, checks));
+			result.emplace_back(std::make_unique<commands::SetMicrophoneVolume>(input, settings, checks));
+			result.emplace_back(std::make_unique<commands::SetSpeakerVolume>(output, settings, checks));
+			result.emplace_back(std::make_unique<commands::GetMicrophoneVolume>(input, checks));
+			result.emplace_back(std::make_unique<commands::GetSpeakerVolume>(output, checks));
 			result.emplace_back(std::make_unique<commands::MuteOrUnmute>(input, checks));
 			result.emplace_back(std::make_unique<commands::Echo>(socket, checks));
 			result.emplace_back(std::make_unique<commands::OverrideInputDeviceId>(input, checks));
@@ -190,7 +190,7 @@ catch (const std::exception& e)
 	return 1;
 }
 
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::InputVoice>& input, const std::unique_ptr<wrappers::OutputVoice>& output)
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& input, const std::unique_ptr<wrappers::SpeakerWrapper>& output)
 {
 	if (!input || !output)
 	{
@@ -201,7 +201,7 @@ void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrapp
 	output->setVolume(settings.outputVolume);
 }
 
-void printDeviceInfo(const std::unique_ptr<wrappers::InputVoice>& input)
+void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& input)
 {
 	DeviceInformationArray devices = utils::callApiFunction(&getDeviceInformation);
 	uint64_t size = utils::callApiFunction(&getDeviceInformationSize, devices);

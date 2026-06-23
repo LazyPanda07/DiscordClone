@@ -2,12 +2,12 @@
 
 #include <algorithm>
 
-#include "InputVoice.hpp"
-#include "OutputVoice.hpp"
+#include "Microphone.hpp"
+#include "Speaker.hpp"
 
 namespace functionality
 {
-	void muteOrUnmute(voice::InputVoice& input);
+	void muteOrUnmute(voice::Microphone& microphone);
 
 	std::vector<RtAudio::DeviceInfo> getAudioDevices();
 

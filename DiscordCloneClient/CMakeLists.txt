@@ -21,20 +21,20 @@ add_executable(
 	src/Settings.cpp
 	src/Utils.cpp
 	src/Wrappers/SocketWrapper.cpp
-	src/Wrappers/InputVoice.cpp
-	src/Wrappers/OutputVoice.cpp
+	src/Wrappers/MicrophoneWrapper.cpp
+	src/Wrappers/SpeakerWrapper.cpp
 	src/Commands/Command.cpp
 	src/Checks/Check.cpp
-	src/Checks/CheckInputStream.cpp
-	src/Checks/CheckOutputStream.cpp
+	src/Checks/CheckMicrophone.cpp
+	src/Checks/CheckSpeaker.cpp
 	src/Checks/CheckSocket.cpp
 	src/Commands/Connect.cpp
 	src/Commands/OverrideInputDeviceId.cpp
 	src/Commands/OverrideOutputDeviceId.cpp
-	src/Commands/SetInputVolume.cpp
-	src/Commands/SetOutputVolume.cpp
-	src/Commands/GetInputVolume.cpp
-	src/Commands/GetOutputVolume.cpp
+	src/Commands/SetMicrophoneVolume.cpp
+	src/Commands/SetSpeakerVolume.cpp
+	src/Commands/GetMicrophoneVolume.cpp
+	src/Commands/GetSpeakerVolume.cpp
 	src/Commands/MuteOrUnmute.cpp
 	src/Commands/Echo.cpp
 	src/Commands/Exit.cpp

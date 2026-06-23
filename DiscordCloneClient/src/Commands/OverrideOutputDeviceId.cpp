@@ -10,7 +10,7 @@ namespace commands
 
 		stream >> id;
 
-		output->overrideDeviceId(id);
+		speaker->overrideDeviceId(id);
 
 		return true;
 	}
@@ -20,9 +20,9 @@ namespace commands
 		return checks::Check::AvailableChecks::outputStream;
 	}
 
-	OverrideOutputDeviceId::OverrideOutputDeviceId(std::unique_ptr<wrappers::OutputVoice>& output, const std::vector<std::unique_ptr<checks::Check>>& checks) :
+	OverrideOutputDeviceId::OverrideOutputDeviceId(std::unique_ptr<wrappers::SpeakerWrapper>& speaker, const std::vector<std::unique_ptr<checks::Check>>& checks) :
 		Command(commandName, checks),
-		output(output)
+		speaker(speaker)
 	{
 
 	}

@@ -4,24 +4,20 @@
 
 namespace wrappers
 {
-	class InputVoice
+	class SpeakerWrapper
 	{
 	private:
-		InputVoiceStreamObject implementation;
+		SpeakerObject implementation;
 
 	public:
-		InputVoice(SocketWrapper& socket);
+		SpeakerWrapper(SocketWrapper& socket);
 
 		void overrideDeviceId(uint32_t id);
-
-		void muteOrUnmute();
-
-		bool isStreamRunning() const;
 
 		void setVolume(double volume);
 
 		double getVolume() const;
 
-		~InputVoice();
+		~SpeakerWrapper();
 	};
 }

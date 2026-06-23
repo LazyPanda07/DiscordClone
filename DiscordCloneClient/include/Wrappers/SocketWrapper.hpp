@@ -22,7 +22,7 @@ namespace wrappers
 
 		~SocketWrapper();
 
-		friend class InputVoice;
-		friend class OutputVoice;
+		friend class MicrophoneWrapper;
+		friend class SpeakerWrapper;
 	};
 }

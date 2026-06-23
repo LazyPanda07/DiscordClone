@@ -6,7 +6,7 @@
 
 namespace commands
 {
-	class MuteOrUnmute : public Command
+	class GetMicrophoneVolume : public Command
 	{
 	private:
 		const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone;
@@ -17,8 +17,8 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		MuteOrUnmute(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		GetMicrophoneVolume(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
-		~MuteOrUnmute() = default;
+		~GetMicrophoneVolume() = default;
 	};
 }

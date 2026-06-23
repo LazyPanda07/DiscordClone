@@ -5,8 +5,8 @@
 #include <UDPClientSocket.hpp>
 
 #include "Functionality.hpp"
-#include "InputVoice.hpp"
-#include "OutputVoice.hpp"
+#include "Microphone.hpp"
+#include "Speaker.hpp"
 
 static constexpr uint32_t sampleRate = 48'000;
 static constexpr uint32_t frameSize = 480;
@@ -37,11 +37,11 @@ UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception
 	return nullptr;
 }
 
-InputVoiceStreamObject createInputVoiceStream(UdpSocketObject socket, Exception* exception)
+MicrophoneObject createMicrophone(UdpSocketObject socket, Exception* exception)
 {
 	try
 	{
-		return new voice::InputVoice(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate);
+		return new voice::Microphone(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate);
 	}
 	catch (const std::exception& e)
 	{
@@ -51,11 +51,11 @@ InputVoiceStreamObject createInputVoiceStream(UdpSocketObject socket, Exception*
 	return nullptr;
 }
 
-OutputVoiceStreamObject createOutputVoiceStream(UdpSocketObject socket, Exception* exception)
+SpeakerObject createSpeaker(UdpSocketObject socket, Exception* exception)
 {
 	try
 	{
-		return new voice::OutputVoice(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate);
+		return new voice::Speaker(*reinterpret_cast<web::UDPSocket*>(socket), frameSize, sampleRate);
 	}
 	catch (const std::exception& e)
 	{
@@ -146,11 +146,11 @@ int64_t ping(UdpSocketObject socket, Exception* exception)
 	return 0;
 }
 
-void overrideInputDeviceId(InputVoiceStreamObject inputStream, uint32_t id, Exception* exception)
+void overrideMicrophoneDeviceId(MicrophoneObject microphone, uint32_t id, Exception* exception)
 {
 	try
 	{
-		static_cast<voice::InputVoice*>(inputStream)->overrideDeviceId(id);
+		static_cast<voice::Microphone*>(microphone)->overrideDeviceId(id);
 	}
 	catch (const std::exception& e)
 	{
@@ -158,11 +158,11 @@ void overrideInputDeviceId(InputVoiceStreamObject inputStream, uint32_t id, Exce
 	}
 }
 
-void muteOrUnmute(InputVoiceStreamObject inputStream, Exception* exception)
+void muteOrUnmute(MicrophoneObject microphone, Exception* exception)
 {
 	try
 	{
-		functionality::muteOrUnmute(*static_cast<voice::InputVoice*>(inputStream));
+		functionality::muteOrUnmute(*static_cast<voice::Microphone*>(microphone));
 	}
 	catch (const std::exception& e)
 	{
@@ -170,11 +170,11 @@ void muteOrUnmute(InputVoiceStreamObject inputStream, Exception* exception)
 	}
 }
 
-bool isStreamRunning(InputVoiceStreamObject inputStream, Exception* exception)
+bool isStreamRunning(MicrophoneObject microphone, Exception* exception)
 {
 	try
 	{
-		return static_cast<voice::InputVoice*>(inputStream)->isStreamRunning();
+		return static_cast<voice::Microphone*>(microphone)->isStreamRunning();
 	}
 	catch (const std::exception& e)
 	{
@@ -184,11 +184,11 @@ bool isStreamRunning(InputVoiceStreamObject inputStream, Exception* exception)
 	return false;
 }
 
-void restartInput(InputVoiceStreamObject inputStream, Exception* exception)
+void restartMicrophone(MicrophoneObject microphone, Exception* exception)
 {
 	try
 	{
-		static_cast<voice::InputVoice*>(inputStream)->restart();
+		static_cast<voice::Microphone*>(microphone)->restart();
 	}
 	catch (const std::exception& e)
 	{
@@ -196,11 +196,11 @@ void restartInput(InputVoiceStreamObject inputStream, Exception* exception)
 	}
 }
 
-void setInputVolume(InputVoiceStreamObject inputStream, double volume, Exception* exception)
+void setMicrophoneVolume(MicrophoneObject microphone, double volume, Exception* exception)
 {
 	try
 	{
-		static_cast<voice::InputVoice*>(inputStream)->setVolume(volume);
+		static_cast<voice::Microphone*>(microphone)->setVolume(volume);
 	}
 	catch (const std::exception& e)
 	{
@@ -208,11 +208,11 @@ void setInputVolume(InputVoiceStreamObject inputStream, double volume, Exception
 	}
 }
 
-double getInputVolume(InputVoiceStreamObject inputStream, Exception* exception)
+double getMicrophoneVolume(MicrophoneObject microphone, Exception* exception)
 {
 	try
 	{
-		return static_cast<voice::InputVoice*>(inputStream)->getVolume();
+		return static_cast<voice::Microphone*>(microphone)->getVolume();
 	}
 	catch (const std::exception& e)
 	{
@@ -222,11 +222,11 @@ double getInputVolume(InputVoiceStreamObject inputStream, Exception* exception)
 	return 0.0;
 }
 
-void overrideOutputDeviceId(OutputVoiceStreamObject outputStream, uint32_t id, Exception* exception)
+void overrideSpeakerDeviceId(SpeakerObject speaker, uint32_t id, Exception* exception)
 {
 	try
 	{
-		static_cast<voice::OutputVoice*>(outputStream)->overrideDeviceId(id);
+		static_cast<voice::Speaker*>(speaker)->overrideDeviceId(id);
 	}
 	catch (const std::exception& e)
 	{
@@ -234,11 +234,11 @@ void overrideOutputDeviceId(OutputVoiceStreamObject outputStream, uint32_t id, E
 	}
 }
 
-void restartOutput(OutputVoiceStreamObject outputStream, Exception* exception)
+void restartSpeaker(SpeakerObject speaker, Exception* exception)
 {
 	try
 	{
-		static_cast<voice::OutputVoice*>(outputStream)->restart();
+		static_cast<voice::Speaker*>(speaker)->restart();
 	}
 	catch (const std::exception& e)
 	{
@@ -246,11 +246,11 @@ void restartOutput(OutputVoiceStreamObject outputStream, Exception* exception)
 	}
 }
 
-void setOutputVolume(OutputVoiceStreamObject inputStream, double volume, Exception* exception)
+void setSpeakerVolume(SpeakerObject microphone, double volume, Exception* exception)
 {
 	try
 	{
-		static_cast<voice::OutputVoice*>(inputStream)->setVolume(volume);
+		static_cast<voice::Speaker*>(microphone)->setVolume(volume);
 	}
 	catch (const std::exception& e)
 	{
@@ -258,11 +258,11 @@ void setOutputVolume(OutputVoiceStreamObject inputStream, double volume, Excepti
 	}
 }
 
-double getOutputVolume(OutputVoiceStreamObject inputStream, Exception* exception)
+double getSpeakerVolume(SpeakerObject microphone, Exception* exception)
 {
 	try
 	{
-		return static_cast<voice::OutputVoice*>(inputStream)->getVolume();
+		return static_cast<voice::Speaker*>(microphone)->getVolume();
 	}
 	catch (const std::exception& e)
 	{
@@ -414,14 +414,14 @@ void deleteSocket(UdpSocketObject socket)
 	delete static_cast<web::UDPSocket*>(socket);
 }
 
-void deleteInputVoiceStream(InputVoiceStreamObject inputStream)
+void deleteMicrophone(MicrophoneObject microphone)
 {
-	delete static_cast<voice::InputVoice*>(inputStream);
+	delete static_cast<voice::Microphone*>(microphone);
 }
 
-void deleteOutputVoiceStream(OutputVoiceStreamObject outputStream)
+void deleteSpeaker(SpeakerObject speaker)
 {
-	delete static_cast<voice::OutputVoice*>(outputStream);
+	delete static_cast<voice::Speaker*>(speaker);
 }
 
 void deleteException(Exception exception)

@@ -40,8 +40,8 @@ project(DiscordCloneClientLibrary)
 
 add_library(
 	${PROJECT_NAME} ${LIBRARY_TYPE}
-	src/InputVoice.cpp
-	src/OutputVoice.cpp
+	src/Microphone.cpp
+	src/Speaker.cpp
 	src/Functionality.cpp
 	src/c_api.cpp
 )

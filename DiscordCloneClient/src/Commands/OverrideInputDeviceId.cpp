@@ -10,7 +10,7 @@ namespace commands
 
 		stream >> id;
 
-		input->overrideDeviceId(id);
+		microphone->overrideDeviceId(id);
 
 		return true;
 	}
@@ -20,9 +20,9 @@ namespace commands
 		return checks::Check::AvailableChecks::inputStream;
 	}
 
-	OverrideInputDeviceId::OverrideInputDeviceId(std::unique_ptr<wrappers::InputVoice>& input, const std::vector<std::unique_ptr<checks::Check>>& checks) :
+	OverrideInputDeviceId::OverrideInputDeviceId(std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks) :
 		Command(commandName, checks),
-		input(input)
+		microphone(microphone)
 	{
 
 	}

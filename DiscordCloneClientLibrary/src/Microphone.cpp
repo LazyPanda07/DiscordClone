@@ -1,4 +1,4 @@
-#include "InputVoice.hpp"
+#include "Microphone.hpp"
 
 #include <span>
 #include <filesystem>
@@ -28,9 +28,9 @@ static const uint8_t* callGetMicrophoneOnSound(uint64_t* size);
 
 namespace voice
 {
-	int InputVoice::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
+	int Microphone::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
-		InputVoice& voice = *reinterpret_cast<InputVoice*>(userData);
+		Microphone& voice = *reinterpret_cast<Microphone*>(userData);
 
 		if (status & RTAUDIO_INPUT_OVERFLOW)
 		{
@@ -64,7 +64,7 @@ namespace voice
 		return 0;
 	}
 
-	InputVoice::InputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate) :
+	Microphone::Microphone(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate) :
 		socket(socket),
 		volume(1.0),
 		frameSize(frameSize),
@@ -79,7 +79,7 @@ namespace voice
 		parameters.deviceId = audio.getDefaultInputDevice();
 		parameters.nChannels = 1;
 
-		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &frameSize, &InputVoice::callback, this);
+		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &frameSize, &Microphone::callback, this);
 
 		audio.startStream();
 
@@ -91,12 +91,12 @@ namespace voice
 		}
 	}
 
-	void InputVoice::overrideDeviceId(uint32_t id)
+	void Microphone::overrideDeviceId(uint32_t id)
 	{
 		parameters.deviceId = id;
 	}
 
-	void InputVoice::restart()
+	void Microphone::restart()
 	{
 		if (audio.isStreamRunning())
 		{
@@ -108,11 +108,11 @@ namespace voice
 			audio.closeStream();
 		}
 
-		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &frameSize, &InputVoice::callback, this);
+		audio.openStream(nullptr, &parameters, RTAUDIO_FLOAT32, sampleRate, &frameSize, &Microphone::callback, this);
 		audio.startStream();
 	}
 
-	void InputVoice::startStream()
+	void Microphone::startStream()
 	{
 		uint64_t size = 0;
 
@@ -123,7 +123,7 @@ namespace voice
 		audio.startStream();
 	}
 
-	void InputVoice::stopStream()
+	void Microphone::stopStream()
 	{
 		uint64_t size = 0;
 
@@ -134,22 +134,22 @@ namespace voice
 		audio.stopStream();
 	}
 
-	bool InputVoice::isStreamRunning() const
+	bool Microphone::isStreamRunning() const
 	{
 		return audio.isStreamRunning();
 	}
 
-	void InputVoice::setVolume(double volume)
+	void Microphone::setVolume(double volume)
 	{
 		this->volume = volume;
 	}
 
-	double InputVoice::getVolume() const
+	double Microphone::getVolume() const
 	{
 		return volume;
 	}
 
-	InputVoice::~InputVoice()
+	Microphone::~Microphone()
 	{
 		if (encoder)
 		{

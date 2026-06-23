@@ -2,15 +2,15 @@
 
 namespace functionality
 {
-	void muteOrUnmute(voice::InputVoice& input)
+	void muteOrUnmute(voice::Microphone& microphone)
 	{
-		if (input.isStreamRunning())
+		if (microphone.isStreamRunning())
 		{
-			input.stopStream();
+			microphone.stopStream();
 		}
 		else
 		{
-			input.startStream();
+			microphone.startStream();
 		}
 	}
 

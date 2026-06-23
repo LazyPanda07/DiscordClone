@@ -4,17 +4,17 @@
 
 #include <memory>
 
-#include "Wrappers/OutputVoice.hpp"
+#include "Wrappers/SpeakerWrapper.hpp"
 
 namespace checks
 {
-	class CheckOutputStream : public Check
+	class CheckSpeaker : public Check
 	{
 	private:
-		const std::unique_ptr<wrappers::OutputVoice>& input;
+		const std::unique_ptr<wrappers::SpeakerWrapper>& speaker;
 
 	public:
-		CheckOutputStream(const std::unique_ptr<wrappers::OutputVoice>& input);
+		CheckSpeaker(const std::unique_ptr<wrappers::SpeakerWrapper>& speaker);
 
 		bool check() const override;
 
@@ -22,6 +22,6 @@ namespace checks
 
 		AvailableChecks getCheck() const override;
 
-		~CheckOutputStream() = default;
+		~CheckSpeaker() = default;
 	};
 }

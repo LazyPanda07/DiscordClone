@@ -7,7 +7,7 @@
 
 namespace voice
 {
-	class InputVoice
+	class Microphone
 	{
 	private:
 		static int callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData);
@@ -23,7 +23,7 @@ namespace voice
 		std::array<uint8_t, web::UDPSocket::voicePacketSize> outputData;
 
 	public:
-		InputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate);
+		Microphone(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate);
 
 		void overrideDeviceId(uint32_t id);
 
@@ -39,6 +39,6 @@ namespace voice
 
 		double getVolume() const;
 
-		~InputVoice();
+		~Microphone();
 	};
 }

@@ -1,15 +1,15 @@
-#include "OutputVoice.hpp"
+#include "Speaker.hpp"
 
 template<size_t Size>
 static void fillSound(const std::array<float, Size>& sound, std::span<float> out);
 
 namespace voice
 {
-	int OutputVoice::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
+	int Speaker::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
 		static constexpr std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> silence{};
 
-		OutputVoice& voice = *reinterpret_cast<OutputVoice*>(userData);
+		Speaker& voice = *reinterpret_cast<Speaker*>(userData);
 		std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
 
 		if (status & RTAUDIO_OUTPUT_UNDERFLOW)
@@ -61,7 +61,7 @@ namespace voice
 		return 0;
 	}
 
-	OutputVoice::OutputVoice(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate) :
+	Speaker::Speaker(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate) :
 		socket(socket),
 		volume(1.0),
 		frameSize(frameSize),
@@ -74,7 +74,7 @@ namespace voice
 		parameters.deviceId = audio.getDefaultOutputDevice();
 		parameters.nChannels = 2;
 
-		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &frameSize, &OutputVoice::callback, this);
+		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &frameSize, &Speaker::callback, this);
 		audio.startStream();
 
 		int errorCode = 0;
@@ -85,12 +85,12 @@ namespace voice
 		}
 	}
 
-	void OutputVoice::overrideDeviceId(uint32_t id)
+	void Speaker::overrideDeviceId(uint32_t id)
 	{
 		parameters.deviceId = id;
 	}
 
-	void OutputVoice::restart()
+	void Speaker::restart()
 	{
 		if (audio.isStreamRunning())
 		{
@@ -102,16 +102,16 @@ namespace voice
 			audio.closeStream();
 		}
 
-		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &frameSize, &OutputVoice::callback, this);
+		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &frameSize, &Speaker::callback, this);
 		audio.startStream();
 	}
 
-	void OutputVoice::setVolume(double volume)
+	void Speaker::setVolume(double volume)
 	{
 		this->volume = volume;
 	}
 
-	double OutputVoice::getVolume() const
+	double Speaker::getVolume() const
 	{
 		return volume;
 	}
