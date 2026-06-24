@@ -32,6 +32,8 @@ if (${BUILD_SHARED_CLIENT_LIBRARY})
 	add_definitions(-DSHARED_CLIENT_LIBRARY)
 endif()
 
+add_subdirectory(3rdparty)
+
 add_subdirectory(UDPSocket)
 
 if (${BUILD_SERVER})
