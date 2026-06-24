@@ -6,7 +6,7 @@
 
 namespace commands
 {
-	class OverrideOutputDeviceId : public Command
+	class OverrideSpeakerDeviceId : public Command
 	{
 	private:
 		std::unique_ptr<wrappers::SpeakerWrapper>& speaker;
@@ -17,10 +17,10 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		OverrideOutputDeviceId(std::unique_ptr<wrappers::SpeakerWrapper>& speaker, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		OverrideSpeakerDeviceId(std::unique_ptr<wrappers::SpeakerWrapper>& speaker, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
 		std::string_view getHelpText() const override;
 
-		~OverrideOutputDeviceId() = default;
+		~OverrideSpeakerDeviceId() = default;
 	};
 }

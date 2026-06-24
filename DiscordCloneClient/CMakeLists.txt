@@ -29,8 +29,8 @@ add_executable(
 	src/Checks/CheckSpeaker.cpp
 	src/Checks/CheckSocket.cpp
 	src/Commands/Connect.cpp
-	src/Commands/OverrideInputDeviceId.cpp
-	src/Commands/OverrideOutputDeviceId.cpp
+	src/Commands/OverrideMicrophoneDeviceId.cpp
+	src/Commands/OverrideSpeakerDeviceId.cpp
 	src/Commands/SetMicrophoneVolume.cpp
 	src/Commands/SetSpeakerVolume.cpp
 	src/Commands/GetMicrophoneVolume.cpp

@@ -83,8 +83,8 @@ namespace client
 
 	Settings::Settings() :
 		reconnectPort(8080),
-		inputVolume(1.0),
-		outputVolume(1.0)
+		microphoneVolume(1.0),
+		speakerVolume(1.0)
 	{
 
 	}
@@ -109,8 +109,8 @@ namespace client
 
 		result[reconnectIpKey] = reconnectIp;
 		result[reconnectPortKey] = reconnectPort;
-		result[microhponeVolumeKey] = inputVolume;
-		result[speakerVolumeKey] = outputVolume;
+		result[microhponeVolumeKey] = microphoneVolume;
+		result[speakerVolumeKey] = speakerVolume;
 
 		return result;
 	}
@@ -121,8 +121,8 @@ namespace client
 
 		parser.tryGet<std::string>(reconnectIpKey, settings.reconnectIp);
 		parser.tryGet<uint16_t>(reconnectPortKey, settings.reconnectPort);
-		parser.tryGet<double>(microhponeVolumeKey, settings.inputVolume);
-		parser.tryGet<double>(speakerVolumeKey, settings.outputVolume);
+		parser.tryGet<double>(microhponeVolumeKey, settings.microphoneVolume);
+		parser.tryGet<double>(speakerVolumeKey, settings.speakerVolume);
 
 		return stream;
 	}

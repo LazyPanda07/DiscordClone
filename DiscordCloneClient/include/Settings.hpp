@@ -24,8 +24,8 @@ namespace client
 	public:
 		std::string reconnectIp;
 		uint16_t reconnectPort;
-		double inputVolume;
-		double outputVolume;
+		double microphoneVolume;
+		double speakerVolume;
 
 	private:
 		void saveSettings() const;

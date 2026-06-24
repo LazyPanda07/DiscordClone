@@ -18,8 +18,8 @@
 #include "Checks/CheckMicrophone.hpp"
 #include "Checks/CheckSpeaker.hpp"
 #include "Commands/Connect.hpp"
-#include "Commands/OverrideInputDeviceId.hpp"
-#include "Commands/OverrideOutputDeviceId.hpp"
+#include "Commands/OverrideMicrophoneDeviceId.hpp"
+#include "Commands/OverrideSpeakerDeviceId.hpp"
 #include "Commands/SetMicrophoneVolume.hpp"
 #include "Commands/SetSpeakerVolume.hpp"
 #include "Commands/GetMicrophoneVolume.hpp"
@@ -32,9 +32,9 @@
 #include <Windows.h>
 #endif
 
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& input, const std::unique_ptr<wrappers::SpeakerWrapper>& output);
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::unique_ptr<wrappers::SpeakerWrapper>& speaker);
 
-void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& input);
+void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone);
 
 void help(const std::vector<std::unique_ptr<commands::Command>>& commands);
 
@@ -46,20 +46,20 @@ int main(int argc, char** argv) try
 
 	client::Settings settings;
 	std::unique_ptr<wrappers::SocketWrapper> socket;
-	std::unique_ptr<wrappers::MicrophoneWrapper> input;
-	std::unique_ptr<wrappers::SpeakerWrapper> output;
+	std::unique_ptr<wrappers::MicrophoneWrapper> microphone;
+	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
 	functionality::Hotkeys hotkeys;
-	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &input, &output]()
+	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &microphone, &speaker]()
 		{
 			std::vector<std::unique_ptr<checks::Check>> result;
 
 			result.emplace_back(std::make_unique<checks::CheckSocket>(socket));
-			result.emplace_back(std::make_unique<checks::CheckMicrophone>(input));
-			result.emplace_back(std::make_unique<checks::CheckSpeaker>(output));
+			result.emplace_back(std::make_unique<checks::CheckMicrophone>(microphone));
+			result.emplace_back(std::make_unique<checks::CheckSpeaker>(speaker));
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &input, &output, &settings, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &microphone, &speaker, &settings, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -69,22 +69,24 @@ int main(int argc, char** argv) try
 				(
 					socket,
 					settings,
-					[&socket, &input, &output]()
+					[&socket, &settings, &microphone, &speaker]()
 					{
-						input = std::make_unique<wrappers::MicrophoneWrapper>(*socket);
-						output = std::make_unique<wrappers::SpeakerWrapper>(*socket);
+						microphone = std::make_unique<wrappers::MicrophoneWrapper>(*socket);
+						speaker = std::make_unique<wrappers::SpeakerWrapper>(*socket);
+
+						restoreVolume(settings, microphone, speaker);
 					},
 					checks
 				)
 			);
-			result.emplace_back(std::make_unique<commands::SetMicrophoneVolume>(input, settings, checks));
-			result.emplace_back(std::make_unique<commands::SetSpeakerVolume>(output, settings, checks));
-			result.emplace_back(std::make_unique<commands::GetMicrophoneVolume>(input, checks));
-			result.emplace_back(std::make_unique<commands::GetSpeakerVolume>(output, checks));
-			result.emplace_back(std::make_unique<commands::MuteOrUnmute>(input, checks));
+			result.emplace_back(std::make_unique<commands::SetMicrophoneVolume>(microphone, settings, checks));
+			result.emplace_back(std::make_unique<commands::SetSpeakerVolume>(speaker, settings, checks));
+			result.emplace_back(std::make_unique<commands::GetMicrophoneVolume>(microphone, checks));
+			result.emplace_back(std::make_unique<commands::GetSpeakerVolume>(speaker, checks));
+			result.emplace_back(std::make_unique<commands::MuteOrUnmute>(microphone, checks));
 			result.emplace_back(std::make_unique<commands::Echo>(socket, checks));
-			result.emplace_back(std::make_unique<commands::OverrideInputDeviceId>(input, checks));
-			result.emplace_back(std::make_unique<commands::OverrideOutputDeviceId>(output, checks));
+			result.emplace_back(std::make_unique<commands::OverrideMicrophoneDeviceId>(microphone, checks));
+			result.emplace_back(std::make_unique<commands::OverrideSpeakerDeviceId>(speaker, checks));
 			result.emplace_back(std::make_unique<commands::Exit>(checks));
 
 			return result;
@@ -121,16 +123,16 @@ int main(int argc, char** argv) try
 		}
 	}
 
-	printDeviceInfo(input);
+	printDeviceInfo(microphone);
 
 #ifndef __LINUX__
 	hotkeys.registerHotkey
 	(
-		[&input]()
+		[&microphone]()
 		{
-			input->muteOrUnmute();
+			microphone->muteOrUnmute();
 
-			printDeviceInfo(input);
+			printDeviceInfo(microphone);
 
 			std::cout << "Enter command: ";
 		},
@@ -139,17 +141,15 @@ int main(int argc, char** argv) try
 	);
 #endif
 
-	restoreVolume(settings, input, output);
-
 	while (true)
 	{
-		std::string inputCommand;
+		std::string microphoneCommand;
 
 		std::cout << "Enter command: ";
 
-		std::getline(std::cin, inputCommand);
+		std::getline(std::cin, microphoneCommand);
 
-		std::istringstream is(inputCommand);
+		std::istringstream is(microphoneCommand);
 		std::string command;
 
 		is >> command;
@@ -190,25 +190,25 @@ catch (const std::exception& e)
 	return 1;
 }
 
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& input, const std::unique_ptr<wrappers::SpeakerWrapper>& output)
+void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::unique_ptr<wrappers::SpeakerWrapper>& speaker)
 {
-	if (!input || !output)
+	if (!microphone || !speaker)
 	{
 		return;
 	}
 
-	input->setVolume(settings.inputVolume);
-	output->setVolume(settings.outputVolume);
+	microphone->setVolume(settings.microphoneVolume);
+	speaker->setVolume(settings.speakerVolume);
 }
 
-void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& input)
+void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone)
 {
 	DeviceInformationArray devices = utils::callApiFunction(&getDeviceInformation);
 	uint64_t size = utils::callApiFunction(&getDeviceInformationSize, devices);
 
-	if (input)
+	if (microphone)
 	{
-		std::cout << std::endl << std::format("Microphone state: {}", input->isStreamRunning() ? "🟢" : "🔴") << std::endl;
+		std::cout << std::endl << std::format("Microphone state: {}", microphone->isStreamRunning() ? "🟢" : "🔴") << std::endl;
 	}
 
 	std::cout << std::format("Found {} audio devices:", size) << std::endl << std::endl;
@@ -217,16 +217,16 @@ void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& input)
 	{
 		uint32_t id = utils::callApiFunction(&getDeviceInformationId, devices, i);
 		std::string_view name = utils::callApiFunction(&getDeviceInformationName, devices, i);
-		uint32_t inputChannels = utils::callApiFunction(&getDeviceInformationInputChannels, devices, i);
-		uint32_t outputChannels = utils::callApiFunction(&getDeviceInformationOutputChannels, devices, i);
+		uint32_t microphoneChannels = utils::callApiFunction(&getDeviceInformationInputChannels, devices, i);
+		uint32_t speakerChannels = utils::callApiFunction(&getDeviceInformationOutputChannels, devices, i);
 		bool isDefaultInput = utils::callApiFunction(&getDeviceInformationDefaultInput, devices, i);
 		bool isDefaultOutput = utils::callApiFunction(&getDeviceInformationDefaultOutput, devices, i);
 
 		std::cout << std::format("Device {}: {}", id, name) << std::endl;
-		std::cout << std::format("\tInput channels: {}", inputChannels) << std::endl;
-		std::cout << std::format("\tOutput channels: {}", outputChannels) << std::endl;
-		std::cout << std::format("\tDefault input: {}", (isDefaultInput ? "yes" : "no")) << std::endl;
-		std::cout << std::format("\tDefault output: {}", (isDefaultOutput ? "yes" : "no")) << std::endl;
+		std::cout << std::format("\tInput channels: {}", microphoneChannels) << std::endl;
+		std::cout << std::format("\tOutput channels: {}", speakerChannels) << std::endl;
+		std::cout << std::format("\tDefault microphone: {}", (isDefaultInput ? "yes" : "no")) << std::endl;
+		std::cout << std::format("\tDefault speaker: {}", (isDefaultOutput ? "yes" : "no")) << std::endl;
 		std::cout << std::endl;
 	}
 
@@ -239,7 +239,7 @@ void help(const std::vector<std::unique_ptr<commands::Command>>& commands)
 	
 	for (const std::unique_ptr<commands::Command>& command : commands)
 	{
-		std::cout << command->command << ": " << command->getHelpText() << std::endl;
+		std::cout << std::format("{}: {}", command->command, command->getHelpText()) << std::endl;
 	}
 
 	std::cout << "help: " << std::endl;

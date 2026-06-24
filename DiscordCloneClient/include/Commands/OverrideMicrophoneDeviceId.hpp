@@ -6,7 +6,7 @@
 
 namespace commands
 {
-	class OverrideInputDeviceId : public Command
+	class OverrideMicrophoneDeviceId : public Command
 	{
 	private:
 		std::unique_ptr<wrappers::MicrophoneWrapper>& microphone;
@@ -17,10 +17,10 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		OverrideInputDeviceId(std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		OverrideMicrophoneDeviceId(std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
 		std::string_view getHelpText() const override;
 
-		~OverrideInputDeviceId() = default;
+		~OverrideMicrophoneDeviceId() = default;
 	};
 }

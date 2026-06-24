@@ -16,7 +16,7 @@ namespace commands
 		(
 			[volume](client::Settings& self)
 			{
-				self.outputVolume = volume;
+				self.speakerVolume = volume;
 			}
 		);
 
