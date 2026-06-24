@@ -29,6 +29,7 @@ target_link_libraries(
 	rtaudio
 	UtilityLibrary
 	opus
+	Networks
 )
 
 if (WIN32)
