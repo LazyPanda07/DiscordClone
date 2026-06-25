@@ -14,6 +14,8 @@
 
 static constexpr std::string_view reconnectIpKey = "reconnectIp";
 static constexpr std::string_view reconnectPortKey = "reconnectPort";
+static constexpr std::string_view roomNameKey = "roomName";
+static constexpr std::string_view roomPasswordKey = "roomPassword";
 static constexpr std::string_view microhponeVolumeKey = "microphoneVolume";
 static constexpr std::string_view speakerVolumeKey = "speakerVolume";
 
@@ -111,6 +113,8 @@ namespace client
 		result[reconnectPortKey] = reconnectPort;
 		result[microhponeVolumeKey] = microphoneVolume;
 		result[speakerVolumeKey] = speakerVolume;
+		result[roomNameKey] = roomName;
+		result[roomPasswordKey] = roomPassword;
 
 		return result;
 	}
@@ -121,6 +125,8 @@ namespace client
 
 		parser.tryGet<std::string>(reconnectIpKey, settings.reconnectIp);
 		parser.tryGet<uint16_t>(reconnectPortKey, settings.reconnectPort);
+		parser.tryGet<std::string>(roomNameKey, settings.roomName);
+		parser.tryGet<std::string>(roomPasswordKey, settings.roomPassword);
 		parser.tryGet<double>(microhponeVolumeKey, settings.microphoneVolume);
 		parser.tryGet<double>(speakerVolumeKey, settings.speakerVolume);
 

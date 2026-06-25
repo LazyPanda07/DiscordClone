@@ -7,7 +7,7 @@ namespace web
 	void UDPSocket::initializeSockets()
 	{
 #ifndef __LINUX__
-		WSADATA wsaData;
+		WSADATA wsaData{};
 
 		if (int result = WSAStartup(MAKEWORD(2, 2), &wsaData); result != 0)
 		{
@@ -57,6 +57,11 @@ namespace web
 		closesocket(udpSocket);
 
 		udpSocket = SOCKET_ERROR;
+	}
+
+	SOCKET UDPSocket::getSocket() const
+	{
+		return udpSocket;
 	}
 
 	UDPSocket::~UDPSocket()

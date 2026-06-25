@@ -10,15 +10,15 @@ namespace web
 		localAddress = {};
 
 		localAddress.sin_family = AF_INET;
-		localAddress.sin_addr.s_addr = INADDR_ANY;
 		localAddress.sin_port = htons(0);
+		localAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 
 		if (bind(udpSocket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) == SOCKET_ERROR)
 		{
 #ifdef __LINUX__
-			throw std::runtime_error(std::format("Bind failed: {}", strerror(errno)));
+			throw std::runtime_error(std::format("Bind failed from client with: {} error", strerror(errno)));
 #else
-			throw std::runtime_error(std::format("Bind failed: {}", WSAGetLastError()));
+			throw std::runtime_error(std::format("Bind failed from client with: {} error", WSAGetLastError()));
 #endif
 		}
 

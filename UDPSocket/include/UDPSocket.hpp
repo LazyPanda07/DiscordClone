@@ -57,8 +57,8 @@ namespace web
 		static constexpr std::string_view echo = "echo";
 		static constexpr size_t echoPacketSize = echo.size();
 
-		static constexpr std::string_view ping = "ping";
-		static constexpr size_t pingPacketSize = ping.size();
+		static constexpr std::string_view alive = "alive";
+		static constexpr size_t alivePacketSize = alive.size();
 
 	protected:
 		SOCKET udpSocket;
@@ -81,6 +81,8 @@ namespace web
 		virtual bool receiveData(const ReceiveCallback& callback, int32_t flags = 0) = 0;
 
 		void close();
+
+		SOCKET getSocket() const;
 
 		virtual ~UDPSocket();
 	};

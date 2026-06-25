@@ -20,7 +20,7 @@ namespace commands
 		std::function<void()> onSuccess;
 
 	private:
-		bool connect(std::string_view ip, int16_t port);
+		bool connect(std::string_view ip, uint16_t port, std::string_view roomName, std::string_view roomPassword);
 
 		bool sendHello();
 

@@ -26,11 +26,6 @@ namespace wrappers
 		return result;
 	}
 
-	int64_t SocketWrapper::ping() const
-	{
-		return utils::callApiFunction(&::ping, implementation);
-	}
-
 	SocketWrapper::~SocketWrapper()
 	{
 		deleteSocket(implementation);

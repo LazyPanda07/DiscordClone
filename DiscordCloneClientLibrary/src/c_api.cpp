@@ -108,44 +108,6 @@ void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint6
 	}
 }
 
-int64_t ping(UdpSocketObject socket, Exception* exception)
-{
-	try
-	{
-		web::UDPSocket& udpSocket = *static_cast<web::UDPSocket*>(socket);
-
-		udpSocket.sendData(web::UDPSocket::ping);
-
-		auto start = std::chrono::high_resolution_clock::now();
-
-		udpSocket.receiveData
-		(
-			[](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-			{
-				if (size == SOCKET_ERROR)
-				{
-#ifdef __LINUX__
-					throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
-#else
-
-					throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
-#endif
-				}
-			}
-		);
-
-		auto end = std::chrono::high_resolution_clock::now();
-
-		return std::chrono::duration_cast<std::chrono::milliseconds>((end - start)).count();
-	}
-	catch (const std::exception& e)
-	{
-		*exception = new std::runtime_error(e.what());
-	}
-
-	return 0;
-}
-
 void overrideMicrophoneDeviceId(MicrophoneObject microphone, uint32_t id, Exception* exception)
 {
 	try

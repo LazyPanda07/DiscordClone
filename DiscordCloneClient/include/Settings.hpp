@@ -24,6 +24,8 @@ namespace client
 	public:
 		std::string reconnectIp;
 		uint16_t reconnectPort;
+		std::string roomName;
+		std::string roomPassword;
 		double microphoneVolume;
 		double speakerVolume;
 

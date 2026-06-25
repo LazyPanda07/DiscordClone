@@ -9,6 +9,7 @@ add_executable(
 	src/main.cpp
 	src/VoiceServer.cpp
 	src/Executors/Ping.cpp
+	src/Executors/Room.cpp
 )
 
 target_include_directories(

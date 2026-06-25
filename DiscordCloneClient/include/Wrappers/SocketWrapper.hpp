@@ -18,8 +18,6 @@ namespace wrappers
 
 		std::string receiveData(int32_t flags = 0);
 
-		int64_t ping() const;
-
 		~SocketWrapper();
 
 		friend class MicrophoneWrapper;

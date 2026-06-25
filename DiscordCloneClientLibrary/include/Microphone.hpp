@@ -21,6 +21,7 @@ namespace voice
 		uint32_t sampleRate;
 		OpusEncoder* encoder;
 		std::array<uint8_t, web::UDPSocket::voicePacketSize> outputData;
+		std::function<bool& ()> runningGetter;
 
 	public:
 		Microphone(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate);

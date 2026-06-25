@@ -89,6 +89,34 @@ namespace voice
 		{
 			throw std::runtime_error(std::format("Can't create Opus encoder: {}", opus_strerror(errorCode)));
 		}
+
+		std::thread
+		(
+			[this](std::function<bool& ()>& runningGetter)
+			{
+				// TODO: maybe change to std::shared_ptr
+
+				using namespace std::chrono_literals;
+
+				bool running = true;
+
+				runningGetter = [&running]() -> bool&
+					{
+						return running;
+					};
+
+				while (running)
+				{
+					if (!audio.isStreamRunning())
+					{
+						this->socket.sendData(web::UDPSocket::alive);
+					}
+
+					std::this_thread::sleep_for(5s);
+				}
+			},
+			std::ref(runningGetter)
+		).detach();
 	}
 
 	void Microphone::overrideDeviceId(uint32_t id)
@@ -157,6 +185,8 @@ namespace voice
 
 			encoder = nullptr;
 		}
+
+		runningGetter() = false;
 	}
 }
 

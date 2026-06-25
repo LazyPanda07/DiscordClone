@@ -44,14 +44,6 @@ CLIENT_LIBRARY_FUNCTION_API void sendData(UdpSocketObject socket, const char* da
 
 CLIENT_LIBRARY_FUNCTION_API void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint64_t size, void* userData), int32_t flags, void* userData, Exception* exception);
 
-/**
- * @brief Check ping to server. Needs separate connection
- * @param socket 
- * @param exception 
- * @return 
- */
-CLIENT_LIBRARY_FUNCTION_API int64_t ping(UdpSocketObject socket, Exception* exception);
-
 CLIENT_LIBRARY_FUNCTION_API void overrideMicrophoneDeviceId(MicrophoneObject microphone, uint32_t id, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void muteOrUnmute(MicrophoneObject microphone, Exception* exception);

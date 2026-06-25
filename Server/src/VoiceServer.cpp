@@ -35,16 +35,46 @@ namespace voice
 		return ip == otherIp && port == otherPort;
 	}
 
-	VoiceServer::VoiceServer()
+	void VoiceServer::serve(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 	{
-		constexpr size_t predictedNumberOfClients = 4;
+		auto timestamp = std::chrono::steady_clock::now();
 
-		clients.reserve(predictedNumberOfClients);
-	}
+		if (size == web::UDPSocket::alivePacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::alive.begin()))
+		{
+			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
+			{
+				it->aliveTimestamp = timestamp;
+			}
 
-	void VoiceServer::operator ()(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-	{
-		if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
+			return;
+		}
+		else if (size == SOCKET_ERROR)
+		{
+			constexpr int32_t timeoutValue = 30;
+
+			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
+			{
+				clients.erase(it);
+			}
+
+			for (int32_t i = 0; i < static_cast<int32_t>(clients.size()); i++)
+			{
+				if (std::chrono::duration_cast<std::chrono::seconds>(clients[i].aliveTimestamp.time_since_epoch()).count() >= timeoutValue)
+				{
+					clients.erase(clients.begin() + i);
+
+					i--;
+				}
+			}
+
+			if (clients.empty())
+			{
+				started = false;
+			}
+
+			return;
+		}
+		else if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
 		{
 			socket.sendData(web::UDPSocket::hello, address);
 
@@ -59,27 +89,8 @@ namespace voice
 
 			return;
 		}
-		else if (size == web::UDPSocket::pingPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::ping.begin()))
-		{
-			socket.sendData(web::UDPSocket::ping, address);
 
-			return;
-		}
-		else if (size == SOCKET_ERROR)
-		{
-			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
-			{
-				clients.erase(it);
-			}
-
-			auto [otherIp, otherPort] = VoiceServer::Client::getIpPort(address);
-
-			std::cout << std::format("Wrong voice packet size: {}, from {}:{}", size, otherIp, otherPort) << std::endl;
-
-			return;
-		}
-
-		const Client* currentClient = nullptr;
+		Client* currentClient = nullptr;
 
 		if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it == clients.end())
 		{
@@ -90,6 +101,8 @@ namespace voice
 			currentClient = &*it;
 		}
 
+		currentClient->aliveTimestamp = timestamp;
+
 		for (const Client& client : clients)
 		{
 			if (currentClient != &client || currentClient->echo)
@@ -97,5 +110,44 @@ namespace voice
 				socket.sendData(std::span<const char>(data.data(), size), &client.socket);
 			}
 		}
+	}
+
+	VoiceServer::VoiceServer() :
+		started(false)
+	{
+		constexpr size_t predictedNumberOfClients = 4;
+
+		clients.reserve(predictedNumberOfClients);
+	}
+
+	void VoiceServer::start()
+	{
+		if (started)
+		{
+			return;
+		}
+
+		started = true;
+
+		web::UDPSocket::ReceiveCallback callback = std::bind(&VoiceServer::serve, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		std::cout << "Run server: " << this << std::endl;
+
+		while (started)
+		{
+			socket.receiveData(callback);
+		}
+
+		std::cout << "Stop server: " << this << std::endl;
+	}
+
+	uint16_t VoiceServer::getPort() const
+	{
+		return socket.getPort();
+	}
+
+	VoiceServer::~VoiceServer()
+	{
+		started = false;
 	}
 }
