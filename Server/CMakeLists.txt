@@ -8,6 +8,7 @@ add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
 	src/VoiceServer.cpp
+	src/Executors/Ping.cpp
 )
 
 target_include_directories(
@@ -18,6 +19,7 @@ target_include_directories(
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	UDPSocket
+	UtilityLibrary
 	WebFramework::CXX_API
 )
 
@@ -29,6 +31,8 @@ if (UNIX)
 endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+install(FILES config.json DESTINATION bin)
+install(DIRECTORY settings DESTINATION bin)
 
 if (UNIX)
 	install(

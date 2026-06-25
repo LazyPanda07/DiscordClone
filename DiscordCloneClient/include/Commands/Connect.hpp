@@ -4,6 +4,8 @@
 
 #include <functional>
 
+#include <IOSocketStream.h>
+
 #include "Wrappers/SocketWrapper.hpp"
 #include "Settings.hpp"
 
@@ -13,6 +15,7 @@ namespace commands
 	{
 	private:
 		std::unique_ptr<wrappers::SocketWrapper>& socket;
+		std::unique_ptr<streams::IOSocketStream>& controlStream;
 		client::Settings& settings;
 		std::function<void()> onSuccess;
 
@@ -29,7 +32,7 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, client::Settings& settings, const std::function<void()>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void()>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
 		std::string_view getHelpText() const override;
 

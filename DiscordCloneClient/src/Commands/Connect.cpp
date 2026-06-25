@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 
+#include <Http/HttpNetwork.h>
 #include <UDPSocket.hpp>
 
 constexpr std::string_view commandName = "connect";
@@ -14,7 +15,14 @@ namespace commands
 	{
 		try
 		{
-			socket = std::make_unique<wrappers::SocketWrapper>(ip, port);
+			if (!controlStream)
+			{
+				using namespace std::chrono_literals;
+
+				controlStream = std::make_unique<streams::IOSocketStream>(streams::IOSocketStream::createStream<web::http::HttpNetwork>(ip, std::to_string(port), 5s));
+			}
+
+			socket = std::make_unique<wrappers::SocketWrapper>(ip, port + 1);
 		}
 		catch (const std::exception&)
 		{
@@ -137,9 +145,10 @@ namespace commands
 		return NULL;
 	}
 
-	Connect::Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, client::Settings& settings, const std::function<void()>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks) :
+	Connect::Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void()>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks) :
 		Command(commandName, checks),
 		socket(socket),
+		controlStream(controlStream),
 		settings(settings),
 		onSuccess(onSuccess)
 	{

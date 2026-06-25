@@ -8,6 +8,7 @@
 
 #include <UDPSocket.hpp>
 #include <c_api.h>
+#include <IOSocketStream.h>
 
 #include "Hotkeys.hpp"
 #include "Settings.hpp"
@@ -27,6 +28,7 @@
 #include "Commands/MuteOrUnmute.hpp"
 #include "Commands/Echo.hpp"
 #include "Commands/Exit.hpp"
+#include "Commands/PingCommand.hpp"
 
 #ifndef __LINUX__
 #include <Windows.h>
@@ -46,6 +48,7 @@ int main(int argc, char** argv) try
 
 	client::Settings settings;
 	std::unique_ptr<wrappers::SocketWrapper> socket;
+	std::unique_ptr<streams::IOSocketStream> controlStream;
 	std::unique_ptr<wrappers::MicrophoneWrapper> microphone;
 	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
 	functionality::Hotkeys hotkeys;
@@ -59,7 +62,7 @@ int main(int argc, char** argv) try
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &microphone, &speaker, &settings, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &controlStream, &microphone, &speaker, &settings, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -68,6 +71,7 @@ int main(int argc, char** argv) try
 				std::make_unique<commands::Connect>
 				(
 					socket,
+					controlStream,
 					settings,
 					[&socket, &settings, &microphone, &speaker]()
 					{
@@ -88,6 +92,7 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::OverrideMicrophoneDeviceId>(microphone, checks));
 			result.emplace_back(std::make_unique<commands::OverrideSpeakerDeviceId>(speaker, checks));
 			result.emplace_back(std::make_unique<commands::Exit>(checks));
+			result.emplace_back(std::make_unique<commands::PingCommand>(controlStream, checks));
 
 			return result;
 		}();

@@ -27,6 +27,7 @@ add_executable(
 	src/Commands/MuteOrUnmute.cpp
 	src/Commands/Echo.cpp
 	src/Commands/Exit.cpp
+	"src/Commands/PingCommand.cpp"
 )
 
 if (WIN32)

@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS build
+FROM ubuntu:26.04 AS build
 
 ARG BUILD_TAG
 
@@ -13,13 +13,14 @@ WORKDIR /tmp/DiscordClone
 
 RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/DiscordClone -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF .. && cmake --build . -j && cmake --install .
 
-FROM ubuntu:24.04 AS deploy
+FROM ubuntu:26.04 AS deploy
 
 ENV LISTEN_PORT=8080
+ENV LD_LIBRARY_PATH=/opt/DiscordClone
 
 RUN apt update && apt upgrade -y
 
 COPY --from=build /opt/DiscordClone/bin/DiscordCloneServer /opt/DiscordClone/DiscordCloneServer
 
 WORKDIR /opt/DiscordClone
-ENTRYPOINT [ "sh", "-c", "./DiscordCloneServer ${LISTEN_PORT}" ]
+ENTRYPOINT [ "sh", "-c", "./DiscordCloneServer --ip 0.0.0.0 --port ${LISTEN_PORT}" ]
