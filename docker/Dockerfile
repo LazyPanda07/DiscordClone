@@ -20,7 +20,7 @@ ENV LD_LIBRARY_PATH=/opt/DiscordClone
 
 RUN apt update && apt upgrade -y
 
-COPY --from=build /opt/DiscordClone/bin/DiscordCloneServer /opt/DiscordClone/DiscordCloneServer
+COPY --from=build /opt/DiscordClone/bin /opt/DiscordClone
 
 WORKDIR /opt/DiscordClone
 ENTRYPOINT [ "sh", "-c", "./DiscordCloneServer --ip 0.0.0.0 --port ${LISTEN_PORT}" ]
