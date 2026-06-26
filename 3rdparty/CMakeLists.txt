@@ -14,24 +14,16 @@ set(OPUS_X86_PRESUME_AVX2 ON)
 set(SSE4_1_SUPPORTED ON)
 set(OPUS_X86_MAY_HAVE_SSE4_1 ON)
 set(OPUS_X86_PRESUME_SSE4_1 ON)
-set(WEB_FRAMEWORK_URL https://github.com/LazyPanda07/WebFramework/releases/download/v${WEB_FRAMEWORK_VERSION})
 
-if (UNIX)
-    set(WEB_FRAMEWORK_URL ${WEB_FRAMEWORK_URL}/Linux-WITH_PYTHON_EXECUTORS.OFF-BUILD_PYTHON_API.OFF--WITH_DOTNET_EXECUTORS.OFF-BUILD_CSHARP_API.OFF-BUILD_CC_API.OFF.zip)
-else()
-    set(WEB_FRAMEWORK_URL ${WEB_FRAMEWORK_URL}/Windows-WITH_PYTHON_EXECUTORS.OFF-BUILD_PYTHON_API.OFF--WITH_DOTNET_EXECUTORS.OFF-BUILD_CSHARP_API.OFF-BUILD_CC_API.OFF.zip)
-endif()
+set(BUILD_PYTHON_API OFF)
+set(BUILD_CSHARP_API OFF)
+set(WITH_PYTHON_EXECUTORS OFF)
+set(WITH_DOTNET_EXECUTORS OFF)
 
 FetchContent_Declare(
 	rtaudio
 	GIT_REPOSITORY https://github.com/thestk/rtaudio.git
 	GIT_TAG ${RTAUDIO_TAG}
-)
-
-FetchContent_Declare(
-	UtilityLibrary
-	GIT_REPOSITORY https://github.com/LazyPanda07/UtilityLibrary.git
-	GIT_TAG v${UTILITY_LIBRARY_VERSION}
 )
 
 FetchContent_Declare(
@@ -41,22 +33,11 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-	Networks
-	GIT_REPOSITORY https://github.com/LazyPanda07/Networks.git
-	GIT_TAG v${NETWORKS_VERSION}
-)
-
-FetchContent_Declare(
 	WebFramework
-	URL ${WEB_FRAMEWORK_URL}
+	GIT_REPOSITORY https://github.com/LazyPanda07/WebFramework.git
+	GIT_TAG v${WEB_FRAMEWORK_VERSION}
 )
 
 FetchContent_MakeAvailable(rtaudio)
-FetchContent_MakeAvailable(UtilityLibrary)
 FetchContent_MakeAvailable(opus)
-FetchContent_MakeAvailable(Networks)
 FetchContent_MakeAvailable(WebFramework)
-
-list(APPEND CMAKE_PREFIX_PATH ${webframework_SOURCE_DIR})
-
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} PARENT_SCOPE)

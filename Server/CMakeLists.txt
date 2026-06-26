@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.27.0)
 
 project(DiscordCloneServer)
 
-find_package(WebFramework REQUIRED)
-
 add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
@@ -21,7 +19,7 @@ target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	UDPSocket
 	UtilityLibrary
-	WebFramework::CXX_API
+	CXX_API
 )
 
 if (UNIX)
@@ -38,7 +36,7 @@ install(DIRECTORY settings DESTINATION bin)
 if (UNIX)
 	install(
 		CODE [[
-			file(GLOB WEB_FRAMEWORK_LIBRARIES ${CMAKE_INSTALL_PREFIX}/*.so)
+			file(GLOB WEB_FRAMEWORK_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/*.so)
 
 			foreach(LIBRARY IN LISTS WEB_FRAMEWORK_LIBRARIES)
 				file(COPY ${LIBRARY} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
@@ -48,7 +46,7 @@ if (UNIX)
 else()
 	install(
 		CODE [[
-			file(GLOB WEB_FRAMEWORK_LIBRARIES ${CMAKE_INSTALL_PREFIX}/*.dll)
+			file(GLOB WEB_FRAMEWORK_LIBRARIES ${CMAKE_INSTALL_PREFIX}/dll/*.dll)
 
 			foreach(LIBRARY IN LISTS WEB_FRAMEWORK_LIBRARIES)
 				file(COPY ${LIBRARY} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
