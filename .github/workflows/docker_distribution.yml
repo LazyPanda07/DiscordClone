@@ -20,6 +20,11 @@ jobs:
     steps:
     - uses: actions/checkout@v6
   
+    - name: Install dependencies
+      run: |
+        sudo apt update 
+        sudo apt install -y libasound2-dev
+
     - name: Build Docker image
       run: |
         mkdir build
