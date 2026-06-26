@@ -3,7 +3,7 @@ FROM ubuntu:26.04 AS build
 ARG BUILD_TAG
 
 RUN apt update
-RUN apt install -y gcc g++ cmake git
+RUN apt install -y gcc g++ cmake git uuid-dev
 
 WORKDIR /tmp
 
@@ -11,7 +11,7 @@ RUN git clone https://github.com/LazyPanda07/DiscordClone -b ${BUILD_TAG}
 
 WORKDIR /tmp/DiscordClone
 
-RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/DiscordClone -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF .. && cmake --build . -j && cmake --install .
+RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=/opt/DiscordClone -DBUILD_CLIENT=OFF -DBUILD_CLIENT_LIBRARY=OFF .. && cmake --build . -j && cmake --install .
 
 FROM ubuntu:26.04 AS deploy
 
