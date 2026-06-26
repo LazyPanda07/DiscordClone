@@ -3,7 +3,7 @@ FROM ubuntu:26.04 AS build
 ARG BUILD_TAG
 
 RUN apt update
-RUN apt install -y gcc g++ cmake git uuid-dev
+RUN apt install -y gcc g++ cmake git uuid-dev libasound2-dev
 
 WORKDIR /tmp
 
