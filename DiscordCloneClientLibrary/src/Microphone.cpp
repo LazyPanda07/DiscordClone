@@ -2,6 +2,7 @@
 
 #include <span>
 #include <filesystem>
+#include <thread>
 
 #ifdef __LINUX__
 #include <dlfcn.h>
