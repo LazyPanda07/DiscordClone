@@ -1,9 +1,19 @@
 #include "UDPSocket.hpp"
 
-#include <array>
-
 namespace web
 {
+	std::string UDPSocket::constructHelloPacket(uint64_t id)
+	{
+		std::string result(UDPSocket::helloPacketSize, '\0');
+
+		const char* ptr = reinterpret_cast<const char*>(&id);
+		auto it = std::copy(UDPSocket::hello.begin(), UDPSocket::hello.end(), result.begin());
+
+		std::copy(ptr, ptr + sizeof(id), it);
+
+		return result;
+	}
+
 	void UDPSocket::initializeSockets()
 	{
 #ifndef __LINUX__

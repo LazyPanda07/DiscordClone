@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <chrono>
+#include <mutex>
 
 #include <UDPClientSocket.hpp>
 #include <UDPServerSocket.hpp>
@@ -21,6 +22,7 @@ namespace voice
 			web::UDPClientSocket socket;
 			sockaddr_in address;
 			std::string ip;
+			std::string userName;
 			uint16_t port;
 			bool echo;
 			std::chrono::steady_clock::time_point aliveTimestamp;
@@ -36,6 +38,8 @@ namespace voice
 	private:
 		std::vector<Client> clients;
 		web::UDPServerSocket socket;
+		std::unordered_map<uint64_t, std::string> pendingClients;
+		std::mutex pendingClientsMutex;
 		bool started;
 
 	private:
@@ -45,6 +49,8 @@ namespace voice
 		VoiceServer();
 
 		void start();
+
+		void addPendingClient(uint64_t id, std::string&& userName);
 
 		uint16_t getPort() const;
 

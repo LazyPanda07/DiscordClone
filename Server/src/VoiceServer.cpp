@@ -1,7 +1,6 @@
 #include "VoiceServer.hpp"
 
 #include <iostream>
-#include <format>
 
 namespace voice
 {
@@ -39,16 +38,7 @@ namespace voice
 	{
 		auto timestamp = std::chrono::steady_clock::now();
 
-		if (size == web::UDPSocket::alivePacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::alive.begin()))
-		{
-			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
-			{
-				it->aliveTimestamp = timestamp;
-			}
-
-			return;
-		}
-		else if (size == SOCKET_ERROR)
+		if (size == SOCKET_ERROR)
 		{
 			constexpr int32_t timeoutValue = 30;
 
@@ -74,9 +64,41 @@ namespace voice
 
 			return;
 		}
-		else if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::hello.begin()))
+		else if (size == web::UDPSocket::alivePacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::alive.begin()))
 		{
-			socket.sendData(web::UDPSocket::hello, address);
+			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
+			{
+				it->aliveTimestamp = timestamp;
+			}
+
+			return;
+		}
+		else if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + web::UDPSocket::helloMessageSize, web::UDPSocket::hello.begin()))
+		{
+			uint64_t id = 0;
+			char* ptr = reinterpret_cast<char*>(&id);
+
+			for (size_t i = 0; i < sizeof(id); i++)
+			{
+				*ptr = data[web::UDPSocket::helloMessageSize + i];
+
+				ptr++;
+			}
+
+			socket.sendData(web::UDPSocket::constructHelloPacket(id), address);
+
+			Client& client = clients.emplace_back(address);
+
+			std::lock_guard<std::mutex> lock(pendingClientsMutex);
+
+			if (auto it = pendingClients.find(id); it != pendingClients.end())
+			{
+				client.userName = std::move(pendingClients.extract(it).mapped());
+			}
+			else
+			{
+				std::cerr << "Can't find user with id: " << id << std::endl;
+			}
 
 			return;
 		}
@@ -94,7 +116,7 @@ namespace voice
 
 		if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it == clients.end())
 		{
-			currentClient = &clients.emplace_back(address);
+			return;
 		}
 		else
 		{
@@ -131,14 +153,17 @@ namespace voice
 
 		web::UDPSocket::ReceiveCallback callback = std::bind(&VoiceServer::serve, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		std::cout << "Run server: " << this << std::endl;
-
 		while (started)
 		{
 			socket.receiveData(callback);
 		}
+	}
 
-		std::cout << "Stop server: " << this << std::endl;
+	void VoiceServer::addPendingClient(uint64_t id, std::string&& userName)
+	{
+		std::lock_guard<std::mutex> lock(pendingClientsMutex);
+
+		pendingClients.try_emplace(id, std::move(userName));
 	}
 
 	uint16_t VoiceServer::getPort() const

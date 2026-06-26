@@ -14,6 +14,11 @@ namespace executors
 		return std::hash<std::string>()(roomData.name);
 	}
 
+	void Room::init(const framework::utility::ExecutorSettings& settings)
+	{
+		random.seed(std::time(nullptr));
+	}
+
 	void Room::doGet(framework::HttpRequest& request, framework::HttpResponse& response)
 	{
 		const framework::JsonParser& data = request.getJson();
@@ -23,15 +28,24 @@ namespace executors
 			.password = data.get<std::string>("roomPassword")
 		};
 
+		framework::JsonBuilder builder;
+		std::string userName = data.get<std::string>("userName");
 		std::lock_guard<std::mutex> lock(roomsMutex);
+		uint64_t id = random();
+
+		builder["id"] = id;
 
 		if (auto it = rooms.find(roomData); it != rooms.end())
 		{
 			if (it->first.password == roomData.password)
 			{
+				it->second.addPendingClient(id, std::move(userName));
+
 				runServer(it->second);
 
-				response.setBody(std::to_string(it->second.getPort()));
+				builder["port"] = it->second.getPort();
+
+				response.setBody(builder);
 			}
 			else
 			{
@@ -45,10 +59,14 @@ namespace executors
 		{
 			const auto& [value, _] = rooms.try_emplace(std::move(roomData));
 
+			value->second.addPendingClient(id, std::move(userName));
+
 			runServer(value->second);
 
+			builder["port"] = value->second.getPort();
+
 			response.setResponseCode(framework::ResponseCodes::created);
-			response.setBody(std::to_string(value->second.getPort()));
+			response.setBody(builder);
 		}
 	}
 

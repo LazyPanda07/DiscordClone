@@ -112,7 +112,7 @@ int main(int argc, char** argv) try
 
 		if (settings.reconnectIp.size())
 		{
-			std::istringstream stream(std::format("{}:{} {} {}", loadedSettings->reconnectIp, loadedSettings->reconnectPort, loadedSettings->roomName, loadedSettings->roomPassword));
+			std::istringstream stream(std::format("{}:{} {} {} {}", loadedSettings->reconnectIp, loadedSettings->reconnectPort, loadedSettings->userName, loadedSettings->roomName, loadedSettings->roomPassword));
 
 			if (!(*it)->conditionalRun(stream))
 			{

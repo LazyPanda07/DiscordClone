@@ -32,7 +32,7 @@ struct utility::parsers::Converter<uint16_t>
 
 namespace commands
 {
-	bool Connect::connect(std::string_view ip, uint16_t port, std::string_view roomName, std::string_view roomPassword)
+	bool Connect::connect(std::string_view ip, uint16_t port, std::string_view userName, std::string_view roomName, std::string_view roomPassword, uint64_t& id)
 	{
 		try
 		{
@@ -48,6 +48,7 @@ namespace commands
 			json::JsonBuilder data;
 			uint16_t udpPort = 0;
 
+			data["userName"] = userName;
 			data["roomName"] = roomName;
 			data["roomPassword"] = roomPassword;
 
@@ -68,7 +69,10 @@ namespace commands
 			}
 			else
 			{
-				udpPort = static_cast<uint16_t>(std::stoi(parser.getBody()));
+				const json::JsonParser& jsonData = parser.getJson();
+
+				id = jsonData.get<uint64_t>("id");
+				udpPort = jsonData.get<uint16_t>("port");
 			}
 
 			socket = std::make_unique<wrappers::SocketWrapper>(ip, udpPort);
@@ -81,11 +85,11 @@ namespace commands
 		return true;
 	}
 
-	bool Connect::sendHello()
+	bool Connect::sendHello(uint64_t id)
 	{
 		try
 		{
-			socket->sendData(web::UDPSocket::hello);
+			socket->sendData(web::UDPSocket::constructHelloPacket(id));
 		}
 		catch (const std::exception&)
 		{
@@ -95,11 +99,28 @@ namespace commands
 		return true;
 	}
 
-	bool Connect::receiveHello()
+	bool Connect::receiveHello(uint64_t id)
 	{
 		try
 		{
-			return socket->receiveData() == web::UDPSocket::hello;
+			std::string data = socket->receiveData();
+
+			if (data.size() != web::UDPSocket::helloPacketSize)
+			{
+				return false;
+			}
+
+			uint64_t idFromServer = 0;
+			char* ptr = reinterpret_cast<char*>(&idFromServer);
+
+			for (size_t i = 0; i < sizeof(idFromServer); i++)
+			{
+				*ptr = data[web::UDPSocket::helloMessageSize + i];
+
+				ptr++;
+			}
+
+			return id == idFromServer;
 		}
 		catch (const std::exception&)
 		{
@@ -112,13 +133,15 @@ namespace commands
 		using namespace std::chrono_literals;
 
 		constexpr size_t retries = 5;
-		constexpr utility::parsers::PatternParser<std::string, uint16_t, std::string, std::string> parser("{}:{} {} {}");
+		constexpr utility::parsers::PatternParser<std::string, uint16_t, std::string, std::string, std::string> parser("{}:{} {} {} {}");
 
 		std::string ip;
 		uint16_t port;
+		std::string userName;
 		std::string roomName;
 		std::string roomPassword;
 		std::string line;
+		uint64_t id;
 		bool connected = false;
 
 		std::getline(stream, line);
@@ -128,13 +151,13 @@ namespace commands
 			line.erase(line.begin());
 		}
 
-		parser.parse(line, ip, port, roomName, roomPassword);
+		parser.parse(line, ip, port, userName, roomName, roomPassword);
 
 		for (size_t i = 0; i < retries; i++)
 		{
 			std::cout << std::format("Connecting to: {}:{}...", ip, port) << std::endl;
 
-			if (this->connect(ip, port, roomName, roomPassword))
+			if (this->connect(ip, port, userName, roomName, roomPassword, id))
 			{
 				std::cout << std::format("Connected to: {}:{}", ip, port) << std::endl;
 
@@ -155,7 +178,7 @@ namespace commands
 
 		for (size_t i = 0; i < retries; i++)
 		{
-			if (this->sendHello())
+			if (this->sendHello(id))
 			{
 				break;
 			}
@@ -165,7 +188,7 @@ namespace commands
 
 		for (size_t i = 0; i < retries; i++)
 		{
-			if (this->receiveHello())
+			if (this->receiveHello(id))
 			{
 				std::cout << "Establish voice stream" << std::endl;
 
@@ -173,10 +196,11 @@ namespace commands
 
 				settings.modifySettings
 				(
-					[&ip, port, &roomName, &roomPassword](client::Settings& self)
+					[&ip, port, &userName, &roomName, &roomPassword](client::Settings& self)
 					{
 						self.reconnectIp = std::move(ip);
 						self.reconnectPort = port;
+						self.userName = std::move(userName);
 						self.roomName = std::move(roomName);
 						self.roomPassword = std::move(roomPassword);
 					}
@@ -212,7 +236,7 @@ namespace commands
 
 	std::string_view Connect::getHelpText() const
 	{
-		constexpr std::string_view helpText = "<ip:port> <roomName> <roomPassword>";
+		constexpr std::string_view helpText = "<ip>:<port> <user_name> <room_name> <room_password>";
 
 		return helpText;
 	}

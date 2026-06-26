@@ -20,11 +20,11 @@ namespace commands
 		std::function<void()> onSuccess;
 
 	private:
-		bool connect(std::string_view ip, uint16_t port, std::string_view roomName, std::string_view roomPassword);
+		bool connect(std::string_view ip, uint16_t port, std::string_view userName, std::string_view roomName, std::string_view roomPassword, uint64_t& id);
 
-		bool sendHello();
+		bool sendHello(uint64_t id);
 
-		bool receiveHello();
+		bool receiveHello(uint64_t id);
 
 	private:
 		bool run(std::istream& stream) override;

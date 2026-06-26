@@ -4,6 +4,7 @@
 
 #include <unordered_map>
 #include <mutex>
+#include <random>
 
 #include "VoiceServer.hpp"
 
@@ -28,8 +29,11 @@ namespace executors
 	private:
 		std::unordered_map<RoomData, voice::VoiceServer, RoomHash> rooms; // TODO: resize may reinitialize servers
 		std::mutex roomsMutex;
+		std::mt19937_64 random;
 
 	public:
+		void init(const framework::utility::ExecutorSettings& settings) override;
+
 		void doGet(framework::HttpRequest& request, framework::HttpResponse& response) override;
 	};
 }
