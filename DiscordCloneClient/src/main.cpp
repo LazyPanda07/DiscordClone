@@ -18,6 +18,7 @@
 #include "Checks/CheckSocket.hpp"
 #include "Checks/CheckMicrophone.hpp"
 #include "Checks/CheckSpeaker.hpp"
+#include "Checks/CheckStream.hpp"
 #include "Commands/Connect.hpp"
 #include "Commands/OverrideMicrophoneDeviceId.hpp"
 #include "Commands/OverrideSpeakerDeviceId.hpp"
@@ -29,6 +30,7 @@
 #include "Commands/Echo.hpp"
 #include "Commands/Exit.hpp"
 #include "Commands/PingCommand.hpp"
+#include "Commands/GetUsers.hpp"
 
 #ifndef __LINUX__
 #include <Windows.h>
@@ -52,13 +54,14 @@ int main(int argc, char** argv) try
 	std::unique_ptr<wrappers::MicrophoneWrapper> microphone;
 	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
 	functionality::Hotkeys hotkeys;
-	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &microphone, &speaker]()
+	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &microphone, &speaker, &controlStream]()
 		{
 			std::vector<std::unique_ptr<checks::Check>> result;
 
 			result.emplace_back(std::make_unique<checks::CheckSocket>(socket));
 			result.emplace_back(std::make_unique<checks::CheckMicrophone>(microphone));
 			result.emplace_back(std::make_unique<checks::CheckSpeaker>(speaker));
+			result.emplace_back(std::make_unique<checks::CheckStream>(controlStream));
 
 			return result;
 		}();
@@ -93,6 +96,7 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::OverrideSpeakerDeviceId>(speaker, checks));
 			result.emplace_back(std::make_unique<commands::Exit>(checks));
 			result.emplace_back(std::make_unique<commands::PingCommand>(controlStream, checks));
+			result.emplace_back(std::make_unique<commands::GetUsers>(controlStream, settings, checks));
 
 			return result;
 		}();

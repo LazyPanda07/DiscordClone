@@ -17,6 +17,7 @@ add_executable(
 	src/Checks/CheckMicrophone.cpp
 	src/Checks/CheckSpeaker.cpp
 	src/Checks/CheckSocket.cpp
+	src/Checks/CheckStream.cpp
 	src/Commands/Connect.cpp
 	src/Commands/OverrideMicrophoneDeviceId.cpp
 	src/Commands/OverrideSpeakerDeviceId.cpp
@@ -27,7 +28,8 @@ add_executable(
 	src/Commands/MuteOrUnmute.cpp
 	src/Commands/Echo.cpp
 	src/Commands/Exit.cpp
-	"src/Commands/PingCommand.cpp"
+	src/Commands/PingCommand.cpp
+	src/Commands/GetUsers.cpp
 )
 
 if (WIN32)

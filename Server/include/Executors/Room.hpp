@@ -35,5 +35,7 @@ namespace executors
 		void init(const framework::utility::ExecutorSettings& settings) override;
 
 		void doGet(framework::HttpRequest& request, framework::HttpResponse& response) override;
+
+		void doPost(framework::HttpRequest& request, framework::HttpResponse& response) override;
 	};
 }

@@ -21,6 +21,41 @@ namespace executors
 
 	void Room::doGet(framework::HttpRequest& request, framework::HttpResponse& response)
 	{
+		const std::unordered_map<std::string, std::string>& queryParameters = request.getQueryParameters();
+		RoomData roomData =
+		{
+			.name = queryParameters.at("roomName"),
+			.password = queryParameters.at("roomPassword")
+		};
+
+		std::lock_guard<std::mutex> lock(roomsMutex);
+
+		if (auto it = rooms.find(roomData); it != rooms.end())
+		{
+			if (it->first.password == roomData.password)
+			{
+				framework::JsonObject result;
+				std::vector<std::string> clients = it->second.getClients();
+
+				for (std::string& client : clients)
+				{
+					result.emplace_back(std::move(client));
+				}
+
+				response.setBody(result);
+			}
+			else
+			{
+				constexpr std::string_view errorMessage = "Wrong password";
+
+				response.setResponseCode(framework::ResponseCodes::forbidden);
+				response.setBody(errorMessage);
+			}
+		}
+	}
+
+	void Room::doPost(framework::HttpRequest& request, framework::HttpResponse& response)
+	{
 		const framework::JsonParser& data = request.getJson();
 		RoomData roomData =
 		{

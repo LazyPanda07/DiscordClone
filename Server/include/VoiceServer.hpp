@@ -54,6 +54,8 @@ namespace voice
 
 		uint16_t getPort() const;
 
+		std::vector<std::string> getClients() const;
+
 		~VoiceServer();
 	};
 }

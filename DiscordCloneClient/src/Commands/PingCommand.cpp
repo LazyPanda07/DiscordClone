@@ -26,7 +26,7 @@ namespace commands
 
 		if (web::HttpParser(response).getResponseCode() == 200)
 		{
-			std::cout << std::format("Ping is: ~{}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) << std::endl;
+			std::cout << std::format("Ping is: ~{} ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) << std::endl;
 
 			return true;
 		}

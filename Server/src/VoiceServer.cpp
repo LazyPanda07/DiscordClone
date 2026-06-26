@@ -171,6 +171,20 @@ namespace voice
 		return socket.getPort();
 	}
 
+	std::vector<std::string> VoiceServer::getClients() const
+	{
+		std::vector<std::string> result;
+
+		result.reserve(clients.size());
+
+		for (const Client& client : clients)
+		{
+			result.push_back(client.userName);
+		}
+
+		return result;
+	}
+
 	VoiceServer::~VoiceServer()
 	{
 		started = false;

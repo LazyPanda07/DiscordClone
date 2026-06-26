@@ -53,7 +53,7 @@ namespace commands
 			data["roomPassword"] = roomPassword;
 
 			request = web::HttpBuilder()
-				.getRequest()
+				.postRequest()
 				.parameters("room")
 				.build(data);
 
