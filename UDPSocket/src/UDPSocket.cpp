@@ -35,25 +35,6 @@ namespace web
 			throw std::runtime_error(std::format("Socket creation failed: {}", WSAGetLastError()));
 #endif
 		}
-
-#ifdef __LINUX__
-		int flags = fcntl(udpSocket, F_GETFL, 0);
-
-		if (flags == -1)
-		{
-			std::cerr << "Can't F_GETFL on socket" << std::endl;
-
-			return;
-		}
-
-		flags |= O_NONBLOCK;
-
-		fcntl(udpSocket, F_SETFL, flags);
-#else
-		u_long blockingMode = 1;
-
-		ioctlsocket(udpSocket, FIONBIO, &blockingMode);
-#endif
 	}
 
 	UDPSocket::UDPSocket(const sockaddr_in& address) :

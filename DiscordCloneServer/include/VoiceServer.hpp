@@ -24,12 +24,13 @@ namespace voice
 			sockaddr_in address;
 			std::string ip;
 			std::string userName;
+			uint64_t id;
 			uint16_t port;
 			bool echo;
 			std::chrono::steady_clock::time_point aliveTimestamp;
 
 		public:
-			Client(const sockaddr_in& address);
+			Client(const sockaddr_in& address, uint64_t id);
 
 			bool operator ==(const sockaddr_in& address) const noexcept;
 
@@ -45,9 +46,6 @@ namespace voice
 		std::mutex disconnectedClientsMutex;
 		std::future<void> startFuture;
 		bool started;
-
-	private:
-		static bool isNoDataAvailable();
 
 	private:
 		void serve(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket);
