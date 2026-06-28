@@ -1,6 +1,5 @@
 #include "UDPClientSocket.hpp"
 
-#include <iostream>
 #include <array>
 
 namespace web

@@ -1,5 +1,7 @@
 #include "UDPSocket.hpp"
 
+#include <iostream>
+
 namespace web
 {
 	std::string UDPSocket::constructHelloPacket(uint64_t id)

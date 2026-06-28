@@ -1,7 +1,6 @@
 #include "UDPServerSocket.hpp"
 
 #include <array>
-#include <chrono>
 
 namespace web
 {
