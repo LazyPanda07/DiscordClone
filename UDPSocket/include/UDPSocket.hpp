@@ -60,7 +60,7 @@ namespace web
 
 		static constexpr std::string_view alive = "alive";
 		static constexpr size_t alivePacketSize = alive.size();
-
+		
 	public:
 		static std::string constructHelloPacket(uint64_t id);
 

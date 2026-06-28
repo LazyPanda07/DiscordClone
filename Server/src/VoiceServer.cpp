@@ -34,6 +34,15 @@ namespace voice
 		return ip == otherIp && port == otherPort;
 	}
 
+	bool VoiceServer::isNoDataAvailable()
+	{
+#ifdef __LINUX__
+		return errno == EAGAIN || errno == EWOULDBLOCK;
+#else
+		return WSAGetLastError() == WSAEWOULDBLOCK;
+#endif
+	}
+
 	void VoiceServer::serve(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 	{
 		auto timestamp = std::chrono::steady_clock::now();
@@ -42,23 +51,48 @@ namespace voice
 		{
 			constexpr int32_t timeoutValue = 30;
 
-			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
+			if (VoiceServer::isNoDataAvailable())
 			{
-				clients.erase(it);
-			}
-
-			for (int32_t i = 0; i < static_cast<int32_t>(clients.size()); i++)
-			{
-				if (std::chrono::duration_cast<std::chrono::seconds>(clients[i].aliveTimestamp.time_since_epoch()).count() >= timeoutValue)
+				if (disconnectedClients.empty())
 				{
-					clients.erase(clients.begin() + i);
-
-					i--;
+					return;
 				}
+
+				{
+					std::lock_guard<std::mutex> lock(disconnectedClientsMutex);
+
+					for (sockaddr_in temp : disconnectedClients)
+					{
+						if (auto it = std::ranges::find_if(clients, [&temp](const Client& client) { return client == temp; }); it != clients.end())
+						{
+							std::cout << std::format("Remove {}", it->userName) << std::endl;
+
+							clients.erase(it);
+						}
+					}
+
+					disconnectedClients.clear();
+				}
+
+				for (int32_t i = 0; i < static_cast<int32_t>(clients.size()); i++)
+				{
+					if (std::chrono::duration_cast<std::chrono::seconds>(clients[i].aliveTimestamp.time_since_epoch()).count() >= timeoutValue)
+					{
+						clients.erase(clients.begin() + i);
+
+						i--;
+					}
+				}
+
+				return;
 			}
+
+			// TODO: decide to off server
 
 			if (clients.empty())
 			{
+				std::cout << "Stop server" << std::endl;
+
 				started = false;
 			}
 
@@ -93,7 +127,9 @@ namespace voice
 
 			if (auto it = pendingClients.find(id); it != pendingClients.end())
 			{
-				client.userName = std::move(pendingClients.extract(it).mapped());
+				it->second.second = address;
+
+				client.userName = it->second.first;
 			}
 			else
 			{
@@ -149,21 +185,53 @@ namespace voice
 			return;
 		}
 
-		started = true;
+		startFuture = std::async
+		(
+			std::launch::async,
+			[this]()
+			{
+				started = true;
 
-		web::UDPSocket::ReceiveCallback callback = std::bind(&VoiceServer::serve, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+				web::UDPSocket::ReceiveCallback callback = std::bind(&VoiceServer::serve, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		while (started)
-		{
-			socket.receiveData(callback);
-		}
+				while (started)
+				{
+					socket.receiveData(callback);
+				}
+			}
+		);
 	}
 
 	void VoiceServer::addPendingClient(uint64_t id, std::string&& userName)
 	{
 		std::lock_guard<std::mutex> lock(pendingClientsMutex);
 
-		pendingClients.try_emplace(id, std::move(userName));
+		pendingClients.try_emplace(id, std::move(userName), sockaddr_in{});
+	}
+
+	void VoiceServer::removeClient(uint64_t id)
+	{
+		sockaddr_in temp{};
+		bool hasClient = false;
+
+		{
+			std::lock_guard<std::mutex> lock(pendingClientsMutex);
+
+			if (auto it = pendingClients.find(id); it != pendingClients.end())
+			{
+				temp = it->second.second;
+				hasClient = true;
+
+				pendingClients.erase(it);
+			}
+		}
+		
+		if (hasClient)
+		{
+			std::lock_guard<std::mutex> lock(disconnectedClientsMutex);
+
+			disconnectedClients.emplace_back(temp);
+		}
 	}
 
 	uint16_t VoiceServer::getPort() const

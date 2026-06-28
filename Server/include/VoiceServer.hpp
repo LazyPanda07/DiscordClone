@@ -4,6 +4,7 @@
 #include <tuple>
 #include <chrono>
 #include <mutex>
+#include <future>
 
 #include <UDPClientSocket.hpp>
 #include <UDPServerSocket.hpp>
@@ -38,9 +39,15 @@ namespace voice
 	private:
 		std::vector<Client> clients;
 		web::UDPServerSocket socket;
-		std::unordered_map<uint64_t, std::string> pendingClients;
+		std::unordered_map<uint64_t, std::pair<std::string, sockaddr_in>> pendingClients;
+		std::vector<sockaddr_in> disconnectedClients;
 		std::mutex pendingClientsMutex;
+		std::mutex disconnectedClientsMutex;
+		std::future<void> startFuture;
 		bool started;
+
+	private:
+		static bool isNoDataAvailable();
 
 	private:
 		void serve(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket);
@@ -51,6 +58,8 @@ namespace voice
 		void start();
 
 		void addPendingClient(uint64_t id, std::string&& userName);
+		
+		void removeClient(uint64_t id);
 
 		uint16_t getPort() const;
 
