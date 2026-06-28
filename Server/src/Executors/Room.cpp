@@ -105,8 +105,6 @@ namespace executors
 
 	void Room::doDelete(framework::HttpRequest& request, framework::HttpResponse& response)
 	{
-		printf("Delete method\n");
-
 		const framework::JsonParser& data = request.getJson();
 		RoomData roomData =
 		{
