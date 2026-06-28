@@ -37,7 +37,7 @@ add_subdirectory(3rdparty)
 add_subdirectory(UDPSocket)
 
 if (${BUILD_SERVER})
-	add_subdirectory(Server)
+	add_subdirectory(DiscordCloneServer)
 endif()
 
 if (${BUILD_CLIENT})

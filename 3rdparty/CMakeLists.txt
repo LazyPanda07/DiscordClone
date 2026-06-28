@@ -26,7 +26,7 @@ FetchContent_Declare(
 
 FetchContent_Declare(
 	opus
-	GIT_REPOSITORY https://gitlab.xiph.org/xiph/opus.git
+	GIT_REPOSITORY https://github.com/xiph/opus.git
 	GIT_TAG v${OPUS_VERSION}
 )
 
