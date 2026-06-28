@@ -1,9 +1,5 @@
 #include "Executors/Room.hpp"
 
-#include <thread>
-
-static void runServer(voice::VoiceServer& server);
-
 namespace executors
 {
 	bool Room::RoomData::operator ==(const RoomData& other) const noexcept
@@ -78,7 +74,7 @@ namespace executors
 			{
 				it->second.addPendingClient(id, std::move(userName));
 
-				runServer(it->second);
+				it->second.start();
 
 				builder["port"] = it->second.getPort();
 
@@ -98,7 +94,7 @@ namespace executors
 
 			value->second.addPendingClient(id, std::move(userName));
 
-			runServer(value->second);
+			value->second.start();
 
 			builder["port"] = value->second.getPort();
 
@@ -107,10 +103,40 @@ namespace executors
 		}
 	}
 
-	DEFINE_EXECUTOR(Room)
-}
+	void Room::doDelete(framework::HttpRequest& request, framework::HttpResponse& response)
+	{
+		printf("Delete method\n");
 
-void runServer(voice::VoiceServer& server)
-{
-	std::thread(&voice::VoiceServer::start, &server).detach();
+		const framework::JsonParser& data = request.getJson();
+		RoomData roomData =
+		{
+			.name = data.get<std::string>("roomName"),
+			.password = data.get<std::string>("roomPassword")
+		};
+		uint64_t id = data.get<uint64_t>("id");
+
+		if (auto it = rooms.find(roomData); it != rooms.end())
+		{
+			if (it->first.password == roomData.password)
+			{
+				it->second.removeClient(id);
+			}
+			else
+			{
+				constexpr std::string_view errorMessage = "Wrong password";
+
+				response.setResponseCode(framework::ResponseCodes::forbidden);
+				response.setBody(errorMessage);
+			}
+		}
+		else
+		{
+			constexpr std::string_view errorMessage = "Wrong room";
+
+			response.setResponseCode(framework::ResponseCodes::forbidden);
+			response.setBody(errorMessage);
+		}
+	}
+
+	DEFINE_EXECUTOR(Room)
 }

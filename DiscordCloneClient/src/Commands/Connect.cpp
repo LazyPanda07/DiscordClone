@@ -192,7 +192,7 @@ namespace commands
 			{
 				std::cout << "Establish voice stream" << std::endl;
 
-				onSuccess();
+				onSuccess(id);
 
 				settings.modifySettings
 				(
@@ -224,7 +224,7 @@ namespace commands
 		return NULL;
 	}
 
-	Connect::Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void()>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks) :
+	Connect::Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void(uint64_t&)>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks) :
 		Command(commandName, checks),
 		socket(socket),
 		controlStream(controlStream),

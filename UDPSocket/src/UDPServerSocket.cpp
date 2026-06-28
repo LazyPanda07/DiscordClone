@@ -25,26 +25,6 @@ namespace web
 #endif
 		}
 
-		int64_t timeout = std::chrono::duration_cast<std::chrono::milliseconds>(60s).count();
-
-#ifdef __LINUX__
-		timeval timeoutValue;
-
-		timeoutValue.tv_sec = timeout / 1000;
-		timeoutValue.tv_usec = (timeout - timeoutValue.tv_sec * 1000) * 1000;
-#else
-		DWORD timeoutValue = static_cast<DWORD>(timeout);
-#endif
-
-		if (setsockopt(udpSocket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeoutValue), sizeof(timeoutValue)) == SOCKET_ERROR)
-		{
-#ifdef __LINUX__
-			throw std::runtime_error(std::format("recvfrom timeout setting failed from server with: {} error", strerror(errno)));
-#else
-			throw std::runtime_error(std::format("recvfrom timeout setting failed from server with: {} error", WSAGetLastError()));
-#endif
-		}
-
 		getsockname(udpSocket, reinterpret_cast<sockaddr*>(&address), &addressSize);
 	}
 

@@ -9,6 +9,7 @@
 #include <UDPSocket.hpp>
 #include <c_api.h>
 #include <IOSocketStream.h>
+#include <HttpBuilder.h>
 
 #include "Hotkeys.hpp"
 #include "Settings.hpp"
@@ -36,11 +37,21 @@
 #include <Windows.h>
 #endif
 
+std::unique_ptr<streams::IOSocketStream> controlStream;
+client::Settings settings;
+uint64_t id;
+
 void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::unique_ptr<wrappers::SpeakerWrapper>& speaker);
 
 void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone);
 
 void help(const std::vector<std::unique_ptr<commands::Command>>& commands);
+
+#ifdef __LINUX__
+
+#else
+BOOL onExit(DWORD CtrlType);
+#endif
 
 int main(int argc, char** argv) try
 {
@@ -48,13 +59,11 @@ int main(int argc, char** argv) try
 	SetConsoleOutputCP(CP_UTF8);
 #endif
 
-	client::Settings settings;
 	std::unique_ptr<wrappers::SocketWrapper> socket;
-	std::unique_ptr<streams::IOSocketStream> controlStream;
 	std::unique_ptr<wrappers::MicrophoneWrapper> microphone;
 	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
 	functionality::Hotkeys hotkeys;
-	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &microphone, &speaker, &controlStream]()
+	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &microphone, &speaker]()
 		{
 			std::vector<std::unique_ptr<checks::Check>> result;
 
@@ -65,7 +74,7 @@ int main(int argc, char** argv) try
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &controlStream, &microphone, &speaker, &settings, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &microphone, &speaker, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -76,8 +85,10 @@ int main(int argc, char** argv) try
 					socket,
 					controlStream,
 					settings,
-					[&socket, &settings, &microphone, &speaker]()
+					[&socket, &microphone, &speaker](uint64_t& resultId)
 					{
+						id = resultId;
+
 						microphone = std::make_unique<wrappers::MicrophoneWrapper>(*socket);
 						speaker = std::make_unique<wrappers::SpeakerWrapper>(*socket);
 
@@ -137,6 +148,8 @@ int main(int argc, char** argv) try
 	printDeviceInfo(microphone);
 
 #ifndef __LINUX__
+	SetConsoleCtrlHandler(&onExit, TRUE);
+
 	hotkeys.registerHotkey
 	(
 		[&microphone]()
@@ -255,3 +268,41 @@ void help(const std::vector<std::unique_ptr<commands::Command>>& commands)
 
 	std::cout << "help: " << std::endl;
 }
+
+#ifdef __LINUX__
+
+#else
+BOOL onExit(DWORD CtrlType)
+{
+	if (controlStream && (CtrlType == CTRL_CLOSE_EVENT || CtrlType == CTRL_SHUTDOWN_EVENT))
+	{
+		std::string request;
+		std::string _;
+
+		json::JsonBuilder builder;
+
+		builder["roomName"] = settings.roomName;
+		builder["roomPassword"] = settings.roomPassword;
+		builder["id"] = id;
+
+		request = web::HttpBuilder()
+			.deleteRequest()
+			.parameters("room")
+			.build(builder);
+
+		try
+		{
+			(*controlStream) << request;
+			(*controlStream) >> _;
+		}
+		catch (const std::exception&)
+		{
+
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+#endif

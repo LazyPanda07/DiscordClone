@@ -1,6 +1,4 @@
 #include <iostream>
-#include <thread>
-#include <chrono>
 
 #include <import.hpp>
 #include <ConsoleArgumentParser.h>
@@ -11,13 +9,20 @@ int main(int argc, char** argv) try
 
 	utility::parsers::ConsoleArgumentParser argumentsParser(argc, argv);
 
-	std::string ip = argumentsParser.get<std::string>("ip", "127.0.0.1");
-	uint16_t port = argumentsParser.get<uint16_t>("port", 8080);
-
 	framework::utility::Config config("config.json");
 
-	config.overrideConfiguration("port", port);
-	config.overrideConfiguration("ip", ip);
+	std::string ip = argumentsParser.get<std::string>("ip");
+	uint16_t port = argumentsParser.get<uint16_t>("port");
+
+	if (ip.size())
+	{
+		config.overrideConfiguration("ip", ip);
+	}
+
+	if (port != 0)
+	{
+		config.overrideConfiguration("port", port);
+	}
 
 	framework::WebFramework server(config);
 

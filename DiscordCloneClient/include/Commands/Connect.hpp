@@ -17,7 +17,7 @@ namespace commands
 		std::unique_ptr<wrappers::SocketWrapper>& socket;
 		std::unique_ptr<streams::IOSocketStream>& controlStream;
 		client::Settings& settings;
-		std::function<void()> onSuccess;
+		std::function<void(uint64_t&)> onSuccess;
 
 	private:
 		bool connect(std::string_view ip, uint16_t port, std::string_view userName, std::string_view roomName, std::string_view roomPassword, uint64_t& id);
@@ -32,7 +32,7 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void()>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void(uint64_t&)>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
 		std::string_view getHelpText() const override;
 
