@@ -18,6 +18,8 @@ namespace wrappers
 
 		bool isStreamRunning() const;
 
+		void sendSilence();
+
 		void setVolume(double volume);
 
 		double getVolume() const;

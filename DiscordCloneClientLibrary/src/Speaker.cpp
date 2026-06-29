@@ -1,5 +1,7 @@
 #include "Speaker.hpp"
 
+#include "Constants.hpp"
+
 template<size_t Size>
 static void fillSound(const std::array<float, Size>& sound, std::span<float> out);
 
@@ -7,10 +9,8 @@ namespace voice
 {
 	int Speaker::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
-		static constexpr std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> silence{};
-		
-		Speaker& voice = *reinterpret_cast<Speaker*>(userData);
-		std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
+		Speaker& speaker = *reinterpret_cast<Speaker*>(userData);
+		std::span<float> out(static_cast<float*>(outputBuffer), frames * speaker.parameters.nChannels);
 
 		if (status & RTAUDIO_OUTPUT_UNDERFLOW)
 		{
@@ -19,64 +19,35 @@ namespace voice
 
 		if (!outputBuffer)
 		{
-			fillSound(silence, out);
+			fillSound(constants::silence, out);
 
 			return 0;
 		}
 
 		try
 		{
-			bool hasSound = false;
-			int32_t count = 0;
-
-			while (true)
-			{
-				bool result = voice.socket.receiveData
-				(
-					[outputBuffer, frames, &voice, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+			bool result = speaker.socket.receiveData
+			(
+				[outputBuffer, frames, &speaker, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+				{
+					if (size == SOCKET_ERROR)
 					{
-						if (size == SOCKET_ERROR)
-						{
-							fillSound(silence, out);
-
-							return;
-						}
-
-						int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, voice.inputDataBuffer.data(), voice.frameSize, 0);
-
-						if (voice.volume != 1.0)
-						{
-							for (float& value : voice.inputDataBuffer)
-							{
-								value *= voice.volume;
-							}
-						}
-
-						fillSound(voice.inputDataBuffer, out);
+						return;
 					}
-				);
 
-				if (result)
-				{
-					count++;
+					opus_decode_float(speaker.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, speaker.inputDataBuffer.data(), speaker.frameSize, 0);
 
-					hasSound = true;
+					if (speaker.volume != 1.0)
+					{
+						for (float& value : speaker.inputDataBuffer)
+						{
+							value *= speaker.volume;
+						}
+					}
+
+					fillSound(speaker.inputDataBuffer, out);
 				}
-				else
-				{
-					break;
-				}
-			}
-
-			if (hasSound)
-			{
-				fillSound(voice.inputDataBuffer, out);
-
-				if (count > 1)
-				{
-					std::cout << "Can't play all sound" << std::endl;
-				}
-			}
+			);
 		}
 		catch (const std::exception& e)
 		{
