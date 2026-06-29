@@ -158,6 +158,18 @@ void restartMicrophone(MicrophoneObject microphone, Exception* exception)
 	}
 }
 
+void sendSilence(MicrophoneObject microphone, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::Microphone*>(microphone)->sendSilence();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
 void setMicrophoneVolume(MicrophoneObject microphone, double volume, Exception* exception)
 {
 	try

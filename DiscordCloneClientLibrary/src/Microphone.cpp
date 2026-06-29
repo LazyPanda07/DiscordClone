@@ -12,6 +12,7 @@
 #endif
 
 #include "Functionality.hpp"
+#include "Constants.hpp"
 
 #ifdef __LINUX__
 using HMODULE = void*;
@@ -31,7 +32,7 @@ namespace voice
 {
 	int Microphone::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
-		Microphone& voice = *reinterpret_cast<Microphone*>(userData);
+		Microphone& microphone = *reinterpret_cast<Microphone*>(userData);
 
 		if (status & RTAUDIO_INPUT_OVERFLOW)
 		{
@@ -43,24 +44,24 @@ namespace voice
 			return 0;
 		}
 
-		std::span<float> in(static_cast<float*>(inputBuffer), frames * voice.parameters.nChannels);
+		std::span<float> in(static_cast<float*>(inputBuffer), frames * microphone.parameters.nChannels);
 
-		if (voice.volume != 1.0)
+		if (microphone.volume != 1.0)
 		{
 			for (float& value : in)
 			{
-				value *= voice.volume;
+				value *= microphone.volume;
 			}
 		}
 
-		int bytes = opus_encode_float(voice.encoder, in.data(), frames, voice.outputData.data(), voice.outputData.size());
+		int bytes = opus_encode_float(microphone.encoder, in.data(), frames, microphone.outputData.data(), microphone.outputData.size());
 
 		if (bytes < 0)
 		{
 			throw std::runtime_error(std::format("Fail encoding: {}", opus_strerror(bytes)));
 		}
 
-		voice.socket.sendData(std::span<uint8_t>(voice.outputData.data(), bytes));
+		microphone.socket.sendData(std::span<uint8_t>(microphone.outputData.data(), bytes));
 
 		return 0;
 	}
@@ -161,11 +162,25 @@ namespace voice
 #endif
 
 		audio.stopStream();
+		
+		this->sendSilence();
 	}
 
 	bool Microphone::isStreamRunning() const
 	{
 		return audio.isStreamRunning();
+	}
+
+	void Microphone::sendSilence()
+	{
+		int bytes = opus_encode_float(encoder, constants::silence.data(), constants::silence.size(), outputData.data(), outputData.size());
+
+		if (bytes < 0)
+		{
+			throw std::runtime_error(std::format("Fail encoding: {}", opus_strerror(bytes)));
+		}
+
+		socket.sendData(std::span<uint8_t>(outputData.data(), bytes));
 	}
 
 	void Microphone::setVolume(double volume)

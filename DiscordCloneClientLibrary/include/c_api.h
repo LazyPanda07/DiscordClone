@@ -52,6 +52,8 @@ CLIENT_LIBRARY_FUNCTION_API bool isStreamRunning(MicrophoneObject microphone, Ex
 
 CLIENT_LIBRARY_FUNCTION_API void restartMicrophone(MicrophoneObject microphone, Exception* exception);
 
+CLIENT_LIBRARY_FUNCTION_API void sendSilence(MicrophoneObject microphone, Exception* exception);
+
 CLIENT_LIBRARY_FUNCTION_API void setMicrophoneVolume(MicrophoneObject microphone, double volume, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API double getMicrophoneVolume(MicrophoneObject microphone, Exception* exception);

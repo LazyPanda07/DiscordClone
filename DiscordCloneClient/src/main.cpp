@@ -38,6 +38,7 @@
 #endif
 
 std::unique_ptr<streams::IOSocketStream> controlStream;
+std::unique_ptr<wrappers::MicrophoneWrapper> microphone;
 client::Settings settings;
 uint64_t id;
 
@@ -60,10 +61,9 @@ int main(int argc, char** argv) try
 #endif
 
 	std::unique_ptr<wrappers::SocketWrapper> socket;
-	std::unique_ptr<wrappers::MicrophoneWrapper> microphone;
 	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
 	functionality::Hotkeys hotkeys;
-	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &microphone, &speaker]()
+	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &speaker]()
 		{
 			std::vector<std::unique_ptr<checks::Check>> result;
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv) try
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &microphone, &speaker, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &speaker, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -85,7 +85,7 @@ int main(int argc, char** argv) try
 					socket,
 					controlStream,
 					settings,
-					[&socket, &microphone, &speaker](uint64_t& resultId)
+					[&socket, &speaker](uint64_t& resultId)
 					{
 						id = resultId;
 
@@ -152,7 +152,7 @@ int main(int argc, char** argv) try
 
 	hotkeys.registerHotkey
 	(
-		[&microphone]()
+		[]()
 		{
 			microphone->muteOrUnmute();
 
@@ -274,7 +274,7 @@ void help(const std::vector<std::unique_ptr<commands::Command>>& commands)
 #else
 BOOL onExit(DWORD CtrlType)
 {
-	if (controlStream && (CtrlType == CTRL_CLOSE_EVENT || CtrlType == CTRL_SHUTDOWN_EVENT))
+	if (CtrlType == CTRL_CLOSE_EVENT || CtrlType == CTRL_SHUTDOWN_EVENT)
 	{
 		std::string request;
 		std::string _;
@@ -292,8 +292,23 @@ BOOL onExit(DWORD CtrlType)
 
 		try
 		{
-			(*controlStream) << request;
-			(*controlStream) >> _;
+			if (microphone)
+			{
+				microphone->sendSilence();
+			}
+		}
+		catch (const std::exception&)
+		{
+
+		}
+
+		try
+		{
+			if (controlStream)
+			{
+				(*controlStream) << request;
+				(*controlStream) >> _;
+			}
 		}
 		catch (const std::exception&)
 		{

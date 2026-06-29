@@ -26,6 +26,11 @@ namespace wrappers
 		return utils::callApiFunction(&::isStreamRunning, implementation);
 	}
 
+	void MicrophoneWrapper::sendSilence()
+	{
+		utils::callApiFunction(&::sendSilence, implementation);
+	}
+
 	void MicrophoneWrapper::setVolume(double volume)
 	{
 		utils::callApiFunction(&setMicrophoneVolume, implementation, volume);
