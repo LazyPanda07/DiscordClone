@@ -41,7 +41,7 @@ namespace voice
 
 		if (disconnectedClients.size())
 		{
-			constexpr int32_t timeoutValue = 30;
+			constexpr int64_t timeoutValue = 30;
 
 			{
 				std::lock_guard<std::mutex> lock(disconnectedClientsMutex);
@@ -54,7 +54,7 @@ namespace voice
 				disconnectedClients.clear();
 			}
 
-			for (int32_t i = 0; i < static_cast<int32_t>(clients.size()); i++)
+			for (int64_t i = 0; i < static_cast<int64_t>(clients.size()); i++)
 			{
 				if (std::chrono::duration_cast<std::chrono::seconds>(timestamp - clients[i].aliveTimestamp).count() >= timeoutValue)
 				{
