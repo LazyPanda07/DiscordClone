@@ -20,6 +20,23 @@ namespace web
 			throw std::runtime_error(std::format("Bind failed from client with: {} error", WSAGetLastError()));
 #endif
 		}
+
+#ifdef __LINUX__
+		int flags = fcntl(udpSocket, F_GETFL, 0);
+
+		if (flags == -1)
+		{
+			throw std::runtime_error("Can't F_GETFL on socket");
+		}
+
+		flags |= O_NONBLOCK;
+
+		fcntl(udpSocket, F_SETFL, flags);
+#else
+		u_long blockingMode = 1;
+
+		ioctlsocket(udpSocket, FIONBIO, &blockingMode);
+#endif
 	}
 
 	UDPClientSocket::UDPClientSocket(std::string_view ip, uint16_t port)

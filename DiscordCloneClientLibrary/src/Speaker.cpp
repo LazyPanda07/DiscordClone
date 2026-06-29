@@ -8,7 +8,7 @@ namespace voice
 	int Speaker::callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData)
 	{
 		static constexpr std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> silence{};
-
+		
 		Speaker& voice = *reinterpret_cast<Speaker*>(userData);
 		std::span<float> out(static_cast<float*>(outputBuffer), frames * voice.parameters.nChannels);
 
@@ -26,30 +26,57 @@ namespace voice
 
 		try
 		{
-			bool result = voice.socket.receiveData
-			(
-				[outputBuffer, frames, &voice, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-				{
-					if (size == SOCKET_ERROR)
+			bool hasSound = false;
+			int32_t count = 0;
+
+			while (true)
+			{
+				bool result = voice.socket.receiveData
+				(
+					[outputBuffer, frames, &voice, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 					{
-						fillSound(silence, out);
-
-						return;
-					}
-
-					int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, voice.inputDataBuffer.data(), voice.frameSize, 0);
-
-					if (voice.volume != 1.0)
-					{
-						for (float& value : voice.inputDataBuffer)
+						if (size == SOCKET_ERROR)
 						{
-							value *= voice.volume;
-						}
-					}
+							fillSound(silence, out);
 
-					fillSound(voice.inputDataBuffer, out);
+							return;
+						}
+
+						int samples = opus_decode_float(voice.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, voice.inputDataBuffer.data(), voice.frameSize, 0);
+
+						if (voice.volume != 1.0)
+						{
+							for (float& value : voice.inputDataBuffer)
+							{
+								value *= voice.volume;
+							}
+						}
+
+						fillSound(voice.inputDataBuffer, out);
+					}
+				);
+
+				if (result)
+				{
+					count++;
+
+					hasSound = true;
 				}
-			);
+				else
+				{
+					break;
+				}
+			}
+
+			if (hasSound)
+			{
+				fillSound(voice.inputDataBuffer, out);
+
+				if (count > 1)
+				{
+					std::cout << "Can't play all sound" << std::endl;
+				}
+			}
 		}
 		catch (const std::exception& e)
 		{
