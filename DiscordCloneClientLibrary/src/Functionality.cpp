@@ -29,7 +29,7 @@ namespace functionality
 
 	std::string_view getDiscordCloneClientLibraryVersion()
 	{
-		constexpr std::string_view version = "0.6.3";
+		constexpr std::string_view version = "0.7.0";
 
 		return version.data();
 	}

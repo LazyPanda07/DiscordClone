@@ -82,7 +82,9 @@ CLIENT_LIBRARY_FUNCTION_API bool getDeviceInformationDefaultOutput(DeviceInforma
 
 CLIENT_LIBRARY_FUNCTION_API const char* getDeviceInformationName(DeviceInformationArray deviceInformation, uint64_t index, Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API const char* getVersion();
+CLIENT_LIBRARY_FUNCTION_API const char* getVersion(Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API void getVersionExtended(int32_t* major, int32_t* minor, int32_t* patch, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API const char* getExceptionMessage(Exception exception);
 

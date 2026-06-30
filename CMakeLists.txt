@@ -9,7 +9,7 @@ option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" OFF)
 option(BUILD_SERVER "Build DiscordCloneServer" ON)
 option(BUILD_SHARED_CLIENT_LIBRARY "Build DiscordCloneClientLibrary as shared library" OFF)
 
-project(DiscordCloneProject VERSION 0.6.3)
+project(DiscordCloneProject VERSION 0.7.0)
 
 include(FetchContent)
 
@@ -44,6 +44,7 @@ if (${BUILD_CLIENT})
 	add_subdirectory(DiscordCloneClientLibrary)
 
 	add_subdirectory(DiscordCloneClient)
+	add_subdirectory(DiscordCloneUpdater)
 	add_subdirectory(DiscordCloneClientResources)
 elseif(${BUILD_CLIENT_LIBRARY})
 	add_subdirectory(DiscordCloneClientLibrary)

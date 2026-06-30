@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include <UDPClientSocket.hpp>
+#include <PatternParser.h>
 
 #include "Functionality.hpp"
 #include "Microphone.hpp"
@@ -10,6 +11,15 @@
 
 static constexpr uint32_t sampleRate = 48'000;
 static constexpr uint32_t frameSize = 480;
+
+template<>
+struct utility::parsers::Converter<int32_t>
+{
+	constexpr void convert(std::string_view data, int32_t& result)
+	{
+		result = std::stoi(data.data());
+	}
+};
 
 void initialize(Exception* exception)
 {
@@ -366,9 +376,32 @@ bool getDeviceInformationDefaultOutput(DeviceInformationArray deviceInformation,
 	return false;
 }
 
-const char* getVersion()
+const char* getVersion(Exception* exception)
 {
-	return functionality::getDiscordCloneClientLibraryVersion().data();
+	try
+	{
+		return functionality::getDiscordCloneClientLibraryVersion().data();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+void getVersionExtended(int32_t* major, int32_t* minor, int32_t* patch, Exception* exception)
+{
+	constexpr utility::parsers::PatternParser<int32_t, int32_t, int32_t> parser("{}.{}.{}");
+
+	try
+	{
+		parser.parse(functionality::getDiscordCloneClientLibraryVersion(), *major, *minor, *patch);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}	
 }
 
 const char* getExceptionMessage(Exception exception)

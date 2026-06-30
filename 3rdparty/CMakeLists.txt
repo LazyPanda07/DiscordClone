@@ -5,6 +5,7 @@ project(3rdparty)
 set(RTAUDIO_TAG e5f0774)
 set(OPUS_VERSION 1.6.1)
 set(WEB_FRAMEWORK_VERSION 3.4.2)
+set(MINIZ_VERSION 3.1.1)
 set(RTAUDIO_BUILD_STATIC_LIBS ON)
 set(AVX2_SUPPORTED ON)
 set(OPUS_X86_MAY_HAVE_AVX2 ON)
@@ -36,6 +37,13 @@ FetchContent_Declare(
 	GIT_TAG v${WEB_FRAMEWORK_VERSION}
 )
 
+FetchContent_Declare(
+	miniz
+	GIT_REPOSITORY https://github.com/richgel999/miniz.git
+	GIT_TAG ${MINIZ_VERSION}
+)
+
 FetchContent_MakeAvailable(rtaudio)
 FetchContent_MakeAvailable(opus)
 FetchContent_MakeAvailable(WebFramework)
+FetchContent_MakeAvailable(miniz)

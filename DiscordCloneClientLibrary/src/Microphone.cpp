@@ -111,10 +111,10 @@ namespace voice
 				{
 					if (!audio.isStreamRunning())
 					{
-						this->socket.sendData(web::UDPSocket::alive);
+						this->sendSilence();
 					}
 
-					std::this_thread::sleep_for(5s);
+					std::this_thread::sleep_for(1s);
 				}
 			},
 			std::ref(runningGetter)
@@ -162,8 +162,6 @@ namespace voice
 #endif
 
 		audio.stopStream();
-		
-		this->sendSilence();
 	}
 
 	bool Microphone::isStreamRunning() const
