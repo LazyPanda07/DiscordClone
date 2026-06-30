@@ -30,6 +30,7 @@ add_executable(
 	src/Commands/Exit.cpp
 	src/Commands/PingCommand.cpp
 	src/Commands/GetUsers.cpp
+	src/Commands/GetVersion.cpp
 )
 
 if (WIN32)

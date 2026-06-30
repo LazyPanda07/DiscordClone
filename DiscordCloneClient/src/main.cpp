@@ -10,6 +10,7 @@
 #include <c_api.h>
 #include <IOSocketStream.h>
 #include <HttpBuilder.h>
+#include <ConsoleArgumentParser.h>
 
 #include "Hotkeys.hpp"
 #include "Settings.hpp"
@@ -32,8 +33,12 @@
 #include "Commands/Exit.hpp"
 #include "Commands/PingCommand.hpp"
 #include "Commands/GetUsers.hpp"
+#include "Commands/GetVersion.hpp"
 
-#ifndef __LINUX__
+#ifdef __LINUX__
+#include <unistd.h>
+#include <sys/types.h>
+#else
 #include <Windows.h>
 #endif
 
@@ -56,9 +61,41 @@ BOOL onExit(DWORD CtrlType);
 
 int main(int argc, char** argv) try
 {
+	std::filesystem::path applicationDirectory = std::filesystem::absolute(std::filesystem::path(argv[0]));
+
+	applicationDirectory = applicationDirectory.parent_path();
+
 #ifndef __LINUX__
 	SetConsoleOutputCP(CP_UTF8);
 #endif
+
+	utility::parsers::ConsoleArgumentParser argumentParser(argc, argv);
+
+	if (!argumentParser.get<bool>("skip_check_updates", false))
+	{
+		constexpr std::string_view discordCloneUpdaterExecutableName =
+#ifdef __LINUX__
+			"DiscordCloneUpdater";
+#else
+			"DiscordCloneUpdater.exe";
+#endif
+
+		int32_t major = 0;
+		int32_t minor = 0;
+		int32_t patch = 0;
+
+#ifdef __LINUX__
+		pid_t processId = getpid();
+#else
+		uint32_t processId = GetProcessId(GetCurrentProcess());
+#endif
+
+		utils::callApiFunction(&::getVersionExtended, &major, &minor, &patch);
+
+		std::system(std::format("{} --process_id {} --start_discord_clone --major_version {} --minor_version {} --patch {}", (applicationDirectory / discordCloneUpdaterExecutableName).string(), processId, major, minor, patch).data());
+
+		return 0;
+	}
 
 	std::unique_ptr<wrappers::SocketWrapper> socket;
 	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
@@ -108,6 +145,7 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::Exit>(checks));
 			result.emplace_back(std::make_unique<commands::PingCommand>(controlStream, checks));
 			result.emplace_back(std::make_unique<commands::GetUsers>(controlStream, settings, checks));
+			result.emplace_back(std::make_unique<commands::GetVersion>(checks));
 
 			return result;
 		}();
