@@ -35,7 +35,10 @@
 #include "Commands/GetUsers.hpp"
 #include "Commands/GetVersion.hpp"
 
-#ifndef __LINUX__
+#ifdef __LINUX__
+#include <unistd.h>
+#include <sys/types.h>
+#else
 #include <Windows.h>
 #endif
 
@@ -80,7 +83,12 @@ int main(int argc, char** argv) try
 		int32_t major = 0;
 		int32_t minor = 0;
 		int32_t patch = 0;
+
+#ifdef __LINUX__
+		pid_t processId = getpid();
+#else
 		uint32_t processId = GetProcessId(GetCurrentProcess());
+#endif
 
 		utils::callApiFunction(&::getVersionExtended, &major, &minor, &patch);
 
