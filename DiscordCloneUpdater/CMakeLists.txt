@@ -20,6 +20,15 @@ target_link_libraries(
 	Networks
 	UtilityLibrary
 	miniz
+	ssl
+	crypto
 )
+
+if (WIN32)
+	target_link_libraries(
+		${PROJECT_NAME} PRIVATE
+		crypt32
+	)
+endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
