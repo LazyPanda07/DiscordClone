@@ -26,28 +26,38 @@ namespace voice
 
 		try
 		{
-			bool result = speaker.socket.receiveData
-			(
-				[outputBuffer, frames, &speaker, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-				{
-					if (size == SOCKET_ERROR)
+			while (true)
+			{
+				bool result = speaker.socket.receiveData
+				(
+					[outputBuffer, frames, &speaker, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 					{
-						return;
-					}
-
-					opus_decode_float(speaker.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, speaker.inputDataBuffer.data(), speaker.frameSize, 0);
-
-					if (speaker.volume != 1.0)
-					{
-						for (float& value : speaker.inputDataBuffer)
+						if (size == SOCKET_ERROR)
 						{
-							value *= speaker.volume;
-						}
-					}
+							fillSound(speaker.inputDataBuffer, out);
 
-					fillSound(speaker.inputDataBuffer, out);
+							return;
+						}
+
+						opus_decode_float(speaker.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, speaker.inputDataBuffer.data(), speaker.frameSize, 0);
+
+						if (speaker.volume != 1.0)
+						{
+							for (float& value : speaker.inputDataBuffer)
+							{
+								value *= speaker.volume;
+							}
+						}
+
+						fillSound(speaker.inputDataBuffer, out);
+					}
+				);
+
+				if (!result)
+				{
+					break;
 				}
-			);
+			}
 		}
 		catch (const std::exception& e)
 		{
