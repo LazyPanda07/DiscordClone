@@ -1,6 +1,7 @@
 #include "Commands/GetVersion.hpp"
 
 #include <iostream>
+#include <format>
 
 #include <c_api.h>
 
