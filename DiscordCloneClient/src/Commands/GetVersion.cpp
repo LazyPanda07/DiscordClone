@@ -12,7 +12,7 @@ namespace commands
 {
 	bool GetVersion::run(std::istream& stream)
 	{
-		std::cout << utils::callApiFunction(&::getVersion) << std::endl;
+		std::cout << std::format("Discord clone version: v{}", utils::callApiFunction(&::getVersion)) << std::endl;
 
 		return true;
 	}

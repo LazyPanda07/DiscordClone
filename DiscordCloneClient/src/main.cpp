@@ -183,6 +183,17 @@ int main(int argc, char** argv) try
 		}
 	}
 
+	if (auto it = std::ranges::find(commands, "get_version", &commands::Command::command); it != commands.end())
+	{
+		std::istringstream stream;
+
+		(*it)->conditionalRun(stream);
+	}
+	else
+	{
+		throw std::runtime_error("Can't find get_version command");
+	}
+
 	printDeviceInfo(microphone);
 
 #ifndef __LINUX__

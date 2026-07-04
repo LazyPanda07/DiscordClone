@@ -109,7 +109,7 @@ jobs:
   linux-client-build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04
+      image: ghcr.io/lazypanda07/ubuntu-cxx23:26.04
 
     steps:
     - uses: actions/checkout@v6
@@ -142,7 +142,7 @@ jobs:
   linux-server-build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04
+      image: ghcr.io/lazypanda07/ubuntu-cxx23:26.04
 
     steps:
     - uses: actions/checkout@v6
@@ -175,7 +175,7 @@ jobs:
   linux-client-library-build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/lazypanda07/ubuntu_cxx20:24.04
+      image: ghcr.io/lazypanda07/ubuntu-cxx23:26.04
 
     steps:
     - uses: actions/checkout@v6
