@@ -18,6 +18,12 @@ else()
 	set(OPENCV_DEBUG_PREFIX "")
 endif()
 
+set(ADDITIONAL_OPENCV_LIBRARY ippicv)
+
+if (WIN32)
+	set(ADDITIONAL_OPENCV_LIBRARY ${ADDITIONAL_OPENCV_LIBRARY}mt)
+endif()
+
 set(
 	OPENCV_LIBRARIES
 	ipphal${OPENCV_DEBUG_PREFIX}
@@ -30,20 +36,13 @@ set(
 	libjpeg-turbo${OPENCV_DEBUG_PREFIX}
 	libclapack${OPENCV_DEBUG_PREFIX}
 	zlib${OPENCV_DEBUG_PREFIX}
+	${ADDITIONAL_OPENCV_LIBRARY}
 )
 set(
 	DXCAM_LIBRARIES
 	d3d11
 	dxgi
 )
-
-if (WIN32)
-	set(
-		OPENCV_LIBRARIES
-		${OPENCV_LIBRARIES}
-		ippicvmt
-	)
-endif()
 
 include(FetchContent)
 
