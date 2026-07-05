@@ -68,11 +68,6 @@ if (${BUILD_CLIENT} OR ${BUILD_CLIENT_LIBRARY})
 
 	file(MAKE_DIRECTORY "${OPENCV_INSTALL_DIR}/include")
 
-	if (WIN32)
-		set(CMAKE_STATIC_LIBRARY_PREFIX "")
-		set(CMAKE_STATIC_LIBRARY_SUFFIX lib)
-	endif()
-
 	if (NOT EXISTS ${OPENCV_INSTALL_DIR}/lib/${OPENCV_LIBRARY_NAME})
 		ExternalProject_Add(
 			external_opencv
