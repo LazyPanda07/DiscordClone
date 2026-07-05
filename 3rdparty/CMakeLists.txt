@@ -83,6 +83,7 @@ if (${BUILD_CLIENT} OR ${BUILD_CLIENT_LIBRARY})
 				-DOPENCV_INCLUDE_INSTALL_PATH=include
 				-DOPENCV_FORCE_3RDPARTY_BUILD=ON
 				-DBUILD_opencv_dnn=OFF
+				-DWITH_PROTOBUF=ON
 				-DBUILD_opencv_world=ON
 				-DBUILD_opencv_python3=OFF
 				-DBUILD_opencv_java=OFF
