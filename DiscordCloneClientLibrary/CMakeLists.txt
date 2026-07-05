@@ -21,6 +21,12 @@ add_library(
 target_include_directories(
 	${PROJECT_NAME} PUBLIC
 	include
+	${OPENCV_INSTALL_DIR}/include
+)
+
+target_link_directories(
+	${PROJECT_NAME} PUBLIC
+	${OPENCV_INSTALL_DIR}/lib
 )
 
 target_link_libraries(
@@ -30,6 +36,10 @@ target_link_libraries(
 	UtilityLibrary
 	opus
 	Networks
+	OpenCV::world
+	${OPENCV_LIBRARIES}
+	DXCam
+	${DXCAM_LIBRARIES}
 )
 
 if (WIN32)

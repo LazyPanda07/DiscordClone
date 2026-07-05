@@ -4,6 +4,7 @@
 
 #include <UDPClientSocket.hpp>
 #include <PatternParser.h>
+#include <opencv2/core/utils/logger.hpp>
 
 #include "Functionality.hpp"
 #include "Microphone.hpp"
@@ -25,7 +26,7 @@ void initialize(Exception* exception)
 {
 	try
 	{
-		
+		cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
 	}
 	catch (const std::exception& e)
 	{
