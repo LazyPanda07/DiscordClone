@@ -11,7 +11,7 @@ option(BUILD_SHARED_CLIENT_LIBRARY "Build DiscordCloneClientLibrary as shared li
 
 project(DiscordCloneProject VERSION 0.7.1)
 
-set(OPENCV_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/3rdparty/opencv)
+set(OPENCV_INSTALL_DIR ${CMAKE_BINARY_DIR}/3rdparty/opencv)
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	set(OPENCV_DEBUG_PREFIX d)
 else()
