@@ -18,6 +18,8 @@ add_library(
 	src/c_api.cpp
 )
 
+add_dependencies(${PROJECT_NAME} OpenCV::world)
+
 target_include_directories(
 	${PROJECT_NAME} PUBLIC
 	include
