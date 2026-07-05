@@ -19,13 +19,11 @@ if (${BUILD_CLIENT} OR ${BUILD_CLIENT_LIBRARY})
 		GIT_REPOSITORY https://github.com/thestk/rtaudio.git
 		GIT_TAG ${RTAUDIO_TAG}
 	)
-
 	FetchContent_Declare(
 		miniz
 		GIT_REPOSITORY https://github.com/richgel999/miniz.git
 		GIT_TAG ${MINIZ_VERSION}
 	)
-
 	FetchContent_Declare(
 		opus
 		GIT_REPOSITORY https://github.com/xiph/opus.git
@@ -38,14 +36,21 @@ if (${BUILD_CLIENT} OR ${BUILD_CLIENT_LIBRARY})
 
 	if (NOT ${BUILD_SERVER})
 		set(NETWORKS_VERSION 1.28.1)
+		set(UTILITY_LIBRARY_VERSION 0.12.1)
 
 		FetchContent_Declare(
 			Networks
 			GIT_REPOSITORY https://github.com/LazyPanda07/Networks.git
 			GIT_TAG v${NETWORKS_VERSION}
 		)
+		FetchContent_Declare(
+			UtilityLibrary
+			GIT_REPOSITORY https://github.com/LazyPanda07/UtilityLibrary.git
+			GIT_TAG v${UTILITY_LIBRARY_VERSION}
+		)
 
 		FetchContent_MakeAvailable(Networks)
+		FetchContent_MakeAvailable(UtilityLibrary)
 	endif()
 endif()
 
