@@ -24,10 +24,11 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1.13.0
 
     - name: Build
+      shell: bash
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_SERVER=OFF -G "Ninja" ..
+        cmake -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_SERVER=OFF -DCMAKE_ASM_COMPILER=$(which ml64) -G "Ninja" ..
         cmake --build . -j
         cmake --install .
 
@@ -84,10 +85,11 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1.13.0
 
     - name: Build
+      shell: bash
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -DBUILD_SHARED_CLIENT_LIBRARY=ON -G "Ninja" ..
+        cmake -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=install-dir -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_CLIENT_LIBRARY=ON -DBUILD_SHARED_CLIENT_LIBRARY=ON -DCMAKE_ASM_COMPILER=$(which ml64) -G "Ninja" ..
         cmake --build . -j
         cmake --install .
 
@@ -147,11 +149,6 @@ jobs:
     steps:
     - uses: actions/checkout@v6
   
-    - name: Install dependencies
-      run: |
-        sudo apt update 
-        sudo apt install -y libasound2-dev
-
     - name: Build
       run: |
         mkdir build

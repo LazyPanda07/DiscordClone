@@ -38,14 +38,14 @@ target_link_libraries(
 	Networks
 	OpenCV::world
 	${OPENCV_LIBRARIES}
-	DXCam
-	${DXCAM_LIBRARIES}
 )
 
 if (WIN32)
 	target_link_libraries(
 		${PROJECT_NAME} PUBLIC
 		winmm.lib
+		DXCam
+		${DXCAM_LIBRARIES}
 	)
 endif()
 
