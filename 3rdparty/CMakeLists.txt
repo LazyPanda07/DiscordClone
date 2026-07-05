@@ -35,6 +35,18 @@ if (${BUILD_CLIENT} OR ${BUILD_CLIENT_LIBRARY})
 	FetchContent_MakeAvailable(rtaudio)
 	FetchContent_MakeAvailable(opus)
 	FetchContent_MakeAvailable(miniz)
+
+	if (NOT ${BUILD_SERVER})
+		set(NETWORKS_VERSION 1.28.1)
+
+		FetchContent_Declare(
+			Networks
+			GIT_REPOSITORY https://github.com/LazyPanda07/Networks.git
+			GIT_TAG v${NETWORKS_VERSION}
+		)
+
+		FetchContent_MakeAvailable(Networks)
+	endif()
 endif()
 
 if (${BUILD_SERVER})
@@ -51,4 +63,10 @@ if (${BUILD_SERVER})
 	)
 
 	FetchContent_MakeAvailable(WebFramework)
+endif()
+
+if (WIN32)
+	if (${BUILD_CLIENT} OR ${BUILD_CLIENT_LIBRARY})
+		
+	endif()
 endif()
