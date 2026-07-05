@@ -22,7 +22,6 @@ set(
 	OPENCV_LIBRARIES
 	ipphal${OPENCV_DEBUG_PREFIX}
 	ippiw${OPENCV_DEBUG_PREFIX}
-	ippicvmt
 	ittnotify${OPENCV_DEBUG_PREFIX}
 	libopenjp2${OPENCV_DEBUG_PREFIX}
 	libwebp${OPENCV_DEBUG_PREFIX}
@@ -37,6 +36,14 @@ set(
 	d3d11
 	dxgi
 )
+
+if (WIN32)
+	set(
+		OPENCV_LIBRARIES
+		${OPENCV_LIBRARIES}
+		ippicvmt
+	)
+endif()
 
 include(FetchContent)
 
