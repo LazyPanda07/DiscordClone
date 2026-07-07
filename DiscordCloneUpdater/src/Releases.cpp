@@ -72,7 +72,7 @@ namespace releases
 		std::string response;
 		streams::IOSocketStream stream = getStream(githubHost);
 
-		std::cout << std::format("Downloading https://{}{}...", url, githubHost) << std::endl;
+		std::cout << std::format("Downloading https://{}{}...", githubHost, url) << std::endl;
 
 		request = web::HttpBuilder()
 			.getRequest()
@@ -91,14 +91,20 @@ namespace releases
 
 		if (parser.getResponseCode() == web::ResponseCodes::found)
 		{
-			constexpr std::string_view releaseAssetsHost = "release-assets.githubusercontent.com";
-			constexpr std::string_view protocolAndHost = "https://release-assets.githubusercontent.com";
+			constexpr std::string_view https = "https://";
+
+			std::string_view location = parser.getHeaders().at("Location");
+			std::string releaseAssetsHost(location.begin() + https.size(), location.begin() + location.find('/', https.size())); // OpenSSL reads all data
+			std::string_view protocolAndHost(location.data(), releaseAssetsHost.size() + https.size());
+			std::filesystem::path result = std::filesystem::temp_directory_path() / getAssetName();
+
+			std::cout << std::format("Connecting to: {}...", protocolAndHost) << std::endl;
 
 			stream = getStream(releaseAssetsHost);
 
 			request = web::HttpBuilder()
 				.getRequest()
-				.parameters(std::string_view(parser.getHeaders().at("Location").data() + protocolAndHost.size()))
+				.parameters(std::string_view(location.data() + protocolAndHost.size()))
 				.headers
 				(
 					"User-Agent", userAgent,
@@ -107,9 +113,10 @@ namespace releases
 				.build();
 
 			stream << request;
-			stream >> response;
 
-			std::filesystem::path result = std::filesystem::temp_directory_path() / getAssetName();
+			std::cout << std::format("Downloading: {} to {}...", location, result.string()) << std::endl;
+
+			stream >> response;
 
 			std::ofstream(result, std::ios::binary).write(response.data(), response.size());
 

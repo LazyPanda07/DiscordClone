@@ -34,8 +34,6 @@ namespace voice
 					{
 						if (size == SOCKET_ERROR)
 						{
-							fillSound(speaker.inputDataBuffer, out);
-
 							return;
 						}
 
