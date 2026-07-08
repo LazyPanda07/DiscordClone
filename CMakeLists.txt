@@ -9,7 +9,7 @@ option(BUILD_CLIENT_LIBRARY "Build DiscordCloneClientLibrary" OFF)
 option(BUILD_SERVER "Build DiscordCloneServer" ON)
 option(BUILD_SHARED_CLIENT_LIBRARY "Build DiscordCloneClientLibrary as shared library" OFF)
 
-project(DiscordCloneProject VERSION 0.7.1)
+project(DiscordCloneProject VERSION 0.7.2)
 
 set(OPENCV_INSTALL_DIR ${CMAKE_BINARY_DIR}/3rdparty/opencv)
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
