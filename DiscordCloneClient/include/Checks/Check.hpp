@@ -10,9 +10,9 @@ namespace checks
 	public:
 		enum AvailableChecks : uint32_t
 		{
-			inputStream = 1,
-			outputStream = inputStream << 1,
-			socketDatagram = outputStream << 1,
+			microphone = 1,
+			speaker = microphone << 1,
+			socketDatagram = speaker << 1,
 			socketStream = socketDatagram << 1
 		};
 

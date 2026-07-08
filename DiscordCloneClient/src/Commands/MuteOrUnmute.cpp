@@ -13,7 +13,7 @@ namespace commands
 
 	uint32_t MuteOrUnmute::getChecks() const
 	{
-		return checks::Check::AvailableChecks::inputStream;
+		return checks::Check::AvailableChecks::microphone;
 	}
 
 	MuteOrUnmute::MuteOrUnmute(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks) :

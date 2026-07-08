@@ -34,6 +34,7 @@
 #include "Commands/PingCommand.hpp"
 #include "Commands/GetUsers.hpp"
 #include "Commands/GetVersion.hpp"
+#include "Commands/FixSpeakerDelay.hpp"
 
 #ifdef __LINUX__
 #include <unistd.h>
@@ -146,6 +147,7 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::PingCommand>(controlStream, checks));
 			result.emplace_back(std::make_unique<commands::GetUsers>(controlStream, settings, checks));
 			result.emplace_back(std::make_unique<commands::GetVersion>(checks));
+			result.emplace_back(std::make_unique<commands::FixSpeakerDelay>(speaker, checks));
 
 			return result;
 		}();

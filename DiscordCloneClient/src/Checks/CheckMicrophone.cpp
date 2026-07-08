@@ -22,6 +22,6 @@ namespace checks
 
 	Check::AvailableChecks CheckMicrophone::getCheck() const
 	{
-		return AvailableChecks::inputStream;
+		return AvailableChecks::microphone;
 	}
 }

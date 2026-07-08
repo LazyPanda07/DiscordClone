@@ -231,6 +231,18 @@ void restartSpeaker(SpeakerObject speaker, Exception* exception)
 	}
 }
 
+void fixSpeakerDelay(SpeakerObject speaker, Exception* exception)
+{
+	try
+	{
+		static_cast<voice::Speaker*>(speaker)->fixSpeakerDelay();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
 void setSpeakerVolume(SpeakerObject microphone, double volume, Exception* exception)
 {
 	try

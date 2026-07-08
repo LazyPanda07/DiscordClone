@@ -62,6 +62,8 @@ CLIENT_LIBRARY_FUNCTION_API void overrideSpeakerDeviceId(SpeakerObject speaker, 
 
 CLIENT_LIBRARY_FUNCTION_API void restartSpeaker(SpeakerObject speaker, Exception* exception);
 
+CLIENT_LIBRARY_FUNCTION_API void fixSpeakerDelay(SpeakerObject speaker, Exception* exception);
+
 CLIENT_LIBRARY_FUNCTION_API void setSpeakerVolume(SpeakerObject microphone, double volume, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API double getSpeakerVolume(SpeakerObject microphone, Exception* exception);

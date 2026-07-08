@@ -25,6 +25,7 @@ namespace voice
 		uint32_t sampleRate;
 		OpusDecoder* decoder;
 		std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> inputDataBuffer;
+		bool fixDelay;
 		
 	public:
 		Speaker(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate);
@@ -32,6 +33,8 @@ namespace voice
 		void overrideDeviceId(uint32_t id);
 
 		void restart();
+
+		void fixSpeakerDelay();
 
 		void setVolume(double volume);
 

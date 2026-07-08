@@ -25,7 +25,7 @@ namespace commands
 
 	uint32_t SetSpeakerVolume::getChecks() const
 	{
-		return checks::Check::AvailableChecks::outputStream;
+		return checks::Check::AvailableChecks::speaker;
 	}
 
 	SetSpeakerVolume::SetSpeakerVolume(std::unique_ptr<wrappers::SpeakerWrapper>& speaker, client::Settings& settings, const std::vector<std::unique_ptr<checks::Check>>& checks) :

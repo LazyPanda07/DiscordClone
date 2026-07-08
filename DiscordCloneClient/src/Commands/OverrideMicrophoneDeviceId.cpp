@@ -17,7 +17,7 @@ namespace commands
 
 	uint32_t OverrideMicrophoneDeviceId::getChecks() const
 	{
-		return checks::Check::AvailableChecks::inputStream;
+		return checks::Check::AvailableChecks::microphone;
 	}
 
 	OverrideMicrophoneDeviceId::OverrideMicrophoneDeviceId(std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::vector<std::unique_ptr<checks::Check>>& checks) :

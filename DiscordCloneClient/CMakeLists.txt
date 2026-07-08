@@ -31,6 +31,7 @@ add_executable(
 	src/Commands/PingCommand.cpp
 	src/Commands/GetUsers.cpp
 	src/Commands/GetVersion.cpp
+	src/Commands/FixSpeakerDelay.cpp
 )
 
 if (WIN32)

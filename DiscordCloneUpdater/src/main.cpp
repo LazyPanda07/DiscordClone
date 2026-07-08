@@ -52,7 +52,15 @@ int main(int argc, char** argv) try
 #endif
 	}
 
+	std::cout << "Checking version..." << std::endl;
+
 	releases::getLatestVersion(latestMajorVersion, latestMinorVersion, latestPatch, assets);
+
+	std::cout << std::format("Current major version: {}, latest major version: {}", majorVersion, latestMajorVersion) << std::endl;
+	std::cout << std::format("Current minor version: {}, latest minor version: {}", minorVersion, latestMinorVersion) << std::endl;
+	std::cout << std::format("Current patch: {}, latest patch: {}", patch, latestPatch) << std::endl;
+
+	std::cout << std::endl;
 
 	if (majorVersion != latestMajorVersion || minorVersion != latestMinorVersion || patch != latestPatch)
 	{

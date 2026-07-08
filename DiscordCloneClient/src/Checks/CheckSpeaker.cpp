@@ -22,6 +22,6 @@ namespace checks
 
 	Check::AvailableChecks CheckSpeaker::getCheck() const
 	{
-		return AvailableChecks::outputStream;
+		return AvailableChecks::speaker;
 	}
 }

@@ -14,6 +14,8 @@ namespace wrappers
 
 		void overrideDeviceId(uint32_t id);
 
+		void fixDelay();
+
 		void setVolume(double volume);
 
 		double getVolume() const;

@@ -25,7 +25,7 @@ namespace commands
 
 	uint32_t SetMicrophoneVolume::getChecks() const
 	{
-		return checks::Check::AvailableChecks::inputStream;
+		return checks::Check::AvailableChecks::microphone;
 	}
 
 	SetMicrophoneVolume::SetMicrophoneVolume(std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, client::Settings& settings, const std::vector<std::unique_ptr<checks::Check>>& checks) :

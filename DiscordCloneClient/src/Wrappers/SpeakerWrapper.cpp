@@ -16,6 +16,11 @@ namespace wrappers
 		utils::callApiFunction(&restartSpeaker, implementation);
 	}
 
+	void SpeakerWrapper::fixDelay()
+	{
+		utils::callApiFunction(&fixSpeakerDelay, implementation);
+	}
+
 	void SpeakerWrapper::setVolume(double volume)
 	{
 		utils::callApiFunction(&setSpeakerVolume, implementation, volume);

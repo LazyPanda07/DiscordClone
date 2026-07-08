@@ -26,35 +26,40 @@ namespace voice
 
 		try
 		{
-			while (true)
-			{
-				bool result = speaker.socket.receiveData
-				(
-					[outputBuffer, frames, &speaker, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
-					{
-						if (size == SOCKET_ERROR)
-						{
-							return;
-						}
-
-						opus_decode_float(speaker.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, speaker.inputDataBuffer.data(), speaker.frameSize, 0);
-
-						if (speaker.volume != 1.0)
-						{
-							for (float& value : speaker.inputDataBuffer)
-							{
-								value *= speaker.volume;
-							}
-						}
-
-						fillSound(speaker.inputDataBuffer, out);
-					}
-				);
-
-				if (!result)
+			bool result = speaker.socket.receiveData
+			(
+				[outputBuffer, frames, &speaker, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 				{
-					break;
+					if (size == SOCKET_ERROR)
+					{
+						return;
+					}
+
+					opus_decode_float(speaker.decoder, reinterpret_cast<const uint8_t*>(data.data()), size, speaker.inputDataBuffer.data(), speaker.frameSize, 0);
+
+					if (speaker.volume != 1.0)
+					{
+						for (float& value : speaker.inputDataBuffer)
+						{
+							value *= speaker.volume;
+						}
+					}
+
+					fillSound(speaker.inputDataBuffer, out);
 				}
+			);
+
+			if (result && speaker.fixDelay)
+			{
+				while (true)
+				{
+					if (!speaker.socket.receiveData([](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket) {}))
+					{
+						break;
+					}
+				}
+
+				speaker.fixDelay = false;
 			}
 		}
 		catch (const std::exception& e)
@@ -73,7 +78,8 @@ namespace voice
 		frameSize(frameSize),
 		sampleRate(sampleRate),
 		decoder(nullptr),
-		inputDataBuffer({})
+		inputDataBuffer({}),
+		fixDelay(false)
 	{
 		audio.showWarnings();
 
@@ -110,6 +116,11 @@ namespace voice
 
 		audio.openStream(&parameters, nullptr, RTAUDIO_FLOAT32, sampleRate, &frameSize, &Speaker::callback, this);
 		audio.startStream();
+	}
+
+	void Speaker::fixSpeakerDelay()
+	{
+		fixDelay = true;
 	}
 
 	void Speaker::setVolume(double volume)
