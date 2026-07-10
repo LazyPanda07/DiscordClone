@@ -1,6 +1,7 @@
 #include "Speaker.hpp"
 
 #include <stack>
+#include <thread>
 
 #include "Constants.hpp"
 
