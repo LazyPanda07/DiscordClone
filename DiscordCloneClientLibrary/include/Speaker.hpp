@@ -3,6 +3,7 @@
 #include <mutex>
 #include <vector>
 #include <span>
+#include <optional>
 
 #include <RtAudio.h>
 #include <opus.h>
@@ -16,6 +17,8 @@ namespace voice
 	private:
 		static int callback(void* outputBuffer, void* inputBuffer, uint32_t frames, double streamTime, RtAudioStreamStatus status, void* userData);
 
+		void receiveSound(std::function<std::optional<web::UDPSocket::VoicePacket>()>& soundGetter, std::function<bool&()>& runningGetter);
+
 	private:
 		RtAudio audio;
 		web::UDPSocket& socket;
@@ -24,9 +27,11 @@ namespace voice
 		uint32_t frameSize;
 		uint32_t sampleRate;
 		OpusDecoder* decoder;
-		std::array<float, web::UDPSocket::voicePacketSize / sizeof(float)> inputDataBuffer;
+		web::UDPSocket::VoicePacket inputDataBuffer;
 		bool fixDelay;
-		
+		std::function<std::optional<web::UDPSocket::VoicePacket>()> soundGetter;
+		std::function<bool& ()> runningGetter;
+
 	public:
 		Speaker(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate);
 
@@ -40,6 +45,6 @@ namespace voice
 
 		double getVolume() const;
 
-		~Speaker() = default;
+		~Speaker();
 	};
 }

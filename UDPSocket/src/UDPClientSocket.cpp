@@ -21,6 +21,8 @@ namespace web
 #endif
 		}
 
+		return;
+
 #ifdef __LINUX__
 		int flags = fcntl(udpSocket, F_GETFL, 0);
 

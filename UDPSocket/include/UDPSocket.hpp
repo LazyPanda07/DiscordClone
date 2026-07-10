@@ -45,12 +45,14 @@ namespace web
 	class UDPSocket
 	{
 	public:
+		static constexpr size_t voicePacketSize = 480 * sizeof(float);
+
+	public:
 		using Buffer = std::array<char, 4096>;
+		using VoicePacket = std::array<float, UDPSocket::voicePacketSize / sizeof(float)>;
 		using ReceiveCallback = std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>;
 
 	public:
-		static constexpr size_t voicePacketSize = 480 * sizeof(float);
-
 		static constexpr std::string_view hello = "hello";
 		static constexpr size_t helloMessageSize = hello.size();
 		static constexpr size_t helloPacketSize = hello.size() + sizeof(uint64_t); // hello message size + user id

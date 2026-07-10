@@ -1,5 +1,7 @@
 #include "Speaker.hpp"
 
+#include <stack>
+
 #include "Constants.hpp"
 
 template<size_t Size>
@@ -26,7 +28,7 @@ namespace voice
 
 		try
 		{
-			bool result = speaker.socket.receiveData
+			/*bool result = speaker.socket.receiveData
 			(
 				[outputBuffer, frames, &speaker, out](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
 				{
@@ -60,6 +62,11 @@ namespace voice
 				}
 
 				speaker.fixDelay = false;
+			}*/
+
+			if (std::optional<web::UDPSocket::VoicePacket> result = speaker.soundGetter())
+			{
+				fillSound(*result, out);
 			}
 		}
 		catch (const std::exception& e)
@@ -70,6 +77,83 @@ namespace voice
 		}
 
 		return 0;
+	}
+
+	void Speaker::receiveSound(std::function<std::optional<web::UDPSocket::VoicePacket>()>& soundGetter, std::function<bool& ()>& runningGetter)
+	{
+		constexpr size_t maxSize = 4;
+
+		std::stack<web::UDPSocket::VoicePacket> sound;
+		std::mutex soundMutex;
+		bool running = true;
+
+		soundGetter = [&sound, &soundMutex]() -> std::optional<web::UDPSocket::VoicePacket>
+			{
+				{
+					std::lock_guard<std::mutex> lock(soundMutex);
+
+					if (sound.size())
+					{
+						web::UDPSocket::VoicePacket result = std::move(sound.top());
+
+						sound.pop();
+
+						return result;
+					}
+				}
+
+				return std::nullopt;
+			};
+		
+		runningGetter = [&running]() -> bool&
+			{
+				return running;
+			};
+
+		while (running)
+		{
+			web::UDPSocket::VoicePacket temp{};
+
+			try
+			{
+				bool result = socket.receiveData
+				(
+					[this, &temp](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+					{
+						if (size == SOCKET_ERROR)
+						{
+							return;
+						}
+
+						opus_decode_float(decoder, reinterpret_cast<const uint8_t*>(data.data()), size, temp.data(), frameSize, 0);
+
+						if (volume != 1.0)
+						{
+							for (float& value : temp)
+							{
+								value *= volume;
+							}
+						}
+					}
+				);
+
+				if (result)
+				{
+					std::lock_guard<std::mutex> lock(soundMutex);
+
+					if (sound.size() > maxSize)
+					{
+						sound = {};
+					}
+
+					sound.push(std::move(temp));
+				}
+			}
+			catch (const std::exception& e)
+			{
+				fprintf(stderr, "%s\n", e.what());
+			}
+		}
 	}
 
 	Speaker::Speaker(web::UDPSocket& socket, uint32_t frameSize, uint32_t sampleRate) :
@@ -95,6 +179,8 @@ namespace voice
 		{
 			throw std::runtime_error(std::format("Can't create Opus decoder: {}", opus_strerror(errorCode)));
 		}
+
+		std::thread(&Speaker::receiveSound, this, std::ref(soundGetter), std::ref(runningGetter)).detach();
 	}
 
 	void Speaker::overrideDeviceId(uint32_t id)
@@ -131,6 +217,11 @@ namespace voice
 	double Speaker::getVolume() const
 	{
 		return volume;
+	}
+
+	Speaker::~Speaker()
+	{
+		runningGetter() = false;
 	}
 }
 
