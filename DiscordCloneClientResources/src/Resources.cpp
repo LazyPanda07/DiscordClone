@@ -2,6 +2,7 @@
 
 #include "Generated/microphone_on.generated.hpp"
 #include "Generated/microphone_off.generated.hpp"
+#include "Generated/join.generated.hpp"
 
 const uint8_t* getMicrophoneOffSound(uint64_t* size)
 {
@@ -15,4 +16,11 @@ const uint8_t* getMicrophoneOnSound(uint64_t* size)
 	*size = sizeof(microphoneOnWav);
 
 	return microphoneOnWav;
+}
+
+const uint8_t* getJoinSound(uint64_t* size)
+{
+	*size = sizeof(joinWav);
+
+	return joinWav;
 }

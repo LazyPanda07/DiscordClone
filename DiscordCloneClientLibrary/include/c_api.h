@@ -92,6 +92,14 @@ CLIENT_LIBRARY_FUNCTION_API const char* getExceptionMessage(Exception exception)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+CLIENT_LIBRARY_FUNCTION_API void playMicrophoneOffSound();
+
+CLIENT_LIBRARY_FUNCTION_API void playMicrophoneOnSound();
+
+CLIENT_LIBRARY_FUNCTION_API void playJoinSound();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 CLIENT_LIBRARY_FUNCTION_API void deleteSocket(UdpSocketObject socket);
 
 CLIENT_LIBRARY_FUNCTION_API void deleteMicrophone(MicrophoneObject microphone);

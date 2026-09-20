@@ -4,29 +4,9 @@
 #include <filesystem>
 #include <thread>
 
-#ifdef __LINUX__
-#include <dlfcn.h>
-#else
-#include <Windows.h>
-#include <mmsystem.h>
-#endif
-
 #include "Functionality.hpp"
 #include "Constants.hpp"
-
-#ifdef __LINUX__
-using HMODULE = void*;
-#endif
-
-using GetResourceSignature = const uint8_t* (*)(uint64_t*);
-
-static void* resourceLibrary = nullptr;
-
-static void loadResourceLibrary();
-
-static const uint8_t* callGetMicrophoneOffSound(uint64_t* size);
-
-static const uint8_t* callGetMicrophoneOnSound(uint64_t* size);
+#include "c_api.h"
 
 namespace voice
 {
@@ -74,8 +54,6 @@ namespace voice
 		encoder(nullptr),
 		outputData({})
 	{
-		loadResourceLibrary();
-
 		audio.showWarnings();
 
 		parameters.deviceId = audio.getDefaultInputDevice();
@@ -146,9 +124,7 @@ namespace voice
 	{
 		uint64_t size = 0;
 
-#ifndef __LINUX__
-		PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOnSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
-#endif
+		playMicrophoneOnSound();
 
 		audio.startStream();
 	}
@@ -157,9 +133,7 @@ namespace voice
 	{
 		uint64_t size = 0;
 
-#ifndef __LINUX__
-		PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(callGetMicrophoneOffSound(&size))), nullptr, SND_MEMORY | SND_ASYNC);
-#endif
+		playMicrophoneOffSound();
 
 		audio.stopStream();
 	}
@@ -202,52 +176,4 @@ namespace voice
 
 		runningGetter() = false;
 	}
-}
-
-void loadResourceLibrary()
-{
-	if (resourceLibrary)
-	{
-		return;
-	}
-
-	std::filesystem::path currentPath(std::filesystem::current_path());
-
-#ifdef __LINUX__
-	currentPath /= "libDiscordCloneClientResources.so";
-
-	resourceLibrary = dlopen(currentPath.string().data(), RTLD_LAZY);
-#else
-	currentPath /= "DiscordCloneClientResources.dll";
-
-	resourceLibrary = LoadLibraryA(currentPath.string().data());
-#endif
-}
-
-const uint8_t* callGetMicrophoneOffSound(uint64_t* size)
-{
-	if (!resourceLibrary)
-	{
-		return nullptr;
-	}
-
-#ifdef __LINUX__
-	return reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOffSound"))(size);
-#else
-	return reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOffSound"))(size);
-#endif
-}
-
-const uint8_t* callGetMicrophoneOnSound(uint64_t* size)
-{
-	if (!resourceLibrary)
-	{
-		return nullptr;
-	}
-
-#ifdef __LINUX__
-	return reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOnSound"))(size);
-#else
-	return reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOnSound"))(size);
-#endif
 }

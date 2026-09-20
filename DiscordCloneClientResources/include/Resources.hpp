@@ -11,3 +11,5 @@
 RESOURCES_FUNCTION_API const uint8_t* getMicrophoneOffSound(uint64_t* size);
 
 RESOURCES_FUNCTION_API const uint8_t* getMicrophoneOnSound(uint64_t* size);
+
+RESOURCES_FUNCTION_API const uint8_t* getJoinSound(uint64_t* size);

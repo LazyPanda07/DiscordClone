@@ -1,17 +1,30 @@
 #include "c_api.h"
 
 #include <chrono>
+#include <filesystem>
 
 #include <UDPClientSocket.hpp>
 #include <PatternParser.h>
 #include <opencv2/core/utils/logger.hpp>
 
+#ifdef __LINUX__
+#include <dlfcn.h>
+#else
+#include <Windows.h>
+#include <mmsystem.h>
+#endif
+
 #include "Functionality.hpp"
 #include "Microphone.hpp"
 #include "Speaker.hpp"
 
+#ifdef __LINUX__
+using HMODULE = void*;
+#endif
+
 static constexpr uint32_t sampleRate = 48'000;
 static constexpr uint32_t frameSize = 480;
+static void* resourceLibrary = nullptr;
 
 template<>
 struct utility::parsers::Converter<int32_t>
@@ -22,10 +35,18 @@ struct utility::parsers::Converter<int32_t>
 	}
 };
 
+using GetResourceSignature = const uint8_t* (*)(uint64_t*);
+
+static void loadResourceLibrary();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void initialize(Exception* exception)
 {
 	try
 	{
+		loadResourceLibrary();
+
 		cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
 	}
 	catch (const std::exception& e)
@@ -414,7 +435,7 @@ void getVersionExtended(int32_t* major, int32_t* minor, int32_t* patch, Exceptio
 	catch (const std::exception& e)
 	{
 		*exception = new std::runtime_error(e.what());
-	}	
+	}
 }
 
 const char* getExceptionMessage(Exception exception)
@@ -425,6 +446,62 @@ const char* getExceptionMessage(Exception exception)
 	}
 
 	return static_cast<std::runtime_error*>(exception)->what();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void playMicrophoneOffSound()
+{
+	if (!resourceLibrary)
+	{
+		return;
+	}
+
+	uint64_t size = 0;
+
+#ifdef __LINUX__
+	const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOffSound"))(&size);
+#else
+	const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOffSound"))(&size);
+
+	PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
+#endif
+}
+
+void playMicrophoneOnSound()
+{
+	if (!resourceLibrary)
+	{
+		return;
+	}
+
+	uint64_t size = 0;
+
+#ifdef __LINUX__
+	const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOnSound"))(&size);
+#else
+	const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOnSound"))(&size);
+
+	PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
+#endif
+}
+
+void playJoinSound()
+{
+	if (!resourceLibrary)
+	{
+		return;
+	}
+
+	uint64_t size = 0;
+
+#ifdef __LINUX__
+	const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getJoinSound"))(&size);
+#else
+	const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getJoinSound"))(&size);
+
+	PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -452,4 +529,26 @@ void deleteException(Exception exception)
 void deleteDeviceInformation(DeviceInformationArray deviceInformation)
 {
 	delete static_cast<std::vector<RtAudio::DeviceInfo>*>(deviceInformation);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void loadResourceLibrary()
+{
+	if (resourceLibrary)
+	{
+		return;
+	}
+
+	std::filesystem::path currentPath(std::filesystem::current_path());
+
+#ifdef __LINUX__
+	currentPath /= "libDiscordCloneClientResources.so";
+
+	resourceLibrary = dlopen(currentPath.string().data(), RTLD_LAZY);
+#else
+	currentPath /= "DiscordCloneClientResources.dll";
+
+	resourceLibrary = LoadLibraryA(currentPath.string().data());
+#endif
 }
