@@ -50,6 +50,7 @@ namespace web
 
 	public:
 		static constexpr size_t voicePacketSize = 480 * sizeof(float);
+		static constexpr size_t maxUserNameSize = 24;
 
 		static constexpr std::string_view hello = "hello";
 		static constexpr size_t helloMessageSize = hello.size();
@@ -58,11 +59,13 @@ namespace web
 		static constexpr std::string_view echo = "echo";
 		static constexpr size_t echoPacketSize = echo.size();
 
-		static constexpr std::string_view alive = "alive";
-		static constexpr size_t alivePacketSize = alive.size();
+		static constexpr std::string_view join = "join";
+		static constexpr size_t joinPacketSize = join.size() + maxUserNameSize;
 		
 	public:
 		static std::string constructHelloPacket(uint64_t id);
+
+		static std::string constructJoinPacket(std::string_view userName);
 
 	protected:
 		SOCKET udpSocket;

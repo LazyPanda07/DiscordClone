@@ -450,58 +450,79 @@ const char* getExceptionMessage(Exception exception)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void playMicrophoneOffSound()
+void playMicrophoneOffSound(Exception* exception)
 {
-	if (!resourceLibrary)
+	try
 	{
-		return;
-	}
+		if (!resourceLibrary)
+		{
+			return;
+		}
 
-	uint64_t size = 0;
+		uint64_t size = 0;
 
 #ifdef __LINUX__
-	const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOffSound"))(&size);
+		const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOffSound"))(&size);
 #else
-	const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOffSound"))(&size);
+		const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOffSound"))(&size);
 
-	PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
+		PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
 }
 
-void playMicrophoneOnSound()
+void playMicrophoneOnSound(Exception* exception)
 {
-	if (!resourceLibrary)
+	try
 	{
-		return;
-	}
+		if (!resourceLibrary)
+		{
+			return;
+		}
 
-	uint64_t size = 0;
+		uint64_t size = 0;
 
 #ifdef __LINUX__
-	const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOnSound"))(&size);
+		const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getMicrophoneOnSound"))(&size);
 #else
-	const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOnSound"))(&size);
+		const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getMicrophoneOnSound"))(&size);
 
-	PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
+		PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
 }
 
-void playJoinSound()
+void playJoinSound(Exception* exception)
 {
-	if (!resourceLibrary)
+	try
 	{
-		return;
-	}
+		if (!resourceLibrary)
+		{
+			return;
+		}
 
-	uint64_t size = 0;
+		uint64_t size = 0;
 
 #ifdef __LINUX__
-	const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getJoinSound"))(&size);
+		const uint8_t* data = reinterpret_cast<GetResourceSignature>(dlsym(resourceLibrary, "getJoinSound"))(&size);
 #else
-	const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getJoinSound"))(&size);
+		const uint8_t* data = reinterpret_cast<GetResourceSignature>(GetProcAddress(static_cast<HMODULE>(resourceLibrary), "getJoinSound"))(&size);
 
-	PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
+		PlaySoundA(reinterpret_cast<PTCHAR>(const_cast<uint8_t*>(data)), nullptr, SND_MEMORY | SND_ASYNC);
 #endif
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

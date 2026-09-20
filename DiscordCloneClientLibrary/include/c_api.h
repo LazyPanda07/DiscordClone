@@ -92,11 +92,11 @@ CLIENT_LIBRARY_FUNCTION_API const char* getExceptionMessage(Exception exception)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CLIENT_LIBRARY_FUNCTION_API void playMicrophoneOffSound();
+CLIENT_LIBRARY_FUNCTION_API void playMicrophoneOffSound(Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void playMicrophoneOnSound();
+CLIENT_LIBRARY_FUNCTION_API void playMicrophoneOnSound(Exception* exception);
 
-CLIENT_LIBRARY_FUNCTION_API void playJoinSound();
+CLIENT_LIBRARY_FUNCTION_API void playJoinSound(Exception* exception);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

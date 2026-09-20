@@ -16,6 +16,26 @@ namespace web
 		return result;
 	}
 
+	std::string UDPSocket::constructJoinPacket(std::string_view userName)
+	{
+		std::string result(UDPSocket::helloPacketSize, '\0');
+
+		auto it = std::copy(UDPSocket::join.begin(), UDPSocket::join.end(), result.begin());
+
+		if (userName.size() > UDPSocket::maxUserNameSize)
+		{
+			constexpr std::string_view tooLongName = "too long name";
+
+			std::copy(tooLongName.begin(), tooLongName.end(), it);
+		}
+		else
+		{
+			std::copy(userName.begin(), userName.end(), it);
+		}
+
+		return result;
+	}
+
 	void UDPSocket::initializeSockets()
 	{
 #ifndef __LINUX__

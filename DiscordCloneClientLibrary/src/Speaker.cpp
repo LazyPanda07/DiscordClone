@@ -1,6 +1,7 @@
 #include "Speaker.hpp"
 
 #include "Constants.hpp"
+#include "c_api.h"
 
 template<size_t Size>
 static void fillSound(const std::array<float, Size>& sound, std::span<float> out);
@@ -32,6 +33,24 @@ namespace voice
 				{
 					if (size == SOCKET_ERROR)
 					{
+						return;
+					}
+					else if (size == web::UDPSocket::joinPacketSize)
+					{
+						std::string_view userName(data.data() + web::UDPSocket::join.size());
+						void* exception = nullptr;
+
+						printf("%s connected to room\n", userName.data());
+
+						playJoinSound(&exception);
+
+						if (exception)
+						{
+							// TODO: handle exception
+
+							deleteException(exception);
+						}
+
 						return;
 					}
 

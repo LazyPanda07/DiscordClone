@@ -123,8 +123,18 @@ namespace voice
 	void Microphone::startStream()
 	{
 		uint64_t size = 0;
+		Exception exception = nullptr;
 
-		playMicrophoneOnSound();
+		playMicrophoneOnSound(&exception);
+
+		if (exception)
+		{
+			std::string message = getExceptionMessage(exception);
+
+			deleteException(exception);
+
+			throw std::runtime_error(message);
+		}
 
 		audio.startStream();
 	}
@@ -132,8 +142,18 @@ namespace voice
 	void Microphone::stopStream()
 	{
 		uint64_t size = 0;
+		Exception exception = nullptr;
 
-		playMicrophoneOffSound();
+		playMicrophoneOffSound(&exception);
+
+		if (exception)
+		{
+			std::string message = getExceptionMessage(exception);
+
+			deleteException(exception);
+
+			throw std::runtime_error(message);
+		}
 
 		audio.stopStream();
 	}

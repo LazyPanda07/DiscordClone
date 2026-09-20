@@ -10,6 +10,8 @@
 #include <HttpParser.h>
 #include <PatternParser.h>
 
+#include "Utils.hpp"
+
 constexpr std::string_view commandName = "connect";
 
 template<>
@@ -193,6 +195,8 @@ namespace commands
 				std::cout << "Establish voice stream" << std::endl;
 
 				onSuccess(id);
+
+				utils::callApiFunction(&::playJoinSound);
 
 				settings.modifySettings
 				(

@@ -89,19 +89,11 @@ namespace voice
 
 			return;
 		}
-		else if (size == web::UDPSocket::alivePacketSize && std::equal(data.begin(), data.begin() + size, web::UDPSocket::alive.begin()))
-		{
-			if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it != clients.end())
-			{
-				it->aliveTimestamp = timestamp;
-			}
-
-			return;
-		}
 		else if (size == web::UDPSocket::helloPacketSize && std::equal(data.begin(), data.begin() + web::UDPSocket::helloMessageSize, web::UDPSocket::hello.begin()))
 		{
 			uint64_t id = 0;
 			char* ptr = reinterpret_cast<char*>(&id);
+			std::string userName;
 
 			for (size_t i = 0; i < sizeof(id); i++)
 			{
@@ -112,19 +104,33 @@ namespace voice
 
 			socket.sendData(web::UDPSocket::constructHelloPacket(id), address);
 
-			Client& client = clients.emplace_back(address, id);
-
-			std::lock_guard<std::mutex> lock(pendingClientsMutex);
-
-			if (auto it = pendingClients.find(id); it != pendingClients.end())
 			{
-				it->second.second = address;
+				Client& client = clients.emplace_back(address, id);
 
-				client.userName = it->second.first;
+				std::lock_guard<std::mutex> lock(pendingClientsMutex);
+
+				if (auto it = pendingClients.find(id); it != pendingClients.end())
+				{
+					it->second.second = address;
+
+					client.userName = it->second.first;
+
+					userName = client.userName;
+				}
+				else
+				{
+					std::cerr << std::format("Can't find user with id: {}", id) << std::endl;
+				}
 			}
-			else
+
+			std::string joinPacket = web::UDPSocket::constructJoinPacket(userName);
+
+			for (const Client& client : clients)
 			{
-				std::cerr << std::format("Can't find user with id: {}", id) << std::endl;
+				if (client.userName != userName)
+				{
+					socket.sendData(joinPacket, &client.socket);
+				}
 			}
 
 			return;
