@@ -214,6 +214,16 @@ int main(int argc, char** argv) try
 		MOD_CONTROL | MOD_ALT,
 		VK_SPACE
 	);
+
+	hotkeys.registerHotkey
+	(
+		[&speaker]()
+		{
+			speaker->fixDelay();
+		},
+		MOD_CONTROL | MOD_ALT,
+		'F'
+	);
 #endif
 
 	while (true)
