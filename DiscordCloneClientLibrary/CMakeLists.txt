@@ -18,17 +18,31 @@ add_library(
 	src/c_api.cpp
 )
 
+if (WIN32)
+	find_package(CUDAToolkit REQUIRED)
+
+	target_link_libraries(
+		${PROJECT_NAME} PRIVATE
+		CUDA::cudart
+		CUDA::cuda_driver
+	)
+
+	target_sources(${PROJECT_NAME} PRIVATE ${VIDEO_CODEC_SOURCES})
+endif()
+
 add_dependencies(${PROJECT_NAME} OpenCV::world)
 
 target_include_directories(
 	${PROJECT_NAME} PUBLIC
 	include
 	${OPENCV_INSTALL_DIR}/include
+	${VIDEO_CODEC_SDK_INCLUDE_DIRECTORY}
 )
 
 target_link_directories(
 	${PROJECT_NAME} PUBLIC
 	${OPENCV_INSTALL_DIR}/lib
+	${VIDEO_CODEC_SDK_LIB_DIRECTORY}
 )
 
 target_link_libraries(
@@ -40,6 +54,7 @@ target_link_libraries(
 	Networks
 	OpenCV::world
 	${OPENCV_LIBRARIES}
+	${VIDEO_CODEC_SDK_LIBRARIES}
 )
 
 if (WIN32)

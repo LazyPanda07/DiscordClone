@@ -46,3 +46,13 @@ build/
 
 # Visual Studio
 .vs/
+
+# VideoCodecSDK Binaries
+!3rdparty/vendor/NVIDIA/VideoCodecSDK/Windows/lib/nvcuvid.lib
+!3rdparty/vendor/NVIDIA/VideoCodecSDK/Windows/lib/nvencodeapi.lib
+
+!3rdparty/vendor/NVIDIA/VideoCodecSDK/Linux/x86_64/lib/libnvcuvid.so
+!3rdparty/vendor/NVIDIA/VideoCodecSDK/Linux/x86_64/lib/libnvidia-encode.so
+
+!3rdparty/vendor/NVIDIA/VideoCodecSDK/Linux/aarch64/lib/libnvcuvid.so
+!3rdparty/vendor/NVIDIA/VideoCodecSDK/Linux/aarch64/lib/libnvidia-encode.so

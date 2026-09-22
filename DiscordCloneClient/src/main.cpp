@@ -219,7 +219,11 @@ int main(int argc, char** argv) try
 	(
 		[&speaker]()
 		{
+			printf("Fix speaker delay...\n");
+
 			speaker->fixDelay();
+
+			printf("Finish fixing speaker delay\n");
 		},
 		MOD_CONTROL | MOD_ALT,
 		'F'
