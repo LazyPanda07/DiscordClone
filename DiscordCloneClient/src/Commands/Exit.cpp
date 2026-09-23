@@ -13,7 +13,7 @@ namespace commands
 
 	uint32_t Exit::getChecks() const
 	{
-		return NULL;
+		return 0;
 	}
 
 	Exit::Exit(const std::vector<std::unique_ptr<checks::Check>>& checks) :
