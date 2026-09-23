@@ -1048,7 +1048,7 @@ NvDecoder::NvDecoder(CUcontext cuContext, bool bUseDeviceFrame, cudaVideoCodec e
     {
         m_fpSEI = fopen("sei_message.txt", "wb");
         if (!m_fpSEI) {
-            LOG(ERROR) << "Failed to open sei_message.txt for writing";
+            std::cout << "Failed to open sei_message.txt for writing";
         }
         m_pCurrSEIMessage = new CUVIDSEIMESSAGEINFO;
         memset(&m_SEIMessagesDisplayOrder, 0, sizeof(m_SEIMessagesDisplayOrder));
