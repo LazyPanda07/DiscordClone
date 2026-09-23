@@ -19,6 +19,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+
+    - name: Install CUDA
+      run: choco install -y cuda --version=13.2.1
   
     - name: Enable CL
       uses: ilammy/msvc-dev-cmd@v1.13.0
@@ -81,6 +84,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
   
+    - name: Install CUDA
+      run: choco install -y cuda --version=13.2.1
+
     - name: Enable CL
       uses: ilammy/msvc-dev-cmd@v1.13.0
 
