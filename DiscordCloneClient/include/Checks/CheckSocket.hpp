@@ -11,10 +11,10 @@ namespace checks
 	class CheckSocket : public Check
 	{
 	private:
-		const std::unique_ptr<wrappers::SocketWrapper>& socket;
+		const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket;
 
 	public:
-		CheckSocket(const std::unique_ptr<wrappers::SocketWrapper>& socket);
+		CheckSocket(const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket);
 
 		bool check() const override;
 

@@ -2,7 +2,7 @@
 
 namespace checks
 {
-	CheckSocket::CheckSocket(const std::unique_ptr<wrappers::SocketWrapper>& socket) :
+	CheckSocket::CheckSocket(const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket) :
 		socket(socket)
 	{
 

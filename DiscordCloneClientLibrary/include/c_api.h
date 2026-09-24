@@ -26,6 +26,7 @@
 
 typedef void* Exception;
 typedef void* UdpSocketObject;
+typedef void* TcpSocketObject;
 typedef void* MicrophoneObject;
 typedef void* SpeakerObject;
 typedef void* DeviceInformationArray;
@@ -33,6 +34,8 @@ typedef void* DeviceInformationArray;
 CLIENT_LIBRARY_FUNCTION_API void initialize(Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API TcpSocketObject createTcpSocket(const char* ip, uint16_t port, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API MicrophoneObject createMicrophone(UdpSocketObject socket, Exception* exception);
 
@@ -43,6 +46,10 @@ CLIENT_LIBRARY_FUNCTION_API SpeakerObject createSpeaker(UdpSocketObject socket, 
 CLIENT_LIBRARY_FUNCTION_API void sendData(UdpSocketObject socket, const char* data, uint64_t size, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint64_t size, void* userData), int32_t flags, void* userData, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API void sendTcpData(TcpSocketObject socket, const char* data, uint64_t size, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API void receiveNotification(TcpSocketObject socket, void(*callback)(const char* data, uint64_t size, void* userData), void* userData, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void overrideMicrophoneDeviceId(MicrophoneObject microphone, uint32_t id, Exception* exception);
 
@@ -101,6 +108,8 @@ CLIENT_LIBRARY_FUNCTION_API void playJoinSound(Exception* exception);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CLIENT_LIBRARY_FUNCTION_API void deleteSocket(UdpSocketObject socket);
+
+CLIENT_LIBRARY_FUNCTION_API void deleteTcpSocket(TcpSocketObject socket);
 
 CLIENT_LIBRARY_FUNCTION_API void deleteMicrophone(MicrophoneObject microphone);
 

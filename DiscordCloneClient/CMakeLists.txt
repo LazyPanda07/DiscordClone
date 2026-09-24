@@ -9,7 +9,6 @@ add_executable(
 	src/main.cpp
 	src/Settings.cpp
 	src/Utils.cpp
-	src/Wrappers/SocketWrapper.cpp
 	src/Wrappers/MicrophoneWrapper.cpp
 	src/Wrappers/SpeakerWrapper.cpp
 	src/Commands/Command.cpp

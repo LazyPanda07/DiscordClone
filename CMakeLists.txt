@@ -93,6 +93,7 @@ endif()
 
 add_subdirectory(3rdparty)
 
+add_subdirectory(TCPSocket)
 add_subdirectory(UDPSocket)
 
 if (${BUILD_SERVER})

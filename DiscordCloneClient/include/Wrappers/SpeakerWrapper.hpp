@@ -10,7 +10,7 @@ namespace wrappers
 		SpeakerObject implementation;
 
 	public:
-		SpeakerWrapper(SocketWrapper& socket);
+		SpeakerWrapper(SocketWrapper<SocketType::udp>& socket);
 
 		void overrideDeviceId(uint32_t id);
 

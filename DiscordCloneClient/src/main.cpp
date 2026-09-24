@@ -98,7 +98,8 @@ int main(int argc, char** argv) try
 		return 0;
 	}
 
-	std::unique_ptr<wrappers::SocketWrapper> socket;
+	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>> socket;
+	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>> notificationSocket;
 	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
 	functionality::Hotkeys hotkeys;
 	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &speaker]()
@@ -112,7 +113,7 @@ int main(int argc, char** argv) try
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &speaker, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &notificationSocket, &speaker, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -121,6 +122,7 @@ int main(int argc, char** argv) try
 				std::make_unique<commands::Connect>
 				(
 					socket,
+					notificationSocket,
 					controlStream,
 					settings,
 					[&socket, &speaker](uint64_t& resultId)
@@ -220,6 +222,8 @@ int main(int argc, char** argv) try
 		[&speaker]()
 		{
 			printf("Fix speaker delay...\n");
+
+			// TODO: also call on server to fix delay for all clients
 
 			speaker->fixDelay();
 

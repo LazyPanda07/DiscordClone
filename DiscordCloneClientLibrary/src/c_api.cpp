@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include <UDPClientSocket.hpp>
+#include <TCPClientSocket.hpp>
 #include <PatternParser.h>
 #include <opencv2/core/utils/logger.hpp>
 
@@ -60,6 +61,20 @@ UdpSocketObject createSocket(const char* ip, uint16_t port, Exception* exception
 	try
 	{
 		return new web::UDPClientSocket(ip, port);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+TcpSocketObject createTcpSocket(const char* ip, uint16_t port, Exception* exception)
+{
+	try
+	{
+		return new web::TCPClientSocket(ip, port);
 	}
 	catch (const std::exception& e)
 	{
@@ -133,6 +148,33 @@ void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint6
 			},
 			flags
 		);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void sendTcpData(TcpSocketObject socket, const char* data, uint64_t size, Exception* exception)
+{
+	try
+	{
+		static_cast<web::TCPSocket*>(socket)->sendBytes(data, static_cast<int>(size));
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void receiveNotification(TcpSocketObject socket, void(*callback)(const char* data, uint64_t size, void* userData), void* userData, Exception* exception)
+{
+	try
+	{
+		std::array<char, web::TCPSocket::notificationSize> notification{};
+		uint64_t actualSize = static_cast<web::TCPSocket*>(socket)->receiveBytes(notification.data(), notification.size());
+
+		callback(notification.data(), actualSize, userData);
 	}
 	catch (const std::exception& e)
 	{
@@ -530,6 +572,11 @@ void playJoinSound(Exception* exception)
 void deleteSocket(UdpSocketObject socket)
 {
 	delete static_cast<web::UDPSocket*>(socket);
+}
+
+void deleteTcpSocket(TcpSocketObject socket)
+{
+	delete static_cast<web::TCPSocket*>(socket);
 }
 
 void deleteMicrophone(MicrophoneObject microphone)

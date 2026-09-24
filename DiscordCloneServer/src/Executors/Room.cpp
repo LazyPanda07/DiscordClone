@@ -92,7 +92,7 @@ namespace executors
 				}
 
 				builder["port"] = it->second.getPort();
-				builder["notificationServerPort"] = notificationServerPort;
+				builder["notificationPort"] = notificationServerPort;
 
 				response.setBody(builder);
 			}
@@ -118,7 +118,7 @@ namespace executors
 			}
 
 			builder["port"] = value->second.getPort();
-			builder["notificationServerPort"] = notificationServerPort;
+			builder["notificationPort"] = notificationServerPort;
 
 			response.setResponseCode(framework::ResponseCodes::created);
 			response.setBody(builder);

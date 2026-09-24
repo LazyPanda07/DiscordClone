@@ -14,7 +14,8 @@ namespace commands
 	class Connect : public Command
 	{
 	private:
-		std::unique_ptr<wrappers::SocketWrapper>& socket;
+		std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket;
+		std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket;
 		std::unique_ptr<streams::IOSocketStream>& controlStream;
 		client::Settings& settings;
 		std::function<void(uint64_t&)> onSuccess;
@@ -32,7 +33,7 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void(uint64_t&)>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		Connect(std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void(uint64_t&)>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
 		std::string_view getHelpText() const override;
 

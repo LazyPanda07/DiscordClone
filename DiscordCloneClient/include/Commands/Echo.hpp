@@ -9,7 +9,7 @@ namespace commands
 	class Echo : public Command
 	{
 	private:
-		const std::unique_ptr<wrappers::SocketWrapper>& socket;
+		const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket;
 
 	private:
 		bool run(std::istream& stream) override;
@@ -17,7 +17,7 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		Echo(const std::unique_ptr<wrappers::SocketWrapper>& socket, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		Echo(const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
 		~Echo() = default;
 	};

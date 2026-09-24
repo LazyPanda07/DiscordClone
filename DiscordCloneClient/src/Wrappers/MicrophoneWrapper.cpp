@@ -4,7 +4,7 @@
 
 namespace wrappers
 {
-	MicrophoneWrapper::MicrophoneWrapper(SocketWrapper& socket) :
+	MicrophoneWrapper::MicrophoneWrapper(SocketWrapper<SocketType::udp>& socket) :
 		implementation(utils::callApiFunction(&createMicrophone, socket.implementation))
 	{
 		

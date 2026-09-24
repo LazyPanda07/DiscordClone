@@ -4,7 +4,7 @@
 
 namespace wrappers
 {
-	SpeakerWrapper::SpeakerWrapper(SocketWrapper& socket) :
+	SpeakerWrapper::SpeakerWrapper(SocketWrapper<SocketType::udp>& socket) :
 		implementation(utils::callApiFunction(&createSpeaker, socket.implementation))
 	{
 

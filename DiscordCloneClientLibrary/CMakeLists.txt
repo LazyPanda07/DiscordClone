@@ -47,6 +47,7 @@ target_link_directories(
 
 target_link_libraries(
 	${PROJECT_NAME} PUBLIC
+	TCPSocket
 	UDPSocket
 	rtaudio
 	UtilityLibrary

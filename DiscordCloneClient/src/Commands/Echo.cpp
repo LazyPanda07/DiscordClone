@@ -18,7 +18,7 @@ namespace commands
 		return checks::Check::AvailableChecks::socketDatagram;
 	}
 
-	Echo::Echo(const std::unique_ptr<wrappers::SocketWrapper>& socket, const std::vector<std::unique_ptr<checks::Check>>& checks) :
+	Echo::Echo(const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket, const std::vector<std::unique_ptr<checks::Check>>& checks) :
 		Command(commandName, checks),
 		socket(socket)
 	{

@@ -10,7 +10,7 @@ namespace wrappers
 		MicrophoneObject implementation;
 
 	public:
-		MicrophoneWrapper(SocketWrapper& socket);
+		MicrophoneWrapper(SocketWrapper<SocketType::udp>& socket);
 
 		void overrideDeviceId(uint32_t id);
 

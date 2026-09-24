@@ -49,6 +49,7 @@ namespace commands
 			std::string response;
 			json::JsonBuilder data;
 			uint16_t udpPort = 0;
+			uint16_t notificationPort = 0;
 
 			data["userName"] = userName;
 			data["roomName"] = roomName;
@@ -75,9 +76,11 @@ namespace commands
 
 				id = jsonData.get<uint64_t>("id");
 				udpPort = jsonData.get<uint16_t>("port");
+				notificationPort = jsonData.get<uint16_t>("notificationPort");
 			}
 
-			socket = std::make_unique<wrappers::SocketWrapper>(ip, udpPort);
+			socket = std::make_unique<wrappers::SocketWrapper<wrappers::SocketType::udp>>(ip, udpPort);
+			notificationSocket = std::make_unique<wrappers::SocketWrapper<wrappers::SocketType::tcp>>(ip, notificationPort);
 		}
 		catch (const std::exception&)
 		{
@@ -91,7 +94,11 @@ namespace commands
 	{
 		try
 		{
+			const char* ptr = reinterpret_cast<const char*>(&id);
+			std::string_view data(ptr, sizeof(id));
+
 			socket->sendData(web::UDPSocket::constructHelloPacket(id));
+			notificationSocket->sendData(data);
 		}
 		catch (const std::exception&)
 		{
@@ -222,9 +229,10 @@ namespace commands
 		return NULL;
 	}
 
-	Connect::Connect(std::unique_ptr<wrappers::SocketWrapper>& socket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void(uint64_t&)>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks) :
+	Connect::Connect(std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& socket, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket, std::unique_ptr<streams::IOSocketStream>& controlStream, client::Settings& settings, const std::function<void(uint64_t&)>& onSuccess, const std::vector<std::unique_ptr<checks::Check>>& checks) :
 		Command(commandName, checks),
 		socket(socket),
+		notificationSocket(notificationSocket),
 		controlStream(controlStream),
 		settings(settings),
 		onSuccess(onSuccess)
