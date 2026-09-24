@@ -27,7 +27,7 @@ namespace executors
 		};
 
 	private:
-		std::unordered_map<RoomData, voice::VoiceServer, RoomHash> rooms; // TODO: resize may reinitialize servers
+		std::unordered_map<RoomData, server::VoiceServer, RoomHash> rooms; // TODO: resize may reinitialize servers
 		std::mutex roomsMutex;
 		std::mt19937_64 random;
 

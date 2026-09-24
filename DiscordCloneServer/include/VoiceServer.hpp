@@ -9,7 +9,9 @@
 #include <UDPClientSocket.hpp>
 #include <UDPServerSocket.hpp>
 
-namespace voice
+#include "NotificationsServer.hpp"
+
+namespace server
 {
 	class VoiceServer
 	{
@@ -38,22 +40,23 @@ namespace voice
 		};
 
 	private:
+		NotificationsServer notificationServer;
 		std::vector<Client> clients;
 		web::UDPServerSocket socket;
 		std::unordered_map<uint64_t, std::pair<std::string, sockaddr_in>> pendingClients;
 		std::vector<sockaddr_in> disconnectedClients;
 		std::mutex pendingClientsMutex;
 		std::mutex disconnectedClientsMutex;
-		std::future<void> startFuture;
+		std::future<void> startHandle;
 		bool started;
 
 	private:
 		void serve(const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket);
 
 	public:
-		VoiceServer();
+		VoiceServer(std::string_view notificationServerIp);
 
-		void start();
+		void start(const std::function<void(uint16_t notificationServerPort)>& notificationServerPortSetter);
 
 		void addPendingClient(uint64_t id, std::string&& userName);
 		

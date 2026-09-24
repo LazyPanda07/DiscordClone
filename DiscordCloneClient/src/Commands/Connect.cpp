@@ -178,13 +178,7 @@ namespace commands
 
 		std::cout << "Waiting for server to response..." << std::endl;
 
-		for (size_t i = 0; i < retries; i++)
-		{
-			if (this->sendHello(id))
-			{
-				break;
-			}
-		}
+		this->sendHello(id);
 
 		std::this_thread::sleep_for(50ms);
 

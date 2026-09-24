@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace voice
+namespace server
 {
 	std::tuple<std::string, uint16_t> VoiceServer::Client::getIpPort(const sockaddr_in& address)
 	{
@@ -48,7 +48,14 @@ namespace voice
 
 				for (sockaddr_in temp : disconnectedClients)
 				{
-					std::erase(clients, temp);
+					auto it = std::find(clients.begin(), clients.end(), temp);
+
+					if (it != clients.end())
+					{
+						notificationServer.remove(it->id);
+
+						std::erase(clients, temp);
+					}
 				}
 
 				disconnectedClients.clear();
@@ -58,11 +65,15 @@ namespace voice
 			{
 				if (std::chrono::duration_cast<std::chrono::seconds>(timestamp - clients[i].aliveTimestamp).count() >= timeoutValue)
 				{
+					uint64_t id = clients[i].id;
+
 					{
 						std::lock_guard<std::mutex> lock(pendingClientsMutex);
 
-						pendingClients.erase(clients[i].id);
+						pendingClients.erase(id);
 					}
+
+					notificationServer.remove(id);
 
 					clients.erase(clients.begin() + i);
 
@@ -76,8 +87,11 @@ namespace voice
 			if (auto it = std::find(clients.begin(), clients.end(), address); it != clients.end())
 			{
 				std::lock_guard<std::mutex> lock(pendingClientsMutex);
+				uint64_t id = it->id;
 
-				pendingClients.erase(it->id);
+				pendingClients.erase(id);
+
+				notificationServer.remove(id);
 			}
 
 			std::erase(clients, address);
@@ -167,7 +181,8 @@ namespace voice
 		}
 	}
 
-	VoiceServer::VoiceServer() :
+	VoiceServer::VoiceServer(std::string_view notificationServerIp) :
+		notificationServer(notificationServerIp),
 		started(false)
 	{
 		constexpr size_t predictedNumberOfClients = 4;
@@ -175,14 +190,18 @@ namespace voice
 		clients.reserve(predictedNumberOfClients);
 	}
 
-	void VoiceServer::start()
+	void VoiceServer::start(const std::function<void(uint16_t notificationServerPort)>& notificationServerPortSetter)
 	{
 		if (started)
 		{
+			notificationServerPortSetter(notificationServer.getServerPortV4());
+
 			return;
 		}
 
-		startFuture = std::async
+		notificationServer.start(false, [this, &notificationServerPortSetter]() { notificationServerPortSetter(notificationServer.getServerPortV4()); });
+
+		startHandle = std::async
 		(
 			std::launch::async,
 			[this]()

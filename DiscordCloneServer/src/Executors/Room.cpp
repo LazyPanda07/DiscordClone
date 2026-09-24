@@ -54,12 +54,22 @@ namespace executors
 
 	void Room::doPost(framework::HttpRequest& request, framework::HttpResponse& response)
 	{
+		using namespace std::chrono_literals;
+
 		const framework::JsonParser& data = request.getJson();
 		RoomData roomData =
 		{
 			.name = data.get<std::string>("roomName"),
 			.password = data.get<std::string>("roomPassword")
 		};
+		std::atomic_bool called(false);
+		uint16_t notificationServerPort;
+		auto setter = [&notificationServerPort, &called](uint16_t port)
+			{
+				notificationServerPort = port;
+
+				called = true;
+			};
 
 		framework::JsonBuilder builder;
 		std::string userName = data.get<std::string>("userName");
@@ -74,9 +84,15 @@ namespace executors
 			{
 				it->second.addPendingClient(id, std::move(userName));
 
-				it->second.start();
+				it->second.start(setter);
+
+				while (!called)
+				{
+					std::this_thread::sleep_for(50ms);
+				}
 
 				builder["port"] = it->second.getPort();
+				builder["notificationServerPort"] = notificationServerPort;
 
 				response.setBody(builder);
 			}
@@ -90,13 +106,19 @@ namespace executors
 		}
 		else
 		{
-			const auto& [value, _] = rooms.try_emplace(std::move(roomData));
+			const auto& [value, _] = rooms.try_emplace(std::move(roomData), request.getServerIpV4());
 
 			value->second.addPendingClient(id, std::move(userName));
 
-			value->second.start();
+			value->second.start(setter);
+
+			while (!called)
+			{
+				std::this_thread::sleep_for(50ms);
+			}
 
 			builder["port"] = value->second.getPort();
+			builder["notificationServerPort"] = notificationServerPort;
 
 			response.setResponseCode(framework::ResponseCodes::created);
 			response.setBody(builder);

@@ -6,6 +6,7 @@ add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
 	src/VoiceServer.cpp
+	src/NotificationsServer.cpp
 	src/Executors/Ping.cpp
 	src/Executors/Room.cpp
 )
@@ -19,6 +20,7 @@ target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	UDPSocket
 	UtilityLibrary
+	BaseTCPServer
 	CXX_API
 )
 
