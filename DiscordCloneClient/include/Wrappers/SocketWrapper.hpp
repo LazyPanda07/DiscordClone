@@ -15,27 +15,26 @@ namespace wrappers
 	};
 
 	template<SocketType T>
+	struct GetSocketType
+	{
+		static_assert(false, "Wrong type");
+	};
+
+	template<>
+	struct GetSocketType<SocketType::udp>
+	{
+		using type = UdpSocketObject;
+	};
+
+	template<>
+	struct GetSocketType<SocketType::tcp>
+	{
+		using type = TcpSocketObject;
+	};
+
+	template<SocketType T>
 	class SocketWrapper
 	{
-	private:
-		template<SocketType ValueT>
-		struct GetSocketType
-		{
-			static_assert(false, "Wrong type");
-		};
-
-		template<>
-		struct GetSocketType<SocketType::udp>
-		{
-			using type = UdpSocketObject;
-		};
-
-		template<>
-		struct GetSocketType<SocketType::tcp>
-		{
-			using type = TcpSocketObject;
-		};
-
 	private:
 		GetSocketType<T>::type implementation;
 

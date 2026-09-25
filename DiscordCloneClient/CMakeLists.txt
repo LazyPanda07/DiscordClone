@@ -31,6 +31,7 @@ add_executable(
 	src/Commands/GetUsers.cpp
 	src/Commands/GetVersion.cpp
 	src/Commands/FixSpeakerDelay.cpp
+	src/Commands/StartStream.cpp
 )
 
 if (WIN32)

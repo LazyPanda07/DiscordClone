@@ -47,7 +47,9 @@ namespace executors
 
 				called = true;
 			};
-		uint64_t id = builder["id"].get<uint64_t>();
+		uint64_t id = random();
+
+		builder["id"] = id;
 
 		it->second.addPendingClient(id, std::move(request.getJson().get<std::string>("userName")));
 
@@ -118,10 +120,7 @@ namespace executors
 		framework::JsonBuilder builder;
 		std::string streamType = request.getRouteParameter<std::string>("streamType");
 		std::lock_guard<std::mutex> lock(roomsMutex);
-		uint64_t id = random();
-
-		builder["id"] = id;
-
+		
 		if (auto it = rooms.find(roomData); it != rooms.end())
 		{
 			if (it->first.password == roomData.password)

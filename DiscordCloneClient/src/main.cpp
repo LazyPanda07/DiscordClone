@@ -35,6 +35,7 @@
 #include "Commands/GetUsers.hpp"
 #include "Commands/GetVersion.hpp"
 #include "Commands/FixSpeakerDelay.hpp"
+#include "Commands/StartStream.hpp"
 
 #ifdef __LINUX__
 #include <unistd.h>
@@ -102,6 +103,7 @@ int main(int argc, char** argv) try
 	}
 
 	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>> socket;
+	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>> videoStreamSocket;
 	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>> notificationSocket; // TODO: separate thread for receiving notifications
 	std::jthread notificationThreadHandler(&notificationThread, std::ref(notificationSocket));
 	functionality::Hotkeys hotkeys;
@@ -116,7 +118,7 @@ int main(int argc, char** argv) try
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &notificationSocket, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &videoStreamSocket, &notificationSocket, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -153,6 +155,7 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::GetUsers>(controlStream, settings, checks));
 			result.emplace_back(std::make_unique<commands::GetVersion>(checks));
 			result.emplace_back(std::make_unique<commands::FixSpeakerDelay>(speaker, checks));
+			result.emplace_back(std::make_unique<commands::StartStream>(controlStream, videoStreamSocket, settings, id, checks));
 
 			return result;
 		}();
