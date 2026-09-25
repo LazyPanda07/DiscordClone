@@ -8,6 +8,6 @@
   "Room": {
     "api": "cxx",
     "loadType": "initialization",
-    "route": "room"
+    "route": "room/{string:streamType}"
   }
 }

@@ -57,7 +57,7 @@ namespace commands
 
 			request = web::HttpBuilder()
 				.postRequest()
-				.parameters("room")
+				.parameters("room/voice")
 				.build(data);
 
 			(*controlStream) << request;

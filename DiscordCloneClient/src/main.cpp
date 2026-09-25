@@ -239,7 +239,7 @@ int main(int argc, char** argv) try
 
 				request = web::HttpBuilder()
 					.patchRequest()
-					.parameters("room")
+					.parameters("room/voice")
 					.build(builder);
 
 				try
@@ -320,8 +320,8 @@ void restoreVolume(const client::Settings& settings)
 
 void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone)
 {
-	DeviceInformationArray devices = utils::callApiFunction(&getDeviceInformation);
-	uint64_t size = utils::callApiFunction(&getDeviceInformationSize, devices);
+	DeviceInformationArray devices = utils::callApiFunction(&::getDeviceInformation);
+	uint64_t size = utils::callApiFunction(&::getDeviceInformationSize, devices);
 
 	if (microphone)
 	{
@@ -332,12 +332,12 @@ void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microph
 
 	for (uint64_t i = 0; i < size; i++)
 	{
-		uint32_t id = utils::callApiFunction(&getDeviceInformationId, devices, i);
-		std::string_view name = utils::callApiFunction(&getDeviceInformationName, devices, i);
-		uint32_t microphoneChannels = utils::callApiFunction(&getDeviceInformationInputChannels, devices, i);
-		uint32_t speakerChannels = utils::callApiFunction(&getDeviceInformationOutputChannels, devices, i);
-		bool isDefaultInput = utils::callApiFunction(&getDeviceInformationDefaultInput, devices, i);
-		bool isDefaultOutput = utils::callApiFunction(&getDeviceInformationDefaultOutput, devices, i);
+		uint32_t id = utils::callApiFunction(&::getDeviceInformationId, devices, i);
+		std::string_view name = utils::callApiFunction(&::getDeviceInformationName, devices, i);
+		uint32_t microphoneChannels = utils::callApiFunction(&::getDeviceInformationInputChannels, devices, i);
+		uint32_t speakerChannels = utils::callApiFunction(&::getDeviceInformationOutputChannels, devices, i);
+		bool isDefaultInput = utils::callApiFunction(&::getDeviceInformationDefaultInput, devices, i);
+		bool isDefaultOutput = utils::callApiFunction(&::getDeviceInformationDefaultOutput, devices, i);
 
 		std::cout << std::format("Device {}: {}", id, name) << std::endl;
 		std::cout << std::format("\tInput channels: {}", microphoneChannels) << std::endl;
@@ -402,7 +402,7 @@ BOOL onExit(DWORD CtrlType)
 
 		request = web::HttpBuilder()
 			.deleteRequest()
-			.parameters("room")
+			.parameters("room/voice")
 			.build(builder);
 
 		try

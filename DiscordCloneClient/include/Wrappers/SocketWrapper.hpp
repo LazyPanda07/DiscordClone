@@ -18,7 +18,7 @@ namespace wrappers
 	class SocketWrapper
 	{
 	private:
-		template<SocketType T>
+		template<SocketType ValueT>
 		struct GetSocketType
 		{
 			static_assert(false, "Wrong type");

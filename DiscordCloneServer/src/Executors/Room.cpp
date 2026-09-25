@@ -17,6 +17,56 @@ namespace executors
 		random.seed(std::time(nullptr));
 	}
 
+	framework::JsonObject Room::doGetVoice(framework::HttpRequest& request, framework::HttpResponse& response, decltype(rooms)::iterator it)
+	{
+		framework::JsonObject result;
+		std::vector<std::string> clients = it->second.getClients();
+
+		for (std::string& client : clients)
+		{
+			result.emplace_back(std::move(client));
+		}
+
+		return result;
+	}
+
+	framework::JsonObject Room::doGetVideo(framework::HttpRequest& request, framework::HttpResponse& response, decltype(rooms)::iterator it)
+	{
+		return framework::JsonObject();
+	}
+
+	void Room::doPostVoice(framework::HttpRequest& request, framework::HttpResponse& response, framework::JsonBuilder& builder, decltype(rooms)::iterator it)
+	{
+		using namespace std::chrono_literals;
+
+		std::atomic_bool called(false);
+		uint16_t notificationServerPort;
+		auto setter = [&notificationServerPort, &called](uint16_t port)
+			{
+				notificationServerPort = port;
+
+				called = true;
+			};
+		uint64_t id = builder["id"].get<uint64_t>();
+
+		it->second.addPendingClient(id, std::move(request.getJson().get<std::string>("userName")));
+
+		it->second.start(setter);
+
+		while (!called)
+		{
+			std::this_thread::sleep_for(50ms);
+		}
+
+		builder["port"] = it->second.getPort();
+		builder["notificationPort"] = notificationServerPort;
+	}
+
+	void Room::doPostVideo(framework::HttpRequest& request, framework::HttpResponse& response, framework::JsonBuilder& builder, decltype(rooms)::iterator it)
+	{
+
+	}
+
 	void Room::doGet(framework::HttpRequest& request, framework::HttpResponse& response)
 	{
 		const std::unordered_map<std::string, std::string>& queryParameters = request.getQueryParameters();
@@ -25,6 +75,7 @@ namespace executors
 			.name = queryParameters.at("roomName"),
 			.password = queryParameters.at("roomPassword")
 		};
+		std::string streamType = request.getRouteParameter<std::string>("streamType");
 
 		std::lock_guard<std::mutex> lock(roomsMutex);
 
@@ -33,11 +84,14 @@ namespace executors
 			if (it->first.password == roomData.password)
 			{
 				framework::JsonObject result;
-				std::vector<std::string> clients = it->second.getClients();
 
-				for (std::string& client : clients)
+				if (streamType == "voice")
 				{
-					result.emplace_back(std::move(client));
+					result = this->doGetVoice(request, response, it);
+				}
+				else if (streamType == "video")
+				{
+					result = this->doGetVideo(request, response, it);
 				}
 
 				response.setBody(result);
@@ -54,25 +108,15 @@ namespace executors
 
 	void Room::doPost(framework::HttpRequest& request, framework::HttpResponse& response)
 	{
-		using namespace std::chrono_literals;
-
 		const framework::JsonParser& data = request.getJson();
 		RoomData roomData =
 		{
 			.name = data.get<std::string>("roomName"),
 			.password = data.get<std::string>("roomPassword")
 		};
-		std::atomic_bool called(false);
-		uint16_t notificationServerPort;
-		auto setter = [&notificationServerPort, &called](uint16_t port)
-			{
-				notificationServerPort = port;
-
-				called = true;
-			};
 
 		framework::JsonBuilder builder;
-		std::string userName = data.get<std::string>("userName");
+		std::string streamType = request.getRouteParameter<std::string>("streamType");
 		std::lock_guard<std::mutex> lock(roomsMutex);
 		uint64_t id = random();
 
@@ -82,17 +126,14 @@ namespace executors
 		{
 			if (it->first.password == roomData.password)
 			{
-				it->second.addPendingClient(id, std::move(userName));
-
-				it->second.start(setter);
-
-				while (!called)
+				if (streamType == "voice")
 				{
-					std::this_thread::sleep_for(50ms);
+					this->doPostVoice(request, response, builder, it);
 				}
-
-				builder["port"] = it->second.getPort();
-				builder["notificationPort"] = notificationServerPort;
+				else if (streamType == "video")
+				{
+					this->doPostVideo(request, response, builder, it);
+				}
 
 				response.setBody(builder);
 			}
@@ -108,17 +149,14 @@ namespace executors
 		{
 			const auto& [value, _] = rooms.try_emplace(std::move(roomData), request.getServerIpV4());
 
-			value->second.addPendingClient(id, std::move(userName));
-
-			value->second.start(setter);
-
-			while (!called)
+			if (streamType == "voice")
 			{
-				std::this_thread::sleep_for(50ms);
+				this->doPostVoice(request, response, builder, value);
 			}
-
-			builder["port"] = value->second.getPort();
-			builder["notificationPort"] = notificationServerPort;
+			else if (streamType == "video")
+			{
+				this->doPostVideo(request, response, builder, value);
+			}
 
 			response.setResponseCode(framework::ResponseCodes::created);
 			response.setBody(builder);

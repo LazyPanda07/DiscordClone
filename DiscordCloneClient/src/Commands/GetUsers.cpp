@@ -15,7 +15,7 @@ namespace commands
 
 		request = web::HttpBuilder()
 			.getRequest()
-			.parameters("room")
+			.parameters("room/voice")
 			.build
 			(
 				{
