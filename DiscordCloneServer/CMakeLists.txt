@@ -19,6 +19,7 @@ target_include_directories(
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	UDPSocket
+	TCPSocket
 	UtilityLibrary
 	BaseTCPServer
 	CXX_API

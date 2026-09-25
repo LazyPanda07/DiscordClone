@@ -45,14 +45,17 @@
 
 std::unique_ptr<streams::IOSocketStream> controlStream;
 std::unique_ptr<wrappers::MicrophoneWrapper> microphone;
+std::unique_ptr<wrappers::SpeakerWrapper> speaker;
 client::Settings settings;
 uint64_t id;
 
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::unique_ptr<wrappers::SpeakerWrapper>& speaker);
+void restoreVolume(const client::Settings& settings);
 
 void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone);
 
 void help(const std::vector<std::unique_ptr<commands::Command>>& commands);
+
+void notificationThread(std::stop_token stop, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket);
 
 #ifdef __LINUX__
 
@@ -99,10 +102,10 @@ int main(int argc, char** argv) try
 	}
 
 	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>> socket;
-	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>> notificationSocket;
-	std::unique_ptr<wrappers::SpeakerWrapper> speaker;
+	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>> notificationSocket; // TODO: separate thread for receiving notifications
+	std::jthread notificationThreadHandler(&notificationThread, std::ref(notificationSocket));
 	functionality::Hotkeys hotkeys;
-	std::vector<std::unique_ptr<checks::Check>> checks = [&socket, &speaker]()
+	std::vector<std::unique_ptr<checks::Check>> checks = [&socket]()
 		{
 			std::vector<std::unique_ptr<checks::Check>> result;
 
@@ -113,7 +116,7 @@ int main(int argc, char** argv) try
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &notificationSocket, &speaker, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &notificationSocket, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -125,14 +128,14 @@ int main(int argc, char** argv) try
 					notificationSocket,
 					controlStream,
 					settings,
-					[&socket, &speaker](uint64_t& resultId)
+					[&socket](uint64_t& resultId)
 					{
 						id = resultId;
 
 						microphone = std::make_unique<wrappers::MicrophoneWrapper>(*socket);
 						speaker = std::make_unique<wrappers::SpeakerWrapper>(*socket);
 
-						restoreVolume(settings, microphone, speaker);
+						restoreVolume(settings);
 					},
 					checks
 				)
@@ -154,7 +157,7 @@ int main(int argc, char** argv) try
 			return result;
 		}();
 
-	utils::callApiFunction(&initialize);
+	utils::callApiFunction(&::initialize);
 
 	if (std::optional<client::Settings> loadedSettings = client::Settings::loadSettings())
 	{
@@ -219,15 +222,36 @@ int main(int argc, char** argv) try
 
 	hotkeys.registerHotkey
 	(
-		[&speaker]()
+		[]()
 		{
-			printf("Fix speaker delay...\n");
-
-			// TODO: also call on server to fix delay for all clients
-
 			speaker->fixDelay();
 
-			printf("Finish fixing speaker delay\n");
+			if (controlStream)
+			{
+				std::string request;
+				std::string _;
+
+				json::JsonBuilder builder;
+
+				builder["roomName"] = settings.roomName;
+				builder["roomPassword"] = settings.roomPassword;
+				builder["id"] = id;
+
+				request = web::HttpBuilder()
+					.patchRequest()
+					.parameters("room")
+					.build(builder);
+
+				try
+				{
+					(*controlStream) << request;
+					(*controlStream) >> _;
+				}
+				catch (const std::exception&)
+				{
+
+				}
+			}
 		},
 		MOD_CONTROL | MOD_ALT,
 		'F'
@@ -283,7 +307,7 @@ catch (const std::exception& e)
 	return 1;
 }
 
-void restoreVolume(const client::Settings& settings, const std::unique_ptr<wrappers::MicrophoneWrapper>& microphone, const std::unique_ptr<wrappers::SpeakerWrapper>& speaker)
+void restoreVolume(const client::Settings& settings)
 {
 	if (!microphone || !speaker)
 	{
@@ -329,13 +353,35 @@ void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microph
 void help(const std::vector<std::unique_ptr<commands::Command>>& commands)
 {
 	std::cout << "Available commands:" << std::endl;
-	
+
 	for (const std::unique_ptr<commands::Command>& command : commands)
 	{
 		std::cout << std::format("{}: {}", command->command, command->getHelpText()) << std::endl;
 	}
 
 	std::cout << "help: " << std::endl;
+}
+
+void notificationThread(std::stop_token stop, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket)
+{
+	using namespace std::chrono_literals;
+
+	while (!stop.stop_requested())
+	{
+		if (!notificationSocket)
+		{
+			std::this_thread::sleep_for(1s);
+
+			continue;
+		}
+
+		std::string notification = notificationSocket->receiveData();
+
+		if (notification.contains("fix_speaker_delay"))
+		{
+			speaker->fixDelay();
+		}
+	}
 }
 
 #ifdef __LINUX__

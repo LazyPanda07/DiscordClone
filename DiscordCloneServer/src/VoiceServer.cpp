@@ -250,6 +250,11 @@ namespace server
 		}
 	}
 
+	bool VoiceServer::isRunning() const
+	{
+		return started;
+	}
+
 	uint16_t VoiceServer::getPort() const
 	{
 		return socket.getPort();
@@ -267,6 +272,11 @@ namespace server
 		}
 
 		return result;
+	}
+
+	NotificationsServer& VoiceServer::getNotificationServer()
+	{
+		return notificationServer;
 	}
 
 	VoiceServer::~VoiceServer()

@@ -158,5 +158,31 @@ namespace executors
 		}
 	}
 
+	void Room::doPatch(framework::HttpRequest& request, framework::HttpResponse& response)
+	{
+		const framework::JsonParser& data = request.getJson();
+		const std::unordered_map<std::string, std::string>& queryParameters = request.getQueryParameters();
+		RoomData roomData =
+		{
+			.name = queryParameters.at("roomName"),
+			.password = queryParameters.at("roomPassword")
+		};
+		uint64_t id = data.get<uint64_t>("id");
+
+		std::lock_guard<std::mutex> lock(roomsMutex);
+
+		if (auto it = rooms.find(roomData); it != rooms.end())
+		{
+			if (!it->second.isRunning())
+			{
+				return;
+			}
+
+			server::NotificationsServer& server = it->second.getNotificationServer();
+
+			server.pushNotification(id, "fix_speaker_delay");
+		}
+	}
+
 	DEFINE_EXECUTOR(Room)
 }

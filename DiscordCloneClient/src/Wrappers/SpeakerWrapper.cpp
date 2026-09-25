@@ -18,7 +18,11 @@ namespace wrappers
 
 	void SpeakerWrapper::fixDelay()
 	{
+		printf("Fix speaker delay...\n");
+
 		utils::callApiFunction(&fixSpeakerDelay, implementation);
+
+		printf("Finish fixing speaker delay\n");
 	}
 
 	void SpeakerWrapper::setVolume(double volume)

@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+#include <TCPSocket.hpp>
+
 namespace server
 {
 	NotificationsServer::Client::Client(uint64_t id, SOCKET socket, std::function<void()>&& cleanup) :
@@ -92,6 +94,13 @@ namespace server
 
 	void NotificationsServer::pushNotification(uint64_t id, std::string_view notification)
 	{
+		std::string fullPacketNotification(notification);
+
+		while (fullPacketNotification.size() != web::TCPSocket::notificationSize)
+		{
+			fullPacketNotification += '\0';
+		}
+
 		std::lock_guard<std::mutex> lock(notificationsMutex);
 
 		notifications.emplace_back(id, notification);

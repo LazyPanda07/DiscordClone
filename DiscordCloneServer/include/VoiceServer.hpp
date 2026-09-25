@@ -62,9 +62,13 @@ namespace server
 		
 		void removeClient(uint64_t id);
 
+		bool isRunning() const;
+
 		uint16_t getPort() const;
 
 		std::vector<std::string> getClients() const;
+
+		NotificationsServer& getNotificationServer();
 
 		~VoiceServer();
 	};

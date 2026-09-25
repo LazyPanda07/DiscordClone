@@ -39,5 +39,7 @@ namespace executors
 		void doPost(framework::HttpRequest& request, framework::HttpResponse& response) override;
 
 		void doDelete(framework::HttpRequest& request, framework::HttpResponse& response) override;
+
+		void doPatch(framework::HttpRequest& request, framework::HttpResponse& response) override;
 	};
 }
