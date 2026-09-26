@@ -19,6 +19,7 @@ static constexpr std::string_view roomNameKey = "roomName";
 static constexpr std::string_view roomPasswordKey = "roomPassword";
 static constexpr std::string_view microhponeVolumeKey = "microphoneVolume";
 static constexpr std::string_view speakerVolumeKey = "speakerVolume";
+static constexpr std::string_view showPreviewKey = "showPreview";
 
 namespace client
 {
@@ -114,6 +115,7 @@ namespace client
 		result[reconnectPortKey] = reconnectPort;
 		result[microhponeVolumeKey] = microphoneVolume;
 		result[speakerVolumeKey] = speakerVolume;
+		result[showPreview] = showPreview;
 		result[userNameKey] = userName;
 		result[roomNameKey] = roomName;
 		result[roomPasswordKey] = roomPassword;
@@ -132,6 +134,7 @@ namespace client
 		parser.tryGet<std::string>(roomPasswordKey, settings.roomPassword);
 		parser.tryGet<double>(microhponeVolumeKey, settings.microphoneVolume);
 		parser.tryGet<double>(speakerVolumeKey, settings.speakerVolume);
+		parser.tryGet<bool>(showPreviewKey, settings.showPreview);
 
 		return stream;
 	}

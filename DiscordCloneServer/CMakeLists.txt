@@ -7,6 +7,7 @@ add_executable(
 	src/main.cpp
 	src/VoiceServer.cpp
 	src/NotificationsServer.cpp
+	src/VideoStreamingServer.cpp
 	src/Executors/Ping.cpp
 	src/Executors/Room.cpp
 )

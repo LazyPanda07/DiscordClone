@@ -45,6 +45,15 @@ namespace web
 	class UDPSocket
 	{
 	public:
+		struct VideoStreamFrameChunk
+		{
+			uint16_t chunkIndex;
+			uint16_t chunksInFrame;
+			uint16_t dataSize;
+			char data[1024];
+		};
+
+	public:
 		using Buffer = std::array<char, 4096>;
 		using ReceiveCallback = std::function<void(const Buffer& data, socklen_t size, const sockaddr_in& address, const UDPSocket& socket)>;
 

@@ -30,6 +30,7 @@ typedef void* TcpSocketObject;
 typedef void* MicrophoneObject;
 typedef void* SpeakerObject;
 typedef void* DeviceInformationArray;
+typedef void* ScreenCapturer;
 
 CLIENT_LIBRARY_FUNCTION_API void initialize(Exception* exception);
 
@@ -70,6 +71,21 @@ CLIENT_LIBRARY_FUNCTION_API void overrideSpeakerDeviceId(SpeakerObject speaker, 
 CLIENT_LIBRARY_FUNCTION_API void restartSpeaker(SpeakerObject speaker, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void fixSpeakerDelay(SpeakerObject speaker, Exception* exception);
+
+/**
+ * @brief 
+ * @param width 
+ * @param height 
+ * @param qualityPreset 0-7 valid range. 0 for default
+ * @param showPreview 
+ * @param exception 
+ * @return 
+ */
+CLIENT_LIBRARY_FUNCTION_API ScreenCapturer startStream(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API void stopStream(ScreenCapturer capturer, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void setSpeakerVolume(SpeakerObject microphone, double volume, Exception* exception);
 

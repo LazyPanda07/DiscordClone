@@ -3,11 +3,14 @@
 #include <concepts>
 #include <stdexcept>
 #include <functional>
+#include <thread>
 
 #include <c_api.h>
 
 namespace utils
 {
+	void runStream(std::stop_token stop, uint32_t width, uint32_t height, bool showPreview, uint32_t frameRate, void* socket);
+
 	template<typename Callable, typename... Args>
 	auto callApiFunction(Callable&& callable, Args&&... args) requires (std::invocable<Callable, Args..., Exception*>);
 }

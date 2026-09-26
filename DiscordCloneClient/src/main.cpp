@@ -56,7 +56,7 @@ void printDeviceInfo(const std::unique_ptr<wrappers::MicrophoneWrapper>& microph
 
 void help(const std::vector<std::unique_ptr<commands::Command>>& commands);
 
-void notificationThread(std::stop_token stop, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket);
+void notificationThread(std::stop_token stop, const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket);
 
 #ifdef __LINUX__
 
@@ -105,7 +105,8 @@ int main(int argc, char** argv) try
 	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>> socket;
 	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>> videoStreamSocket;
 	std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>> notificationSocket; // TODO: separate thread for receiving notifications
-	std::jthread notificationThreadHandler(&notificationThread, std::ref(notificationSocket));
+	std::jthread notificationThreadHandler(&notificationThread, std::cref(notificationSocket));
+	std::jthread streamThread;
 	functionality::Hotkeys hotkeys;
 	std::vector<std::unique_ptr<checks::Check>> checks = [&socket]()
 		{
@@ -118,7 +119,7 @@ int main(int argc, char** argv) try
 
 			return result;
 		}();
-	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &videoStreamSocket, &notificationSocket, &checks]()
+	std::vector<std::unique_ptr<commands::Command>> commands = [&socket, &videoStreamSocket, &notificationSocket, &streamThread, &checks]()
 		{
 			std::vector<std::unique_ptr<commands::Command>> result;
 
@@ -155,7 +156,7 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::GetUsers>(controlStream, settings, checks));
 			result.emplace_back(std::make_unique<commands::GetVersion>(checks));
 			result.emplace_back(std::make_unique<commands::FixSpeakerDelay>(speaker, checks));
-			result.emplace_back(std::make_unique<commands::StartStream>(controlStream, videoStreamSocket, settings, id, checks));
+			result.emplace_back(std::make_unique<commands::StartStream>(controlStream, videoStreamSocket, settings, streamThread, id, checks));
 
 			return result;
 		}();
@@ -365,7 +366,7 @@ void help(const std::vector<std::unique_ptr<commands::Command>>& commands)
 	std::cout << "help: " << std::endl;
 }
 
-void notificationThread(std::stop_token stop, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket)
+void notificationThread(std::stop_token stop, const std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::tcp>>& notificationSocket)
 {
 	using namespace std::chrono_literals;
 

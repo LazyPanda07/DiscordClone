@@ -10,6 +10,7 @@
 #include <UDPServerSocket.hpp>
 
 #include "NotificationsServer.hpp"
+#include "VideoStreamingServer.hpp"
 
 namespace server
 {
@@ -41,6 +42,7 @@ namespace server
 
 	private:
 		NotificationsServer notificationServer;
+		VideoStreamingServer videoStreamingServer;
 		std::vector<Client> clients;
 		web::UDPServerSocket socket;
 		std::unordered_map<uint64_t, std::pair<std::string, sockaddr_in>> pendingClients;

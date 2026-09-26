@@ -7,6 +7,16 @@
 #include <TCPClientSocket.hpp>
 #include <PatternParser.h>
 #include <opencv2/core/utils/logger.hpp>
+#include <dxcam/dxcam.h>
+
+#include <cuda.h>
+
+#ifdef __LINUX__
+
+#else
+#include <NvCodec/NvDecoder/NvDecoder.h>
+#include <NvCodec/NvEncoder/NvEncoderCuda.h>
+#endif
 
 #ifdef __LINUX__
 #include <dlfcn.h>
@@ -34,6 +44,30 @@ struct utility::parsers::Converter<int32_t>
 	{
 		result = std::stoi(data.data());
 	}
+};
+
+class ScreenCapturerData
+{
+private:
+	std::string windowName;
+
+#ifdef __LINUX__
+
+#else
+	CUcontext context;
+	std::unique_ptr<NvEncoderCuda> encoder;
+	std::unique_ptr<NvDecoder> decoder;
+#endif
+
+public:
+	std::shared_ptr<DXCam::DXCamera> capturer;
+
+public:
+	ScreenCapturerData(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview);
+
+	cv::Mat processFrame(cv::Mat& frame);
+
+	~ScreenCapturerData();
 };
 
 using GetResourceSignature = const uint8_t* (*)(uint64_t*);
@@ -299,6 +333,52 @@ void fixSpeakerDelay(SpeakerObject speaker, Exception* exception)
 	try
 	{
 		static_cast<voice::Speaker*>(speaker)->fixSpeakerDelay();
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+ScreenCapturer startStream(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview, Exception* exception)
+{
+	try
+	{
+		return new ScreenCapturerData(width, height, qualityPreset, showPreview);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* exception)
+{
+	try
+	{
+		ScreenCapturerData& data = *static_cast<ScreenCapturerData*>(capturer);
+		cv::Mat frame; 
+		
+		while (frame.empty())
+		{
+			frame = data.capturer->grab();
+		}
+
+		cv::Mat result = data.processFrame(frame);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void stopStream(ScreenCapturer capturer, Exception* exception)
+{
+	try
+	{
+		delete static_cast<ScreenCapturerData*>(capturer);
 	}
 	catch (const std::exception& e)
 	{
@@ -619,4 +699,145 @@ void loadResourceLibrary()
 
 	resourceLibrary = LoadLibraryA(currentPath.string().data());
 #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview) :
+	capturer(DXCam::create())
+{
+#ifdef __LINUX__
+
+#else
+	context = nullptr;
+
+	ck(cuInit(0));
+
+	CUdevice device = 0;
+	int gpu = 0;
+
+	ck(cuDeviceGet(&device, gpu));
+
+	ck(NVCODEC_CUDA_CTX_CREATE(&context, 0, device));
+
+	encoder = std::make_unique<NvEncoderCuda>(context, width, height, NV_ENC_BUFFER_FORMAT::NV_ENC_BUFFER_FORMAT_IYUV);
+	decoder = std::make_unique<NvDecoder>(context, false, cudaVideoCodec_HEVC, true);
+
+	NV_ENC_INITIALIZE_PARAMS initializeParams = { NV_ENC_INITIALIZE_PARAMS_VER };
+	NV_ENC_CONFIG encodeConfig = { NV_ENC_CONFIG_VER };
+
+	initializeParams.encodeConfig = &encodeConfig;
+
+	const GUID* preset = nullptr;
+
+	switch (qualityPreset)
+	{
+	case 0:
+		preset = &NV_ENC_PRESET_P3_GUID;
+
+		break;
+
+	case 1:
+		preset = &NV_ENC_PRESET_P1_GUID;
+		break;
+
+	case 2:
+		preset = &NV_ENC_PRESET_P2_GUID;
+		break;
+
+	case 3:
+		preset = &NV_ENC_PRESET_P3_GUID;
+		break;
+
+	case 4:
+		preset = &NV_ENC_PRESET_P4_GUID;
+		break;
+
+	case 5:
+		preset = &NV_ENC_PRESET_P5_GUID;
+		break;
+
+	case 6:
+		preset = &NV_ENC_PRESET_P6_GUID;
+		break;
+
+	case 7:
+		preset = &NV_ENC_PRESET_P7_GUID;
+		break;
+
+	default:
+		preset = &NV_ENC_PRESET_P3_GUID;
+
+		break;
+	}
+
+	encoder->CreateDefaultEncoderParams(&initializeParams, NV_ENC_CODEC_HEVC_GUID, *preset, NV_ENC_TUNING_INFO::NV_ENC_TUNING_INFO_LOW_LATENCY);
+	encoder->CreateEncoder(&initializeParams);
+#endif
+
+	if (showPreview)
+	{
+		windowName = "Stream";
+
+		cv::namedWindow(windowName, cv::WINDOW_NORMAL || cv::WINDOW_OPENGL);
+	}
+}
+
+cv::Mat ScreenCapturerData::processFrame(cv::Mat& frame)
+{
+	int32_t width = encoder->GetEncodeWidth();
+	int32_t height = encoder->GetEncodeHeight();
+	uint8_t* frameData = nullptr;
+	std::vector<NvEncOutputFrame> frames;
+	cv::Mat result;
+
+	cv::resize(frame, frame, cv::Size(width, height));
+
+	cv::cvtColor(frame, frame, cv::COLOR_BGR2YUV_IYUV);
+
+	const NvEncInputFrame* encoderInputFrame = encoder->GetNextInputFrame();
+	NvEncoderCuda::CopyToDeviceFrame
+	(
+		context, frame.data, 0, (CUdeviceptr)encoderInputFrame->inputPtr,
+		static_cast<int>(encoderInputFrame->pitch),
+		width,
+		height,
+		CU_MEMORYTYPE_HOST,
+		encoderInputFrame->bufferFormat,
+		encoderInputFrame->chromaOffsets,
+		encoderInputFrame->numChromaPlanes
+	);
+
+	while (frames.empty())
+	{
+		encoder->EncodeFrame(frames);
+	}
+
+	NvEncOutputFrame& lastFrame = frames.back();
+
+	decoder->Decode(lastFrame.frame.data(), lastFrame.frame.size(), CUvideopacketflags::CUVID_PKT_ENDOFPICTURE);
+
+	while (!frameData)
+	{
+		frameData = decoder->GetFrame();
+	}
+
+	cv::Mat decoded(height * 3 / 2, width, CV_8UC1, frameData);
+	
+	cv::cvtColor(decoded, result, cv::COLOR_YUV2BGR_NV12);
+
+	if (windowName.size())
+	{
+		cv::imshow(windowName, result);
+	}
+
+	return result;
+}
+
+ScreenCapturerData::~ScreenCapturerData()
+{
+	if (windowName.size())
+	{
+		cv::destroyWindow(windowName);
+	}
 }

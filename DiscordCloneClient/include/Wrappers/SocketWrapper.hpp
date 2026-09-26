@@ -45,6 +45,8 @@ namespace wrappers
 
 		std::string receiveData(int32_t flags = 0);
 
+		GetSocketType<T>::type operator *() const;
+
 		~SocketWrapper();
 
 		friend class MicrophoneWrapper;
@@ -100,6 +102,12 @@ namespace wrappers
 		}
 
 		return result;
+	}
+
+	template<SocketType T>
+	GetSocketType<T>::type SocketWrapper<T>::operator *() const
+	{
+		return implementation;
 	}
 
 	template<SocketType T>

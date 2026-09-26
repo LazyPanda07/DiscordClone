@@ -29,6 +29,7 @@ namespace client
 		std::string roomPassword;
 		double microphoneVolume;
 		double speakerVolume;
+		bool showPreview;
 
 	private:
 		void saveSettings() const;
