@@ -7,13 +7,14 @@
 #include <TCPClientSocket.hpp>
 #include <PatternParser.h>
 #include <opencv2/core/utils/logger.hpp>
-#include <dxcam/dxcam.h>
-
-#include <cuda.h>
 
 #ifdef __LINUX__
 
 #else
+#include <cuda.h>
+
+#include <dxcam/dxcam.h>
+
 #include <NvCodec/NvDecoder/NvDecoder.h>
 #include <NvCodec/NvEncoder/NvEncoderCuda.h>
 #endif
