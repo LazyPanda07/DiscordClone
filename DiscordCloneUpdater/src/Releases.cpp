@@ -16,7 +16,7 @@ constexpr std::string_view repository = "DiscordClone";
 constexpr std::string_view userAgent = "DiscordCloneUpdater";
 constexpr std::string_view defaultHost = "api.github.com";
 constexpr std::string_view githubHost = "github.com";
-constexpr std::string_view releasesToken = "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";
+constexpr std::string_view releasesToken = "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";
 
 template<>
 struct utility::parsers::Converter<int32_t>
