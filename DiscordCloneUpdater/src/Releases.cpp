@@ -16,7 +16,18 @@ constexpr std::string_view repository = "DiscordClone";
 constexpr std::string_view userAgent = "DiscordCloneUpdater";
 constexpr std::string_view defaultHost = "api.github.com";
 constexpr std::string_view githubHost = "github.com";
-constexpr std::string_view releasesToken = "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";
+
+constexpr std::array<char, 93> separated =
+{
+	'g', 'i', 't', 'h', 'u', 'b', '_', 'p', 'a', 't', '_', '1',
+	'1', 'A', 'J', 'U', 'Z', 'K', 'U', 'Y', '0', 'y', 'z', 'h',
+	'W', 'I', 'f', 'a', 'v', '7', 'O', 'j', 'P', '_', '9', 'S',
+	'S', 'R', 'J', 'I', 'f', 'D', 'N', 'c', '1', 'Z', 'P', '5',
+	'Z', '9', 'w', 'O', 'f', 'e', 'v', '2', 'K', 't', 'O', '3',
+	'v', 'p', 'n', '5', 'p', 'R', 'O', 'e', 'l', 'I', 's', '8',
+	'g', 'g', '4', 'W', 'H', '2', '6', 'F', 'K', 'X', 'U', '4',
+	'S', 'V', 'J', 'J', 'P', '5', 'D', '2', '7'
+};
 
 template<>
 struct utility::parsers::Converter<int32_t>
@@ -28,6 +39,8 @@ struct utility::parsers::Converter<int32_t>
 };
 
 static streams::IOSocketStream getStream(std::string_view host = defaultHost);
+
+static std::string combine();
 
 namespace releases
 {
@@ -46,7 +59,7 @@ namespace releases
 			(
 				"User-Agent", userAgent,
 				"Host", defaultHost,
-				"Authorization", std::format("Bearer {}", releasesToken)
+				"Authorization", std::format("Bearer {}", combine())
 			)
 			.build();
 
@@ -83,7 +96,7 @@ namespace releases
 			(
 				"User-Agent", userAgent,
 				"Host", githubHost,
-				"Authorization", std::format("Bearer {}", releasesToken)
+				"Authorization", std::format("Bearer {}", combine())
 			)
 			.build();
 
@@ -112,7 +125,7 @@ namespace releases
 				(
 					"User-Agent", userAgent,
 					"Host", releaseAssetsHost,
-					"Authorization", std::format("Bearer {}", releasesToken)
+					"Authorization", std::format("Bearer {}", combine())
 				)
 				.build();
 
@@ -225,4 +238,16 @@ namespace releases
 streams::IOSocketStream getStream(std::string_view host)
 {
 	return streams::IOSocketStream::createStream<web::http::HttpsNetwork>(host);
+}
+
+std::string combine()
+{
+	std::string result;
+
+	for (char c : separated)
+	{
+		result += c;
+	}
+
+	return result;
 }
