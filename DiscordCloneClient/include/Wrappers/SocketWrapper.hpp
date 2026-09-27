@@ -48,9 +48,6 @@ namespace wrappers
 		GetSocketType<T>::type operator *() const;
 
 		~SocketWrapper();
-
-		friend class MicrophoneWrapper;
-		friend class SpeakerWrapper;
 	};
 }
 

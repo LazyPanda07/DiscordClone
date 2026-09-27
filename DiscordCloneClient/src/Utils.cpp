@@ -11,7 +11,7 @@ namespace utils
 		using namespace std::chrono_literals;
 
 		std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& udpSocket = *reinterpret_cast<std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>*>(socket);
-		ScreenCapturer capturer = callApiFunction(&::startStream, width, height, 0, true);
+		ScreenCapturer capturer = callApiFunction(&::startStream, width, height, 0, showPreview);
 		std::chrono::milliseconds desiredFrameTime(1s);
 
 		desiredFrameTime /= frameRate;

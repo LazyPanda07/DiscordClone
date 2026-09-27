@@ -7,6 +7,7 @@
 #include <TCPClientSocket.hpp>
 #include <PatternParser.h>
 #include <opencv2/core/utils/logger.hpp>
+#include <opencv2/highgui.hpp>
 
 #ifdef __LINUX__
 
@@ -65,6 +66,8 @@ public:
 
 public:
 	ScreenCapturerData(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview);
+
+	cv::Mat capture() const;
 
 	cv::Mat processFrame(cv::Mat& frame);
 
@@ -364,7 +367,7 @@ void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* ex
 		
 		while (frame.empty())
 		{
-			frame = data.capturer->grab();
+			frame = data.capture();
 		}
 
 		cv::Mat result = data.processFrame(frame);
@@ -704,12 +707,12 @@ void loadResourceLibrary()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview) :
-	capturer(DXCam::create())
+ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview)
 {
 #ifdef __LINUX__
 
 #else
+	capturer = DXCam::create();
 	context = nullptr;
 
 	ck(cuInit(0));
@@ -782,6 +785,15 @@ ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t 
 
 		cv::namedWindow(windowName, cv::WINDOW_NORMAL || cv::WINDOW_OPENGL);
 	}
+}
+
+cv::Mat ScreenCapturerData::capture() const
+{
+#ifdef __LINUX__
+	return {};
+#else
+	return capturer->grab();
+#endif
 }
 
 cv::Mat ScreenCapturerData::processFrame(cv::Mat& frame)

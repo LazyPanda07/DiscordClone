@@ -5,34 +5,34 @@
 namespace wrappers
 {
 	SpeakerWrapper::SpeakerWrapper(SocketWrapper<SocketType::udp>& socket) :
-		implementation(utils::callApiFunction(&createSpeaker, socket.implementation))
+		implementation(utils::callApiFunction(&::createSpeaker, *socket))
 	{
 
 	}
 
 	void SpeakerWrapper::overrideDeviceId(uint32_t id)
 	{
-		utils::callApiFunction(&overrideSpeakerDeviceId, implementation, id);
-		utils::callApiFunction(&restartSpeaker, implementation);
+		utils::callApiFunction(&::overrideSpeakerDeviceId, implementation, id);
+		utils::callApiFunction(&::restartSpeaker, implementation);
 	}
 
 	void SpeakerWrapper::fixDelay()
 	{
 		printf("Fix speaker delay...\n");
 
-		utils::callApiFunction(&fixSpeakerDelay, implementation);
+		utils::callApiFunction(&::fixSpeakerDelay, implementation);
 
 		printf("Finish fixing speaker delay\n");
 	}
 
 	void SpeakerWrapper::setVolume(double volume)
 	{
-		utils::callApiFunction(&setSpeakerVolume, implementation, volume);
+		utils::callApiFunction(&::setSpeakerVolume, implementation, volume);
 	}
 
 	double SpeakerWrapper::getVolume() const
 	{
-		return utils::callApiFunction(&getSpeakerVolume, implementation);
+		return utils::callApiFunction(&::getSpeakerVolume, implementation);
 	}
 
 	SpeakerWrapper::~SpeakerWrapper()

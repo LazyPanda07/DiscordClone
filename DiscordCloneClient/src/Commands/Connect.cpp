@@ -80,7 +80,12 @@ namespace commands
 			}
 
 			socket = std::make_unique<wrappers::SocketWrapper<wrappers::SocketType::udp>>(ip, udpPort);
+
+			std::cout << std::format("Connect to voice server {}:{} with UDP", ip, udpPort) << std::endl;
+
 			notificationSocket = std::make_unique<wrappers::SocketWrapper<wrappers::SocketType::tcp>>(ip, notificationPort);
+
+			std::cout << std::format("Connect to notification server {}:{} with TCP", ip, notificationPort) << std::endl;
 		}
 		catch (const std::exception&)
 		{

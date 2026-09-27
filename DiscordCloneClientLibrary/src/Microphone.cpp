@@ -40,8 +40,17 @@ namespace voice
 		{
 			throw std::runtime_error(std::format("Fail encoding: {}", opus_strerror(bytes)));
 		}
+		
+		try
+		{
+			microphone.socket.sendData(std::span<uint8_t>(microphone.outputData.data(), bytes));
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
 
-		microphone.socket.sendData(std::span<uint8_t>(microphone.outputData.data(), bytes));
+			exit(1);
+		}
 
 		return 0;
 	}

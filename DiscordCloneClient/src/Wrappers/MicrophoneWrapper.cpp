@@ -5,15 +5,15 @@
 namespace wrappers
 {
 	MicrophoneWrapper::MicrophoneWrapper(SocketWrapper<SocketType::udp>& socket) :
-		implementation(utils::callApiFunction(&createMicrophone, socket.implementation))
+		implementation(utils::callApiFunction(&::createMicrophone, *socket))
 	{
 		
 	}
 
 	void MicrophoneWrapper::overrideDeviceId(uint32_t id)
 	{
-		utils::callApiFunction(&overrideMicrophoneDeviceId, implementation, id);
-		utils::callApiFunction(&restartMicrophone, implementation);
+		utils::callApiFunction(&::overrideMicrophoneDeviceId, implementation, id);
+		utils::callApiFunction(&::restartMicrophone, implementation);
 	}
 
 	void MicrophoneWrapper::muteOrUnmute()
@@ -33,12 +33,12 @@ namespace wrappers
 
 	void MicrophoneWrapper::setVolume(double volume)
 	{
-		utils::callApiFunction(&setMicrophoneVolume, implementation, volume);
+		utils::callApiFunction(&::setMicrophoneVolume, implementation, volume);
 	}
 
 	double MicrophoneWrapper::getVolume() const
 	{
-		return utils::callApiFunction(&getMicrophoneVolume, implementation);
+		return utils::callApiFunction(&::getMicrophoneVolume, implementation);
 	}
 
 	MicrophoneWrapper::~MicrophoneWrapper()

@@ -86,7 +86,7 @@ namespace client
 	}
 
 	Settings::Settings() :
-		reconnectPort(8080),
+		reconnectPort(5555),
 		microphoneVolume(1.0),
 		speakerVolume(1.0)
 	{
@@ -115,7 +115,7 @@ namespace client
 		result[reconnectPortKey] = reconnectPort;
 		result[microhponeVolumeKey] = microphoneVolume;
 		result[speakerVolumeKey] = speakerVolume;
-		result[showPreview] = showPreview;
+		result[showPreviewKey] = showPreview;
 		result[userNameKey] = userName;
 		result[roomNameKey] = roomName;
 		result[roomPasswordKey] = roomPassword;

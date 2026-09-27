@@ -42,31 +42,29 @@ namespace server
 		}
 	}
 
-	void NotificationsServer::worker()
+	void NotificationsServer::worker(std::stop_token stop)
 	{
 		using namespace std::chrono_literals;
 
-		while (true)
+		while (!stop.stop_requested())
 		{
 			{
 				std::lock_guard<std::mutex> notificationsLock(notificationsMutex);
 
-				if (notifications.empty())
+				if (notifications.size())
 				{
-					return;
-				}
+					std::lock_guard<std::mutex> clientsLock(clientsMutex);
 
-				std::lock_guard<std::mutex> clientsLock(clientsMutex);
-
-				for (auto&& [id, notification] : notifications)
-				{
-					if (auto it = std::ranges::find(clients, id, &Client::id); it != clients.end())
+					for (auto&& [id, notification] : notifications)
 					{
-						BaseTCPServer::sendBytes((**it), notification.data(), notification.size());
+						if (auto it = std::ranges::find(clients, id, &Client::id); it != clients.end())
+						{
+							BaseTCPServer::sendBytes((**it), notification.data(), notification.size());
+						}
 					}
-				}
 
-				notifications.clear();
+					notifications.clear();
+				}
 			}
 
 			std::this_thread::sleep_for(1s);
@@ -89,7 +87,7 @@ namespace server
 	NotificationsServer::NotificationsServer(std::string_view ip) :
 		BaseTCPServer("0", ip, 0, false)
 	{
-		handler = std::async(std::launch::async, &NotificationsServer::worker, this);
+		handler = std::jthread(std::bind(&NotificationsServer::worker, this, std::placeholders::_1));
 	}
 
 	void NotificationsServer::pushNotification(uint64_t id, std::string_view notification)

@@ -190,7 +190,7 @@ namespace server
 		clients.reserve(predictedNumberOfClients);
 	}
 
-	void VoiceServer::start(const std::function<void(uint16_t notificationServerPort)>& notificationServerPortSetter)
+	void VoiceServer::start(const std::function<void(uint16_t)>& notificationServerPortSetter)
 	{
 		if (started)
 		{
@@ -199,7 +199,14 @@ namespace server
 			return;
 		}
 
-		notificationServer.start(false, [this, &notificationServerPortSetter]() { notificationServerPortSetter(notificationServer.getServerPortV4()); });
+		notificationServer.start
+		(
+			false, 
+			[this, notificationServerPortSetter]()
+			{
+				notificationServerPortSetter(notificationServer.getServerPortV4());
+			}
+		);
 
 		startHandle = std::async
 		(

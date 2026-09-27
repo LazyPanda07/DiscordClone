@@ -18,7 +18,7 @@ namespace web
 
 	std::string UDPSocket::constructJoinPacket(std::string_view userName)
 	{
-		std::string result(UDPSocket::helloPacketSize, '\0');
+		std::string result(UDPSocket::joinPacketSize, '\0');
 
 		auto it = std::copy(UDPSocket::join.begin(), UDPSocket::join.end(), result.begin());
 

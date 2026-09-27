@@ -185,7 +185,7 @@ int main(int argc, char** argv) try
 					[](client::Settings& self)
 					{
 						self.reconnectIp = "";
-						self.reconnectPort = 8080;
+						self.reconnectPort = 5555;
 						self.roomName = "";
 						self.roomPassword = "";
 					}
@@ -379,7 +379,7 @@ void notificationThread(std::stop_token stop, const std::unique_ptr<wrappers::So
 			continue;
 		}
 
-		std::string notification = notificationSocket->receiveData();
+		std::string notification = notificationSocket->receiveData(); // TODO: add timeout for prevent freezing if exception throwed somewhere
 
 		if (notification.contains("fix_speaker_delay"))
 		{

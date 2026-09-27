@@ -58,7 +58,7 @@ namespace server
 	public:
 		VoiceServer(std::string_view notificationServerIp);
 
-		void start(const std::function<void(uint16_t notificationServerPort)>& notificationServerPortSetter);
+		void start(const std::function<void(uint16_t)>& notificationServerPortSetter);
 
 		void addPendingClient(uint64_t id, std::string&& userName);
 		

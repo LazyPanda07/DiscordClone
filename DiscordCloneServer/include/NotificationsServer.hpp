@@ -42,10 +42,10 @@ namespace server
 		std::vector<std::pair<uint64_t, std::string>> notifications;
 		std::mutex clientsMutex;
 		std::mutex notificationsMutex;
-		std::future<void> handler;
+		std::jthread handler;
 
 	private:
-		void worker();
+		void worker(std::stop_token stop);
 
 	private:
 		void clientConnection(const std::string& ip, SOCKET clientSocket, sockaddr address, std::function<void()>& cleanup) override;
