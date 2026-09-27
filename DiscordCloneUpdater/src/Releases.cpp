@@ -40,7 +40,7 @@ struct utility::parsers::Converter<int32_t>
 
 static streams::IOSocketStream getStream(std::string_view host = defaultHost);
 
-static std::string combine();
+static constexpr std::string_view combine();
 
 namespace releases
 {
@@ -240,14 +240,9 @@ streams::IOSocketStream getStream(std::string_view host)
 	return streams::IOSocketStream::createStream<web::http::HttpsNetwork>(host);
 }
 
-std::string combine()
+constexpr std::string_view combine()
 {
-	std::string result;
-
-	for (char c : separated)
-	{
-		result += c;
-	}
+	constexpr std::string_view result(separated.data(), separated.size());
 
 	return result;
 }

@@ -56,13 +56,11 @@ private:
 #ifdef __LINUX__
 
 #else
+	std::shared_ptr<DXCam::DXCamera> capturer;
 	CUcontext context;
 	std::unique_ptr<NvEncoderCuda> encoder;
 	std::unique_ptr<NvDecoder> decoder;
 #endif
-
-public:
-	std::shared_ptr<DXCam::DXCamera> capturer;
 
 public:
 	ScreenCapturerData(uint32_t width, uint32_t height, int32_t qualityPreset, bool showPreview);
@@ -363,8 +361,8 @@ void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* ex
 	try
 	{
 		ScreenCapturerData& data = *static_cast<ScreenCapturerData*>(capturer);
-		cv::Mat frame; 
-		
+		cv::Mat frame;
+
 		while (frame.empty())
 		{
 			frame = data.capture();
@@ -798,13 +796,24 @@ cv::Mat ScreenCapturerData::capture() const
 
 cv::Mat ScreenCapturerData::processFrame(cv::Mat& frame)
 {
-	int32_t width = encoder->GetEncodeWidth();
-	int32_t height = encoder->GetEncodeHeight();
-	uint8_t* frameData = nullptr;
-	std::vector<NvEncOutputFrame> frames;
 	cv::Mat result;
+	int32_t width = -1;
+	int32_t height = -1;
+
+#ifdef __LINUX__
+
+#else
+	width = encoder->GetEncodeWidth();
+	height = encoder->GetEncodeHeight();
+#endif
 
 	cv::resize(frame, frame, cv::Size(width, height));
+
+#ifdef __LINUX__
+
+#else
+	uint8_t* frameData = nullptr;
+	std::vector<NvEncOutputFrame> frames;
 
 	cv::cvtColor(frame, frame, cv::COLOR_BGR2YUV_IYUV);
 
@@ -836,8 +845,9 @@ cv::Mat ScreenCapturerData::processFrame(cv::Mat& frame)
 	}
 
 	cv::Mat decoded(height * 3 / 2, width, CV_8UC1, frameData);
-	
+
 	cv::cvtColor(decoded, result, cv::COLOR_YUV2BGR_NV12);
+#endif
 
 	if (windowName.size())
 	{
