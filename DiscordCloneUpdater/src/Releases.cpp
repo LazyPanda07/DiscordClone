@@ -7,7 +7,6 @@
 #include <HttpBuilder.h>
 #include <HttpParser.h>
 #include <PatternParser.h>
-#include <Base64.h>
 #include <miniz.h>
 #include <UUID.h>
 
@@ -17,7 +16,7 @@ constexpr std::string_view repository = "DiscordClone";
 constexpr std::string_view userAgent = "DiscordCloneUpdater";
 constexpr std::string_view defaultHost = "api.github.com";
 constexpr std::string_view githubHost = "github.com";
-constexpr std::string_view base64ReleasesToken = "Z2l0aHViX3BhdF8xMUFKVVpLVVkwMEtKWTNQWmxXRmdKX09mRllIMmJrMnJNZXlPREQ5QmQ4bTBiZWpLVm81bjNGcUJmWFRQaER4T0tKSUJBTkU0QjJmeU55eWZV";
+constexpr std::string_view releasesToken = "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";
 
 template<>
 struct utility::parsers::Converter<int32_t>
@@ -47,7 +46,7 @@ namespace releases
 			(
 				"User-Agent", userAgent,
 				"Host", defaultHost,
-				"Authorization", std::format("Bearer {}", utility::conversion::decodeBase64(base64ReleasesToken))
+				"Authorization", std::format("Bearer {}", releasesToken)
 			)
 			.build();
 
@@ -84,7 +83,7 @@ namespace releases
 			(
 				"User-Agent", userAgent,
 				"Host", githubHost,
-				"Authorization", std::format("Bearer {}", utility::conversion::decodeBase64(base64ReleasesToken))
+				"Authorization", std::format("Bearer {}", releasesToken)
 			)
 			.build();
 
@@ -113,7 +112,7 @@ namespace releases
 				(
 					"User-Agent", userAgent,
 					"Host", releaseAssetsHost,
-					"Authorization", std::format("Bearer {}", utility::conversion::decodeBase64(base64ReleasesToken))
+					"Authorization", std::format("Bearer {}", releasesToken)
 				)
 				.build();
 
