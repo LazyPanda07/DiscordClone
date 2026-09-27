@@ -8,6 +8,7 @@
 #include <PatternParser.h>
 #include <opencv2/core/utils/logger.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 #ifdef __LINUX__
 

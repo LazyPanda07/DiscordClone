@@ -131,6 +131,7 @@ jobs:
       run: |
         sudo apt update 
         sudo apt install -y libasound2-dev
+        python3 -m pip install numpy
 
     - name: Build
       run: |
@@ -192,6 +193,7 @@ jobs:
       run: |
         sudo apt update 
         sudo apt install -y libasound2-dev
+        python3 -m pip install numpy
 
     - name: Build
       run: |
