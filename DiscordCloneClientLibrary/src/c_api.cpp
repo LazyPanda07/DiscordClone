@@ -782,7 +782,7 @@ ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t 
 	{
 		windowName = "Stream";
 
-		cv::namedWindow(windowName, cv::WINDOW_NORMAL || cv::WINDOW_OPENGL);
+		cv::namedWindow(windowName, cv::WINDOW_NORMAL);
 	}
 }
 
@@ -853,6 +853,8 @@ cv::Mat ScreenCapturerData::processFrame(cv::Mat& frame)
 	if (windowName.size())
 	{
 		cv::imshow(windowName, result);
+
+		cv::waitKey(1);
 	}
 
 	return result;

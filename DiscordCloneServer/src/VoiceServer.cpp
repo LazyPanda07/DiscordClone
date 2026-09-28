@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace server
+namespace servers
 {
 	std::tuple<std::string, uint16_t> VoiceServer::Client::getIpPort(const sockaddr_in& address)
 	{
@@ -194,7 +194,10 @@ namespace server
 	{
 		if (started)
 		{
-			notificationServerPortSetter(notificationServer.getServerPortV4());
+			if (notificationServerPortSetter)
+			{
+				notificationServerPortSetter(notificationServer.getServerPortV4());
+			}
 
 			return;
 		}
@@ -204,7 +207,10 @@ namespace server
 			false, 
 			[this, notificationServerPortSetter]()
 			{
-				notificationServerPortSetter(notificationServer.getServerPortV4());
+				if (notificationServerPortSetter)
+				{
+					notificationServerPortSetter(notificationServer.getServerPortV4());
+				}
 			}
 		);
 
@@ -284,6 +290,11 @@ namespace server
 	NotificationsServer& VoiceServer::getNotificationServer()
 	{
 		return notificationServer;
+	}
+
+	VideoStreamingServer& VoiceServer::getVideoStreamingServer()
+	{
+		return videoStreamingServer;
 	}
 
 	VoiceServer::~VoiceServer()

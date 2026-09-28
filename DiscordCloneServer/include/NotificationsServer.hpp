@@ -8,7 +8,7 @@
 #include <mutex>
 #include <thread>
 
-namespace server
+namespace servers
 {
 	class NotificationsServer : public web::BaseTCPServer
 	{

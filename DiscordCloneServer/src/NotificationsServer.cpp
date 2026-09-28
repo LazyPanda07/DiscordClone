@@ -4,7 +4,7 @@
 
 #include <TCPSocket.hpp>
 
-namespace server
+namespace servers
 {
 	NotificationsServer::Client::Client(uint64_t id, SOCKET socket, std::function<void()>&& cleanup) :
 		id(id),
@@ -57,9 +57,12 @@ namespace server
 
 					for (auto&& [id, notification] : notifications)
 					{
-						if (auto it = std::ranges::find(clients, id, &Client::id); it != clients.end())
+						for (const Client& client : clients)
 						{
-							BaseTCPServer::sendBytes((**it), notification.data(), notification.size());
+							if (client.id != id)
+							{
+								BaseTCPServer::sendBytes(*client, notification.data(), notification.size());
+							}
 						}
 					}
 

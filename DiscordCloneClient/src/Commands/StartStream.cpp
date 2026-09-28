@@ -4,6 +4,7 @@
 #include <JsonBuilder.h>
 #include <HttpBuilder.h>
 #include <HttpParser.h>
+#include <UDPSocket.hpp>
 
 constexpr std::string_view commandName = "start_stream";
 
@@ -29,8 +30,12 @@ static std::string getServerIp(SOCKET socket);
 
 namespace commands
 {
-	void StartStream::startStream(std::string_view userName, std::string_view roomName, std::string_view roomPassword, uint64_t id, uint32_t width, uint32_t height, bool showPreview, uint32_t frameRate)
+	bool StartStream::startStream(std::string_view userName, std::string_view roomName, std::string_view roomPassword, uint64_t id, uint32_t width, uint32_t height, bool showPreview, uint32_t frameRate)
 	{
+		using namespace std::chrono_literals;
+
+		constexpr size_t retries = 5;
+
 		std::string request;
 		std::string response;
 		json::JsonBuilder data;
@@ -62,7 +67,50 @@ namespace commands
 
 			videoStreamSocket = std::make_unique<wrappers::SocketWrapper<wrappers::SocketType::udp>>(ip, jsonData.get<uint16_t>("port"));
 
-			streamThread = std::jthread(&utils::runStream, width, height, showPreview, frameRate, &videoStreamSocket);
+			videoStreamSocket->sendData(web::UDPSocket::constructHelloPacket(id));
+
+			std::this_thread::sleep_for(50ms);
+
+			for (size_t i = 0; i < retries; i++)
+			{
+				if (this->receiveHello(id))
+				{
+					streamThread = std::jthread(&utils::runStream, width, height, showPreview, frameRate, &videoStreamSocket);
+
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	bool StartStream::receiveHello(uint64_t id)
+	{
+		try
+		{
+			std::string data = videoStreamSocket->receiveData();
+
+			if (data.size() != web::UDPSocket::helloPacketSize)
+			{
+				return false;
+			}
+
+			uint64_t idFromServer = 0;
+			char* ptr = reinterpret_cast<char*>(&idFromServer);
+
+			for (size_t i = 0; i < sizeof(idFromServer); i++)
+			{
+				*ptr = data[web::UDPSocket::helloMessageSize + i];
+
+				ptr++;
+			}
+
+			return id == idFromServer;
+		}
+		catch (const std::exception&)
+		{
+			return false;
 		}
 	}
 
@@ -85,9 +133,7 @@ namespace commands
 
 		parser.parse(line, width, height, frameRate, showPreview);
 
-		this->startStream(settings.userName, settings.roomName, settings.roomPassword, id, width, height, showPreview == "y" || showPreview == "yes", frameRate);
-
-		return true;
+		return this->startStream(settings.userName, settings.roomName, settings.roomPassword, id, width, height, showPreview == "y" || showPreview == "yes", frameRate);
 	}
 
 	uint32_t StartStream::getChecks() const

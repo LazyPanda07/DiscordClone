@@ -5,7 +5,7 @@
 #include <UDPServerSocket.hpp>
 #include <UDPClientSocket.hpp>
 
-namespace server
+namespace servers
 {
 	class VideoStreamingServer
 	{
@@ -39,6 +39,10 @@ namespace server
 		VideoStreamingServer();
 
 		void start();
+
+		void stop();
+
+		uint16_t getPort() const;
 
 		~VideoStreamingServer() = default;
 	};

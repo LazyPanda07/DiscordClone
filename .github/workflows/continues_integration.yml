@@ -28,6 +28,9 @@ jobs:
     - name: Install CUDA
       run: choco install -y cuda --version=${{ env.CUDA_VERSION }}
   
+    - name: Install dependencies
+      run: python -m pip install numpy
+
     - name: Enable CL
       uses: ilammy/msvc-dev-cmd@v1.13.0
 
@@ -91,6 +94,9 @@ jobs:
   
     - name: Install CUDA
       run: choco install -y cuda --version=${{ env.CUDA_VERSION }}
+
+    - name: Install dependencies
+      run: python -m pip install numpy
 
     - name: Enable CL
       uses: ilammy/msvc-dev-cmd@v1.13.0

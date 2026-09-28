@@ -66,7 +66,13 @@ namespace executors
 
 	void Room::doPostVideo(framework::HttpRequest& request, framework::HttpResponse& response, framework::JsonBuilder& builder, decltype(rooms)::iterator it)
 	{
+		it->second.start();
 
+		servers::VideoStreamingServer& videoStreamingServer = it->second.getVideoStreamingServer();
+
+		videoStreamingServer.start();
+
+		builder["port"] = videoStreamingServer.getPort();
 	}
 
 	void Room::doGet(framework::HttpRequest& request, framework::HttpResponse& response)
@@ -215,7 +221,7 @@ namespace executors
 				return;
 			}
 
-			server::NotificationsServer& server = it->second.getNotificationServer();
+			servers::NotificationsServer& server = it->second.getNotificationServer();
 
 			server.pushNotification(id, "fix_speaker_delay");
 		}

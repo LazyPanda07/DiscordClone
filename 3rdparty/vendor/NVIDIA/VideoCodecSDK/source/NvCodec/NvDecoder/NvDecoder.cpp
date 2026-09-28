@@ -213,7 +213,7 @@ int NvDecoder::GetOperatingPoint(CUVIDOPERATINGPOINTINFO *pOPInfo)
 */
 int NvDecoder::HandleVideoSequence(CUVIDEOFORMAT *pVideoFormat)
 {
-    START_TIMER
+    // START_TIMER
     m_videoInfo.str("");
     m_videoInfo.clear();
     m_videoInfo << "Video Input Information" << std::endl
@@ -417,7 +417,7 @@ int NvDecoder::HandleVideoSequence(CUVIDEOFORMAT *pVideoFormat)
     CUDA_DRVAPI_CALL(cuCtxPushCurrent(m_cuContext));
     NVDEC_API_CALL(cuvidCreateDecoder(&m_hDecoder, &videoDecodeCreateInfo));
     CUDA_DRVAPI_CALL(cuCtxPopCurrent(NULL));
-    STOP_TIMER("Session Initialization Time: ");
+    // STOP_TIMER("Session Initialization Time: ");
     return nDecodeSurface;
 }
 
@@ -530,7 +530,7 @@ int NvDecoder::ReconfigureDecoder(CUVIDEOFORMAT *pVideoFormat)
     CUDA_DRVAPI_CALL(cuCtxPushCurrent(m_cuContext));
     CUresult result = cuvidReconfigureDecoder(m_hDecoder, &reconfigParams);
     CUDA_DRVAPI_CALL(cuCtxPopCurrent(NULL));
-    STOP_TIMER("Session Reconfigure Time: ");
+    // STOP_TIMER("Session Reconfigure Time: ");
 
     if (result == CUDA_SUCCESS) {
         m_bNumSurfacesChange = false;
@@ -1077,7 +1077,7 @@ NvDecoder::NvDecoder(CUcontext cuContext, bool bUseDeviceFrame, cudaVideoCodec e
 
 NvDecoder::~NvDecoder() {
     try {
-        START_TIMER
+        // START_TIMER
 
         if (m_pCurrSEIMessage) {
             delete m_pCurrSEIMessage;
@@ -1172,7 +1172,7 @@ NvDecoder::~NvDecoder() {
 
         cuvidCtxLockDestroy(m_ctxLock);
 
-        STOP_TIMER("Session Deinitialization Time: ");
+        // STOP_TIMER("Session Deinitialization Time: ");
     } 
     catch (...) {
         fprintf(stderr, "NvDecoder::~NvDecoder(): exception during cleanup (suppressed)\n");

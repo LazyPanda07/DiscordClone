@@ -76,7 +76,7 @@ int main(int argc, char** argv) try
 
 	utility::parsers::ConsoleArgumentParser argumentParser(argc, argv);
 
-	if (!argumentParser.get<bool>("skip_check_updates", false))
+	if (!argumentParser.get<bool>("skip_check_updates", true))
 	{
 		constexpr std::string_view discordCloneUpdaterExecutableName =
 #ifdef __LINUX__

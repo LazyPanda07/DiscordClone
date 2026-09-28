@@ -12,7 +12,7 @@
 #include "NotificationsServer.hpp"
 #include "VideoStreamingServer.hpp"
 
-namespace server
+namespace servers
 {
 	class VoiceServer
 	{
@@ -58,7 +58,7 @@ namespace server
 	public:
 		VoiceServer(std::string_view notificationServerIp);
 
-		void start(const std::function<void(uint16_t)>& notificationServerPortSetter);
+		void start(const std::function<void(uint16_t)>& notificationServerPortSetter = nullptr);
 
 		void addPendingClient(uint64_t id, std::string&& userName);
 		
@@ -71,6 +71,8 @@ namespace server
 		std::vector<std::string> getClients() const;
 
 		NotificationsServer& getNotificationServer();
+
+		VideoStreamingServer& getVideoStreamingServer();
 
 		~VoiceServer();
 	};

@@ -15,7 +15,7 @@ static std::tuple<std::string, uint16_t> getIpPort(const sockaddr_in& address)
 	return std::make_tuple(ip, ntohs(address.sin_port));
 }
 
-namespace server
+namespace servers
 {
 	VideoStreamingServer::Client::Client(const sockaddr_in& address, uint64_t id) :
 		address(address),
@@ -65,13 +65,32 @@ namespace server
 			return;
 		}
 
+		Client* currentClient = nullptr;
 
+		if (auto it = std::ranges::find_if(clients, [&address](const Client& client) { return client == address; }); it == clients.end())
+		{
+			return;
+		}
+		else
+		{
+			currentClient = &*it;
+		}
+
+		for (const Client& client : clients)
+		{
+			if (currentClient != &client)
+			{
+				socket.sendData(std::span<const char>(data.data(), size), &client.socket);
+			}
+		}
 	}
 
 	VideoStreamingServer::VideoStreamingServer() :
 		started(false)
 	{
+		constexpr size_t predictedNumberOfClients = 4;
 
+		clients.reserve(predictedNumberOfClients);
 	}
 
 	void VideoStreamingServer::start()
@@ -96,5 +115,20 @@ namespace server
 				}
 			}
 		);
+	}
+
+	void VideoStreamingServer::stop()
+	{
+		if (!started)
+		{
+			return;
+		}
+
+		started = false;
+	}
+
+	uint16_t VideoStreamingServer::getPort() const
+	{
+		return socket.getPort();
 	}
 }

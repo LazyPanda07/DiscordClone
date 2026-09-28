@@ -21,7 +21,9 @@ namespace commands
 		uint64_t id;
 
 	private:
-		void startStream(std::string_view userName, std::string_view roomName, std::string_view roomPassword, uint64_t id, uint32_t width, uint32_t height, bool showPreview, uint32_t frameRate);
+		bool startStream(std::string_view userName, std::string_view roomName, std::string_view roomPassword, uint64_t id, uint32_t width, uint32_t height, bool showPreview, uint32_t frameRate);
+
+		bool receiveHello(uint64_t id);
 
 	private:
 		bool run(std::istream& stream) override;

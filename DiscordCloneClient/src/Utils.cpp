@@ -12,9 +12,7 @@ namespace utils
 
 		std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& udpSocket = *reinterpret_cast<std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>*>(socket);
 		ScreenCapturer capturer = callApiFunction(&::startStream, width, height, 0, showPreview);
-		std::chrono::milliseconds desiredFrameTime(1s);
-
-		desiredFrameTime /= frameRate;
+		std::chrono::milliseconds desiredFrameTime(1s / frameRate);
 
 		while (!stop.stop_requested())
 		{
@@ -24,9 +22,7 @@ namespace utils
 
 			auto end = std::chrono::steady_clock::now();
 
-			std::chrono::milliseconds frameTime(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-			if (frameTime < desiredFrameTime)
+			if (std::chrono::milliseconds frameTime(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)); frameTime < desiredFrameTime)
 			{
 				std::this_thread::sleep_for(desiredFrameTime - frameTime);
 			}
