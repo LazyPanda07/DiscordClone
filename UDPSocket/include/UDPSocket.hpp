@@ -48,9 +48,13 @@ namespace web
 		{
 			static constexpr size_t DataSize = 1024;
 
+			uint64_t totalSize;
 			uint16_t chunkIndex;
 			uint16_t chunksInFrame;
 			uint16_t dataSize;
+			uint16_t sourceWidth;
+			uint16_t sourceHeight;
+			uint16_t signature;
 			uint8_t data[DataSize];
 		};
 

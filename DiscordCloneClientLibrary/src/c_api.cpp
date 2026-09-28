@@ -60,7 +60,6 @@ private:
 	std::shared_ptr<DXCam::DXCamera> capturer;
 	CUcontext context;
 	std::unique_ptr<NvEncoderCuda> encoder;
-	std::unique_ptr<NvDecoder> decoder;
 #endif
 
 public:
@@ -70,7 +69,36 @@ public:
 
 	std::vector<uint8_t> processFrame(cv::Mat& frame);
 
+	uint32_t getWidth() const;
+
+	uint32_t getHeight() const;
+
 	~ScreenCapturerData();
+};
+
+class ScreenViewerData
+{
+private:
+	int32_t width;
+	int32_t height;
+	std::string windowName;
+	uint16_t currentSignature;
+	std::vector<uint8_t> data;
+	std::vector<bool> filled;
+
+#ifdef __LINUX__
+
+#else
+	CUcontext context;
+	std::unique_ptr<NvDecoder> decoder;
+#endif
+
+public:
+	ScreenViewerData(int32_t width, int32_t height);
+
+	cv::Mat decodeFrame(std::span<uint8_t> chunkData);
+
+	~ScreenViewerData();
 };
 
 using GetResourceSignature = const uint8_t* (*)(uint64_t*);
@@ -379,10 +407,15 @@ void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* ex
 		{
 			chunksInFrame++;
 		}
+		auto currentTime = std::chrono::steady_clock::now();
 
 		web::UDPSocket::VideoStreamFrameChunk chunk =
 		{
+			.totalSize = result.size(),
 			.chunksInFrame = static_cast<uint16_t>(chunksInFrame),
+			.sourceWidth = static_cast<uint16_t>(data.getWidth()),
+			.sourceHeight = static_cast<uint16_t>(data.getHeight()),
+			.signature = static_cast<uint16_t>(std::rand() % std::numeric_limits<uint16_t>::max())
 		};
 
 		while (currentSize != result.size())
@@ -753,7 +786,6 @@ ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t 
 	ck(NVCODEC_CUDA_CTX_CREATE(&context, 0, device));
 
 	encoder = std::make_unique<NvEncoderCuda>(context, width, height, NV_ENC_BUFFER_FORMAT::NV_ENC_BUFFER_FORMAT_IYUV);
-	decoder = std::make_unique<NvDecoder>(context, false, cudaVideoCodec_HEVC, true);
 
 	NV_ENC_INITIALIZE_PARAMS initializeParams = { NV_ENC_INITIALIZE_PARAMS_VER };
 	NV_ENC_CONFIG encodeConfig = { NV_ENC_CONFIG_VER };
@@ -827,30 +859,23 @@ cv::Mat ScreenCapturerData::capture() const
 std::vector<uint8_t> ScreenCapturerData::processFrame(cv::Mat& frame)
 {
 	std::vector<uint8_t> result;
-	int32_t width = -1;
-	int32_t height = -1;
-
-#ifdef __LINUX__
-
-#else
-	width = encoder->GetEncodeWidth();
-	height = encoder->GetEncodeHeight();
-#endif
+	int32_t width = this->getWidth();
+	int32_t height = this->getHeight();
 
 	cv::resize(frame, frame, cv::Size(width, height));
 
 #ifdef __LINUX__
 
 #else
-	uint8_t* frameData = nullptr;
 	std::vector<NvEncOutputFrame> frames;
+	cv::Mat preparedFrame;
 
-	cv::cvtColor(frame, frame, cv::COLOR_BGR2YUV_IYUV);
+	cv::cvtColor(frame, preparedFrame, cv::COLOR_BGR2YUV_IYUV);
 
 	const NvEncInputFrame* encoderInputFrame = encoder->GetNextInputFrame();
 	NvEncoderCuda::CopyToDeviceFrame
 	(
-		context, frame.data, 0, (CUdeviceptr)encoderInputFrame->inputPtr,
+		context, preparedFrame.data, 0, (CUdeviceptr)encoderInputFrame->inputPtr,
 		static_cast<int>(encoderInputFrame->pitch),
 		width,
 		height,
@@ -865,34 +890,35 @@ std::vector<uint8_t> ScreenCapturerData::processFrame(cv::Mat& frame)
 		encoder->EncodeFrame(frames);
 	}
 
-	NvEncOutputFrame& lastFrame = frames.back();
-
-	decoder->Decode(lastFrame.frame.data(), lastFrame.frame.size(), CUvideopacketflags::CUVID_PKT_ENDOFPICTURE);
-
-	while (!frameData)
-	{
-		frameData = decoder->GetFrame();
-	}
-
-	result = std::move(lastFrame.frame);
+	result = std::move(frames.back().frame);
 #endif
 
 	if (windowName.size())
 	{
-#ifdef __LINUX__
-
-#else
-		cv::Mat preview(height * 3 / 2, width, CV_8UC1, frameData);
-
-		cv::cvtColor(preview, preview, cv::COLOR_YUV2BGR_NV12);
-#endif
-
-		cv::imshow(windowName, preview);
+		cv::imshow(windowName, frame);
 
 		cv::waitKey(1);
 	}
 
 	return result;
+}
+
+uint32_t ScreenCapturerData::getWidth() const
+{
+#ifdef __LINUX__
+	return 0;
+#else
+	return encoder->GetEncodeWidth();
+#endif
+}
+
+uint32_t ScreenCapturerData::getHeight() const
+{
+#ifdef __LINUX__
+	return 0;
+#else
+	return encoder->GetEncodeHeight();
+#endif
 }
 
 ScreenCapturerData::~ScreenCapturerData()
@@ -901,4 +927,79 @@ ScreenCapturerData::~ScreenCapturerData()
 	{
 		cv::destroyWindow(windowName);
 	}
+}
+
+ScreenViewerData::ScreenViewerData(int32_t width, int32_t height) :
+	width(width),
+	height(height),
+	currentSignature(0)
+{
+#ifdef __LINUX__
+
+#else
+	context = nullptr;
+
+	ck(cuInit(0));
+
+	CUdevice device = 0;
+	int gpu = 0;
+
+	ck(cuDeviceGet(&device, gpu));
+
+	ck(NVCODEC_CUDA_CTX_CREATE(&context, 0, device));
+
+	decoder = std::make_unique<NvDecoder>(context, false, cudaVideoCodec_HEVC, true);
+#endif
+}
+
+cv::Mat ScreenViewerData::decodeFrame(std::span<uint8_t> chunkData)
+{
+	web::UDPSocket::VideoStreamFrameChunk& chunk = *reinterpret_cast<web::UDPSocket::VideoStreamFrameChunk*>(chunkData.data());
+	cv::Mat frame;
+
+	if (currentSignature != chunk.signature)
+	{
+		currentSignature = chunk.signature;
+		data.resize(chunk.totalSize);
+		filled.resize(chunk.chunksInFrame);
+	}
+
+	filled[chunk.chunkIndex] = true;
+
+	std::copy(chunk.data, chunk.data + chunk.dataSize, data.data() + chunk.chunkIndex * web::UDPSocket::VideoStreamFrameChunk::DataSize);
+
+	if (std::ranges::all_of(filled, [](bool value) { return value; }))
+	{
+		uint8_t* frameData = nullptr;
+
+		decoder->Decode(data.data(), data.size(), CUvideopacketflags::CUVID_PKT_ENDOFPICTURE);
+
+		while (!frameData)
+		{
+			frameData = decoder->GetFrame();
+		}
+
+#ifdef __LINUX__
+
+#else
+		frame = cv::Mat(chunk.sourceHeight * 3 / 2, chunk.sourceWidth, CV_8UC1, frameData);
+
+		cv::cvtColor(frame, frame, cv::COLOR_YUV2BGR_NV12);
+#endif
+
+		cv::resize(frame, frame, cv::Size(width, height));
+	}
+
+	return frame;
+}
+
+ScreenViewerData::~ScreenViewerData()
+{
+#ifdef __LINUX__
+
+#else
+	cuCtxDestroy(context);
+
+	context = nullptr;
+#endif
 }
