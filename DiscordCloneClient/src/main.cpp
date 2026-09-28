@@ -37,6 +37,7 @@
 #include "Commands/FixSpeakerDelay.hpp"
 #include "Commands/StartStream.hpp"
 #include "Commands/StopStream.hpp"
+#include "Commands/JoinStream.hpp"
 
 #ifdef __LINUX__
 #include <unistd.h>
@@ -77,7 +78,7 @@ int main(int argc, char** argv) try
 
 	utility::parsers::ConsoleArgumentParser argumentParser(argc, argv);
 
-	if (!argumentParser.get<bool>("skip_check_updates", true))
+	if (!argumentParser.get<bool>("skip_check_updates", false))
 	{
 		constexpr std::string_view discordCloneUpdaterExecutableName =
 #ifdef __LINUX__
@@ -157,8 +158,9 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::GetUsers>(controlStream, settings, checks));
 			result.emplace_back(std::make_unique<commands::GetVersion>(checks));
 			result.emplace_back(std::make_unique<commands::FixSpeakerDelay>(speaker, checks));
-			result.emplace_back(std::make_unique<commands::StartStream>(controlStream, videoStreamSocket, settings, streamThread, id, checks));
+			result.emplace_back(std::make_unique<commands::StartStream>(controlStream, videoStreamSocket, streamThread, settings, id, checks));
 			result.emplace_back(std::make_unique<commands::StopStream>(controlStream, videoStreamSocket, streamThread, settings, checks));
+			result.emplace_back(std::make_unique<commands::JoinStream>(controlStream, videoStreamSocket, streamThread, settings, id, checks));
 
 			return result;
 		}();

@@ -38,6 +38,7 @@ using HMODULE = void*;
 
 static constexpr uint32_t sampleRate = 48'000;
 static constexpr uint32_t frameSize = 480;
+static constexpr std::string_view defaultStreamWindowName = "Screen";
 static void* resourceLibrary = nullptr;
 
 template<>
@@ -81,7 +82,6 @@ class ScreenViewerData
 private:
 	int32_t width;
 	int32_t height;
-	std::string windowName;
 	uint16_t currentSignature;
 	std::vector<uint8_t> data;
 	std::vector<bool> filled;
@@ -96,7 +96,7 @@ private:
 public:
 	ScreenViewerData(int32_t width, int32_t height);
 
-	cv::Mat decodeFrame(std::span<uint8_t> chunkData);
+	cv::Mat decodeFrame(std::string_view chunkData);
 
 	~ScreenViewerData();
 };
@@ -202,10 +202,10 @@ void receiveData(UdpSocketObject socket, void(*callback)(const char* data, uint6
 				if (size == SOCKET_ERROR)
 				{
 #ifdef __LINUX__
-					throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
+					throw std::runtime_error(std::format("Can't receive data: {}", strerror(errno)));
 #else
 
-					throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
+					throw std::runtime_error(std::format("Can't receive data: {}", WSAGetLastError()));
 #endif
 				}
 
@@ -444,6 +444,77 @@ void stopStream(ScreenCapturer capturer, Exception* exception)
 	try
 	{
 		delete static_cast<ScreenCapturerData*>(capturer);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+ScreenViewer startStreamView(int32_t width, int32_t height, Exception* exception)
+{
+	try
+	{
+		return new ScreenViewerData(width, height);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+
+	return nullptr;
+}
+
+void decodeFrame(UdpSocketObject socket, ScreenViewer viewer, Exception* exception)
+{
+	try
+	{
+		static_cast<web::UDPSocket*>(socket)->receiveData
+		(
+			[viewer](const web::UDPSocket::Buffer& data, socklen_t size, const sockaddr_in& address, const web::UDPSocket& socket)
+			{
+				if (size == SOCKET_ERROR)
+				{
+#ifdef __LINUX__
+					throw std::runtime_error(std::format("Can't receive frame data: {}", strerror(errno)));
+#else
+
+					throw std::runtime_error(std::format("Can't receive frame data: {}", WSAGetLastError()));
+#endif
+				}
+
+				ScreenViewerData& viewerData = *static_cast<ScreenViewerData*>(viewer);
+
+#ifdef _DEBUG
+				if (size != web::UDPSocket::VideoStreamFrameChunk::DataSize)
+				{
+					throw std::runtime_error(std::format("Wrong frame chunk size: {}", size));
+				}
+#endif
+
+				cv::Mat frame = viewerData.decodeFrame(std::string_view(data.data(), size));
+
+				if (frame.empty())
+				{
+					return;
+				}
+
+				cv::imshow(defaultStreamWindowName.data(), frame);
+				cv::waitKey(1);
+			}
+		);
+	}
+	catch (const std::exception& e)
+	{
+		*exception = new std::runtime_error(e.what());
+	}
+}
+
+void stopStreamView(ScreenCapturer capturer, Exception* exception)
+{
+	try
+	{
+		delete reinterpret_cast<ScreenCapturerData*>(capturer);
 	}
 	catch (const std::exception& e)
 	{
@@ -841,7 +912,7 @@ ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t 
 
 	if (showPreview)
 	{
-		windowName = "Stream";
+		windowName = defaultStreamWindowName;
 
 		cv::namedWindow(windowName, cv::WINDOW_NORMAL);
 	}
@@ -950,11 +1021,13 @@ ScreenViewerData::ScreenViewerData(int32_t width, int32_t height) :
 
 	decoder = std::make_unique<NvDecoder>(context, false, cudaVideoCodec_HEVC, true);
 #endif
+
+	cv::namedWindow(defaultStreamWindowName.data(), cv::WINDOW_NORMAL);
 }
 
-cv::Mat ScreenViewerData::decodeFrame(std::span<uint8_t> chunkData)
+cv::Mat ScreenViewerData::decodeFrame(std::string_view chunkData)
 {
-	web::UDPSocket::VideoStreamFrameChunk& chunk = *reinterpret_cast<web::UDPSocket::VideoStreamFrameChunk*>(chunkData.data());
+	const web::UDPSocket::VideoStreamFrameChunk& chunk = *reinterpret_cast<const web::UDPSocket::VideoStreamFrameChunk*>(chunkData.data());
 	cv::Mat frame;
 
 	if (currentSignature != chunk.signature)
@@ -1002,4 +1075,6 @@ ScreenViewerData::~ScreenViewerData()
 
 	context = nullptr;
 #endif
+
+	cv::destroyWindow(defaultStreamWindowName.data());
 }

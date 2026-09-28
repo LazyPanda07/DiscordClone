@@ -30,4 +30,19 @@ namespace utils
 
 		callApiFunction(&::stopStream, capturer);
 	}
+
+	void runViewStream(std::stop_token stop, int32_t width, int32_t height, void* socket)
+	{
+		using namespace std::chrono_literals;
+
+		std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& udpSocket = *reinterpret_cast<std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>*>(socket);
+		ScreenViewer viewer = callApiFunction(&::startStreamView, width, height);
+
+		while (!stop.stop_requested())
+		{
+			callApiFunction(&::decodeFrame, **udpSocket, viewer);
+		}
+
+		callApiFunction(&::stopStreamView, viewer);
+	}
 }

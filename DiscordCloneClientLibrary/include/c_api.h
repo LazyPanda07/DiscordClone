@@ -31,6 +31,7 @@ typedef void* MicrophoneObject;
 typedef void* SpeakerObject;
 typedef void* DeviceInformationArray;
 typedef void* ScreenCapturer;
+typedef void* ScreenViewer;
 
 CLIENT_LIBRARY_FUNCTION_API void initialize(Exception* exception);
 
@@ -86,6 +87,12 @@ CLIENT_LIBRARY_FUNCTION_API ScreenCapturer startStream(uint32_t width, uint32_t 
 CLIENT_LIBRARY_FUNCTION_API void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void stopStream(ScreenCapturer capturer, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API ScreenViewer startStreamView(int32_t width, int32_t height, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API void decodeFrame(UdpSocketObject socket, ScreenViewer viewer, Exception* exception);
+
+CLIENT_LIBRARY_FUNCTION_API void stopStreamView(ScreenCapturer capturer, Exception* exception);
 
 CLIENT_LIBRARY_FUNCTION_API void setSpeakerVolume(SpeakerObject microphone, double volume, Exception* exception);
 

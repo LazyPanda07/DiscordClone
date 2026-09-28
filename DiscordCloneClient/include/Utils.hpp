@@ -11,6 +11,8 @@ namespace utils
 {
 	void runStream(std::stop_token stop, uint32_t width, uint32_t height, bool showPreview, uint32_t frameRate, void* socket);
 
+	void runViewStream(std::stop_token stop, int32_t width, int32_t height, void* socket);
+
 	template<typename Callable, typename... Args>
 	auto callApiFunction(Callable&& callable, Args&&... args) requires (std::invocable<Callable, Args..., Exception*>);
 }

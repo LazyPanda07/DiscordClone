@@ -31,7 +31,7 @@ namespace commands
 		uint32_t getChecks() const override;
 
 	public:
-		StartStream(std::unique_ptr<streams::IOSocketStream>& controlStream, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& videoStreamSocket, client::Settings& settings, std::jthread& streamThread, uint64_t id, const std::vector<std::unique_ptr<checks::Check>>& checks);
+		StartStream(std::unique_ptr<streams::IOSocketStream>& controlStream, std::unique_ptr<wrappers::SocketWrapper<wrappers::SocketType::udp>>& videoStreamSocket, std::jthread& streamThread, client::Settings& settings, uint64_t id, const std::vector<std::unique_ptr<checks::Check>>& checks);
 
 		std::string_view getHelpText() const override;
 
