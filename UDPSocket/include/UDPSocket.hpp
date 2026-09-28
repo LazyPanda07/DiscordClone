@@ -7,7 +7,6 @@
 #include <array>
 #include <span>
 #include <stdexcept>
-#include <format>
 #include <cstring>
 #include <optional>
 #include <variant>
@@ -47,10 +46,12 @@ namespace web
 	public:
 		struct VideoStreamFrameChunk
 		{
+			static constexpr size_t DataSize = 1024;
+
 			uint16_t chunkIndex;
 			uint16_t chunksInFrame;
 			uint16_t dataSize;
-			char data[1024];
+			uint8_t data[DataSize];
 		};
 
 	public:
@@ -70,7 +71,7 @@ namespace web
 
 		static constexpr std::string_view join = "join";
 		static constexpr size_t joinPacketSize = join.size() + maxUserNameSize;
-		
+
 	public:
 		static std::string constructHelloPacket(uint64_t id);
 
@@ -136,25 +137,18 @@ namespace web
 			throw std::runtime_error("Wrong toAddress initialization");
 		}
 
-		int totalSend = 0;
+		int result = sendto(udpSocket, reinterpret_cast<const char*>(data.data()), data.size_bytes(), 0, toAddress, sizeof(sockaddr_in));
 
-		while (totalSend != data.size_bytes())
+		if (result == SOCKET_ERROR)
 		{
-			int temp = sendto(udpSocket, reinterpret_cast<const char*>(data.data()) + totalSend, data.size_bytes() - totalSend, 0, toAddress, sizeof(sockaddr_in));
-
-			if (temp == SOCKET_ERROR)
-			{
 #ifdef __LINUX__
-				throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
+			throw std::runtime_error(std::format("Can't send data: {}", strerror(errno)));
 #else
 
-				throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
+			throw std::runtime_error(std::format("Can't send data: {}", WSAGetLastError()));
 #endif
-			}
-
-			totalSend += temp;
 		}
-		
-		return totalSend;
+
+		return result;
 	}
 }

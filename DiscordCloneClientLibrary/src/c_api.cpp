@@ -68,7 +68,7 @@ public:
 
 	cv::Mat capture() const;
 
-	cv::Mat processFrame(cv::Mat& frame);
+	std::vector<uint8_t> processFrame(cv::Mat& frame);
 
 	~ScreenCapturerData();
 };
@@ -362,6 +362,7 @@ void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* ex
 	try
 	{
 		ScreenCapturerData& data = *static_cast<ScreenCapturerData*>(capturer);
+		web::UDPSocket& udpSocket = *static_cast<web::UDPSocket*>(socket);
 		cv::Mat frame;
 
 		while (frame.empty())
@@ -369,7 +370,35 @@ void processFrame(UdpSocketObject socket, ScreenCapturer capturer, Exception* ex
 			frame = data.capture();
 		}
 
-		cv::Mat result = data.processFrame(frame);
+		std::vector<uint8_t> result = data.processFrame(frame);
+		size_t index = 0;
+		size_t currentSize = 0;
+		size_t chunksInFrame = result.size() / web::UDPSocket::VideoStreamFrameChunk::DataSize;
+
+		if (result.size() % web::UDPSocket::VideoStreamFrameChunk::DataSize)
+		{
+			chunksInFrame++;
+		}
+
+		web::UDPSocket::VideoStreamFrameChunk chunk =
+		{
+			.chunksInFrame = static_cast<uint16_t>(chunksInFrame),
+		};
+
+		while (currentSize != result.size())
+		{
+			chunk.chunkIndex = static_cast<uint16_t>(index);
+			chunk.dataSize = static_cast<uint16_t>(std::min(result.size() - currentSize, web::UDPSocket::VideoStreamFrameChunk::DataSize));
+
+			std::copy(result.data() + currentSize, result.data() + currentSize + chunk.dataSize, chunk.data);
+
+			std::string_view view(reinterpret_cast<const char*>(&chunk), sizeof(chunk));
+
+			udpSocket.sendData(view);
+
+			currentSize += chunk.dataSize;
+			index++;
+		}
 	}
 	catch (const std::exception& e)
 	{
@@ -795,9 +824,9 @@ cv::Mat ScreenCapturerData::capture() const
 #endif
 }
 
-cv::Mat ScreenCapturerData::processFrame(cv::Mat& frame)
+std::vector<uint8_t> ScreenCapturerData::processFrame(cv::Mat& frame)
 {
-	cv::Mat result;
+	std::vector<uint8_t> result;
 	int32_t width = -1;
 	int32_t height = -1;
 
@@ -845,14 +874,20 @@ cv::Mat ScreenCapturerData::processFrame(cv::Mat& frame)
 		frameData = decoder->GetFrame();
 	}
 
-	cv::Mat decoded(height * 3 / 2, width, CV_8UC1, frameData);
-
-	cv::cvtColor(decoded, result, cv::COLOR_YUV2BGR_NV12);
+	result = std::move(lastFrame.frame);
 #endif
 
 	if (windowName.size())
 	{
-		cv::imshow(windowName, result);
+#ifdef __LINUX__
+
+#else
+		cv::Mat preview(height * 3 / 2, width, CV_8UC1, frameData);
+
+		cv::cvtColor(preview, preview, cv::COLOR_YUV2BGR_NV12);
+#endif
+
+		cv::imshow(windowName, preview);
 
 		cv::waitKey(1);
 	}
