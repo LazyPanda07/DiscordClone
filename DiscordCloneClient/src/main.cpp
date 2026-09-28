@@ -36,6 +36,7 @@
 #include "Commands/GetVersion.hpp"
 #include "Commands/FixSpeakerDelay.hpp"
 #include "Commands/StartStream.hpp"
+#include "Commands/StopStream.hpp"
 
 #ifdef __LINUX__
 #include <unistd.h>
@@ -157,6 +158,7 @@ int main(int argc, char** argv) try
 			result.emplace_back(std::make_unique<commands::GetVersion>(checks));
 			result.emplace_back(std::make_unique<commands::FixSpeakerDelay>(speaker, checks));
 			result.emplace_back(std::make_unique<commands::StartStream>(controlStream, videoStreamSocket, settings, streamThread, id, checks));
+			result.emplace_back(std::make_unique<commands::StopStream>(controlStream, videoStreamSocket, streamThread, settings, checks));
 
 			return result;
 		}();

@@ -43,7 +43,6 @@ namespace commands
 		data["userName"] = userName;
 		data["roomName"] = roomName;
 		data["roomPassword"] = roomPassword;
-		data["id"] = id;
 
 		request = web::HttpBuilder()
 			.postRequest()

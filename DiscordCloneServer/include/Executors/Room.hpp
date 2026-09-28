@@ -40,6 +40,10 @@ namespace executors
 
 		void doPostVideo(framework::HttpRequest& request, framework::HttpResponse& response, framework::JsonBuilder& builder, decltype(rooms)::iterator it);
 
+		void doDeleteVoice(framework::HttpRequest& request, framework::HttpResponse& response, decltype(rooms)::iterator it);
+
+		void doDeleteVideo(framework::HttpRequest& request, framework::HttpResponse& response, decltype(rooms)::iterator it);
+
 	public:
 		void init(const framework::utility::ExecutorSettings& settings) override;
 

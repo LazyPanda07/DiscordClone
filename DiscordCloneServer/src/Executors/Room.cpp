@@ -12,6 +12,19 @@ namespace executors
 		return std::hash<std::string>()(roomData.name);
 	}
 
+	void Room::doDeleteVoice(framework::HttpRequest& request, framework::HttpResponse& response, decltype(rooms)::iterator it)
+	{
+		const framework::JsonParser& data = request.getJson();
+		uint64_t id = data.get<uint64_t>("id");
+
+		it->second.removeClient(id);
+	}
+
+	void Room::doDeleteVideo(framework::HttpRequest& request, framework::HttpResponse& response, decltype(rooms)::iterator it)
+	{
+		it->second.getVideoStreamingServer().stop();
+	}
+
 	void Room::init(const framework::utility::ExecutorSettings& settings)
 	{
 		random.seed(std::time(nullptr));
@@ -126,7 +139,7 @@ namespace executors
 		framework::JsonBuilder builder;
 		std::string streamType = request.getRouteParameter<std::string>("streamType");
 		std::lock_guard<std::mutex> lock(roomsMutex);
-		
+
 		if (auto it = rooms.find(roomData); it != rooms.end())
 		{
 			if (it->first.password == roomData.password)
@@ -176,13 +189,20 @@ namespace executors
 			.name = data.get<std::string>("roomName"),
 			.password = data.get<std::string>("roomPassword")
 		};
-		uint64_t id = data.get<uint64_t>("id");
+		std::string streamType = request.getRouteParameter<std::string>("streamType");
 
 		if (auto it = rooms.find(roomData); it != rooms.end())
 		{
 			if (it->first.password == roomData.password)
 			{
-				it->second.removeClient(id);
+				if (streamType == "voice")
+				{
+					this->doDeleteVoice(request, response, it);
+				}
+				else if (streamType == "video")
+				{
+					this->doDeleteVideo(request, response, it);
+				}
 			}
 			else
 			{
