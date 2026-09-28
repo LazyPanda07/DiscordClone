@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <functional>
 #include <thread>
+#include <iostream>
 
 #include <c_api.h>
 
@@ -36,6 +37,8 @@ namespace utils
 
 				deleteException(exception);
 
+				std::cerr << message << std::endl;
+
 				throw std::runtime_error(message);
 			}
 		}
@@ -48,6 +51,8 @@ namespace utils
 				std::string message = getExceptionMessage(exception);
 
 				deleteException(exception);
+
+				std::cerr << message << std::endl;
 
 				throw std::runtime_error(message);
 			}

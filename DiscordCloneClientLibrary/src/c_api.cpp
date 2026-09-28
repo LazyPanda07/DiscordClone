@@ -61,6 +61,7 @@ private:
 	std::shared_ptr<DXCam::DXCamera> capturer;
 	CUcontext context;
 	std::unique_ptr<NvEncoderCuda> encoder;
+	NV_ENC_PIC_PARAMS encodeParameters;
 #endif
 
 public:
@@ -478,6 +479,10 @@ void decodeFrame(UdpSocketObject socket, ScreenViewer viewer, Exception* excepti
 #ifdef __LINUX__
 					throw std::runtime_error(std::format("Can't receive frame data: {}", strerror(errno)));
 #else
+					if (WSAGetLastError() == WSAEWOULDBLOCK)
+					{
+						return;
+					}
 
 					throw std::runtime_error(std::format("Can't receive frame data: {}", WSAGetLastError()));
 #endif
@@ -486,7 +491,7 @@ void decodeFrame(UdpSocketObject socket, ScreenViewer viewer, Exception* excepti
 				ScreenViewerData& viewerData = *static_cast<ScreenViewerData*>(viewer);
 
 #ifdef _DEBUG
-				if (size != web::UDPSocket::VideoStreamFrameChunk::DataSize)
+				if (size != sizeof(web::UDPSocket::VideoStreamFrameChunk))
 				{
 					throw std::runtime_error(std::format("Wrong frame chunk size: {}", size));
 				}
@@ -908,6 +913,12 @@ ScreenCapturerData::ScreenCapturerData(uint32_t width, uint32_t height, int32_t 
 
 	encoder->CreateDefaultEncoderParams(&initializeParams, NV_ENC_CODEC_HEVC_GUID, *preset, NV_ENC_TUNING_INFO::NV_ENC_TUNING_INFO_LOW_LATENCY);
 	encoder->CreateEncoder(&initializeParams);
+
+	encodeParameters = { NV_ENC_PIC_PARAMS_VER };
+
+	encodeParameters.inputWidth = width;
+	encodeParameters.inputHeight = height;
+	encodeParameters.encodePicFlags = NV_ENC_PIC_FLAG_FORCEIDR | NV_ENC_PIC_FLAG_OUTPUT_SPSPPS;
 #endif
 
 	if (showPreview)
@@ -958,7 +969,7 @@ std::vector<uint8_t> ScreenCapturerData::processFrame(cv::Mat& frame)
 
 	while (frames.empty())
 	{
-		encoder->EncodeFrame(frames);
+		encoder->EncodeFrame(frames, &encodeParameters);
 	}
 
 	result = std::move(frames.back().frame);
@@ -1034,32 +1045,33 @@ cv::Mat ScreenViewerData::decodeFrame(std::string_view chunkData)
 	{
 		currentSignature = chunk.signature;
 		data.resize(chunk.totalSize);
-		filled.resize(chunk.chunksInFrame);
+		filled = std::vector<bool>(chunk.chunksInFrame, false);
 	}
 
 	filled[chunk.chunkIndex] = true;
 
 	std::copy(chunk.data, chunk.data + chunk.dataSize, data.data() + chunk.chunkIndex * web::UDPSocket::VideoStreamFrameChunk::DataSize);
 
-	if (std::ranges::all_of(filled, [](bool value) { return value; }))
+	if (filled.size() && std::ranges::all_of(filled, [](bool value) { return value; }))
 	{
 		uint8_t* frameData = nullptr;
-
-		decoder->Decode(data.data(), data.size(), CUvideopacketflags::CUVID_PKT_ENDOFPICTURE);
-
-		while (!frameData)
-		{
-			frameData = decoder->GetFrame();
-		}
 
 #ifdef __LINUX__
 
 #else
-		frame = cv::Mat(chunk.sourceHeight * 3 / 2, chunk.sourceWidth, CV_8UC1, frameData);
+		decoder->Decode(data.data(), data.size(), CUvideopacketflags::CUVID_PKT_ENDOFPICTURE);
 
-		cv::cvtColor(frame, frame, cv::COLOR_YUV2BGR_NV12);
+		if (frameData = decoder->GetFrame())
+		{
+			frame = cv::Mat(chunk.sourceHeight * 3 / 2, chunk.sourceWidth, CV_8UC1, frameData);
+
+			cv::cvtColor(frame, frame, cv::COLOR_YUV2BGR_NV12);
+		}
 #endif
+	}
 
+	if (!frame.empty())
+	{
 		cv::resize(frame, frame, cv::Size(width, height));
 	}
 
