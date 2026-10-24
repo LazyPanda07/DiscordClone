@@ -68,6 +68,8 @@ BOOL onExit(DWORD CtrlType);
 
 int main(int argc, char** argv) try
 {
+	constexpr bool defaultSkipCheckUpdates = false;
+
 	std::filesystem::path applicationDirectory = std::filesystem::absolute(std::filesystem::path(argv[0]));
 
 	applicationDirectory = applicationDirectory.parent_path();
@@ -78,7 +80,7 @@ int main(int argc, char** argv) try
 
 	utility::parsers::ConsoleArgumentParser argumentParser(argc, argv);
 
-	if (!argumentParser.get<bool>("skip_check_updates", false))
+	if (!argumentParser.get<bool>("skip_check_updates", defaultSkipCheckUpdates))
 	{
 		constexpr std::string_view discordCloneUpdaterExecutableName =
 #ifdef __LINUX__
